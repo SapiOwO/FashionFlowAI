@@ -1,0 +1,38 @@
+{
+  "_comment": "Canonical machine alias mapping for FashionFlow AI. Each key is the normalized required_machine_type from sewing_templates.json. Used by the multi-tier machine resolver in backend/app.py.",
+  "aliases": {
+    "1-needle Lockstitch": {
+      "csv_type_keywords": ["lockstitch"],
+      "preferred_base_models": ["DDL-9000C", "LH-4500C", "DDL-8000C"],
+      "exclude_type_keywords": ["overlock", "coverstitch", "interlock", "button", "bartack", "cycle pattern"]
+    },
+    "Overlock / Safety Stitch": {
+      "csv_type_keywords": ["overlock", "safety stitch"],
+      "preferred_base_models": ["MO-6800D", "MO-6700D", "MO-6814S"],
+      "exclude_type_keywords": ["lockstitch", "coverstitch", "interlock", "button", "bartack"]
+    },
+    "Coverstitch / Interlock": {
+      "csv_type_keywords": ["coverstitch", "interlock", "chainstitch", "cover seam"],
+      "preferred_base_models": ["MF-7900", "MF-7923D", "MF-7524"],
+      "exclude_type_keywords": ["lockstitch", "overlock", "button", "bartack"]
+    },
+    "Bartacking / Button Sewing": {
+      "csv_type_keywords": ["bartack", "button sewing", "button hole", "buttonhole", "eyelet"],
+      "preferred_base_models": ["LK-1900B", "LK-1900C", "LK-1901C"],
+      "exclude_type_keywords": ["lockstitch", "overlock", "coverstitch", "interlock"]
+    }
+  },
+  "fabric_weight_map": {
+    "light-weight": ["light", "light-weight", "lightweight", "silk", "chiffon"],
+    "medium-weight": ["medium", "medium-weight", "mediumweight", "cotton", "polyester"],
+    "heavy-weight": ["heavy", "heavy-weight", "heavyweight", "jeans", "denim", "canvas", "linen"]
+  },
+  "garment_key_map": {
+    "shirt": ["shirt", "button-down", "kemeja"],
+    "t-shirt": ["t-shirt", "tshirt", "kaos", "tee"],
+    "jacket": ["jacket", "jaket", "outerwear", "coat"],
+    "pants": ["pants", "trousers", "celana", "jeans"],
+    "skirt": ["skirt", "rok"],
+    "dress": ["dress", "gaun", "gown"]
+  }
+}

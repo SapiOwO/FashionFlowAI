@@ -1,0 +1,203 @@
+{
+  "shirt": {
+    "name": "Shirt / Short-Sleeve Button-Down",
+    "default_smv": 13.5,
+    "steps": [
+      {
+        "step_num": 1,
+        "operation": "Collar assembly and run stitching",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 2,
+        "operation": "Attach left and right front plackets",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 3,
+        "operation": "Join shoulder seams",
+        "required_machine_type": "Overlock / Safety Stitch"
+      },
+      {
+        "step_num": 4,
+        "operation": "Stitch sleeve panel and hem sleeve openings",
+        "required_machine_type": "Coverstitch / Interlock"
+      },
+      {
+        "step_num": 5,
+        "operation": "Join side seams from cuff to hem",
+        "required_machine_type": "Overlock / Safety Stitch"
+      },
+      {
+        "step_num": 6,
+        "operation": "Attach collar to neck opening",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 7,
+        "operation": "Hem bottom opening of the shirt",
+        "required_machine_type": "Coverstitch / Interlock"
+      },
+      {
+        "step_num": 8,
+        "operation": "Bartack sleeve vents and plackets",
+        "required_machine_type": "Bartacking / Button Sewing"
+      }
+    ]
+  },
+  "pants": {
+    "name": "Pants / Standard Trousers",
+    "default_smv": 15.8,
+    "steps": [
+      {
+        "step_num": 1,
+        "operation": "Sew front and back pockets to panels",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 2,
+        "operation": "Assemble fly zipper and attach front crotch seam",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 3,
+        "operation": "Join side seams (inseam and outseam)",
+        "required_machine_type": "Overlock / Safety Stitch"
+      },
+      {
+        "step_num": 4,
+        "operation": "Attach waistband panels to trousers",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 5,
+        "operation": "Hem bottom leg opening",
+        "required_machine_type": "Coverstitch / Interlock"
+      },
+      {
+        "step_num": 6,
+        "operation": "Sew belt loops to waistband",
+        "required_machine_type": "Bartacking / Button Sewing"
+      }
+    ]
+  },
+  "skirt": {
+    "name": "Skirt / Standard Pleated",
+    "default_smv": 11.2,
+    "steps": [
+      {
+        "step_num": 1,
+        "operation": "Join front and back skirt side panels",
+        "required_machine_type": "Overlock / Safety Stitch"
+      },
+      {
+        "step_num": 2,
+        "operation": "Attach invisible zipper to side seam opening",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 3,
+        "operation": "Gather waist pleats and attach waistband",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 4,
+        "operation": "Double-stitch bottom hemline loop",
+        "required_machine_type": "Coverstitch / Interlock"
+      }
+    ]
+  },
+  "jacket": {
+    "name": "Jacket / Heavy Outerwear",
+    "default_smv": 22.5,
+    "steps": [
+      {
+        "step_num": 1,
+        "operation": "Pocket assembly and zip flap attachment",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 2,
+        "operation": "Join shoulder seams and stitch heavy lining",
+        "required_machine_type": "Overlock / Safety Stitch"
+      },
+      {
+        "step_num": 3,
+        "operation": "Assemble collar or heavy hood to neck ring",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 4,
+        "operation": "Set front zipper closing to panel",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 5,
+        "operation": "Hem bottom opening and cuffs",
+        "required_machine_type": "Coverstitch / Interlock"
+      },
+      {
+        "step_num": 6,
+        "operation": "Bartack key stress joints and pocket edges",
+        "required_machine_type": "Bartacking / Button Sewing"
+      }
+    ]
+  },
+  "dress": {
+    "name": "Dress / Casual Summer Dress",
+    "default_smv": 18.0,
+    "steps": [
+      {
+        "step_num": 1,
+        "operation": "Join bodice shoulder seams and line neck ring",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 2,
+        "operation": "Set invisible back zipper closure",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 3,
+        "operation": "Gather skirt waist panel and join to bodice",
+        "required_machine_type": "Overlock / Safety Stitch"
+      },
+      {
+        "step_num": 4,
+        "operation": "Double hem bottom skirt loop edge",
+        "required_machine_type": "Coverstitch / Interlock"
+      },
+      {
+        "step_num": 5,
+        "operation": "Stitch armholes and close side seams",
+        "required_machine_type": "Overlock / Safety Stitch"
+      }
+    ]
+  },
+  "tshirt": {
+    "name": "T-Shirt / Classic Round-Neck",
+    "default_smv": 8.5,
+    "steps": [
+      {
+        "step_num": 1,
+        "operation": "Join shoulder seams",
+        "required_machine_type": "Overlock / Safety Stitch"
+      },
+      {
+        "step_num": 2,
+        "operation": "Attach circular rib knit collar strip",
+        "required_machine_type": "Overlock / Safety Stitch"
+      },
+      {
+        "step_num": 3,
+        "operation": "Hem sleeve ends and fold cuffs",
+        "required_machine_type": "Coverstitch / Interlock"
+      },
+      {
+        "step_num": 4,
+        "operation": "Hem bottom tail opening",
+        "required_machine_type": "Coverstitch / Interlock"
+      }
+    ]
+  }
+}
