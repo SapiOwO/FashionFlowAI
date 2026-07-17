@@ -27,4 +27,10 @@ graph TD
   * Automatically handles schema creation and database seeding.
   * Manages dual modes: SQLite (with numpy-based local vector search) or PostgreSQL (with native pgvector HNSW cosine searches).
   * Stores persistent analysis logs in the `analysis_history` table so that upload history is saved across server restarts.
-  * Reads the cleaned Juki machinery catalogs (`data/2025_general_apparel_e.csv`) to match sewing steps with recommended machines.
+  * Reads the Juki machinery catalogs (`data/juki_master_catalog.csv`) to seed the historical knowledge database and serve machine specs details on startup.
+
+### 3. WebGL/WebGPU 3D Asset Pipeline (Planned)
+* **Mannequin Base Mesh (Blender Preset)**: A low-poly mannequin model representing the doll torso, exported as a `.glb` binary asset and optimized via Meshopt/KTX2 Basis compression.
+* **Garment Meshes (Blender Presets)**: Standard garment types (Shirt, T-Shirt, Jacket, Pants, Skirt) modeled to fit the mannequin's dimensions, loaded/unloaded in React Three Fiber dynamically.
+* **Dynamic Texture Mapping**: 2D fabric prints/motifs uploaded by artists/designers are processed as standard canvas textures and mapped in real-time onto the active 3D garment mesh material (UV coordinates). This provides instant visual alignment for designers and operators without expensive CPU/GPU cloth physics simulations.
+
