@@ -199,5 +199,36 @@
         "required_machine_type": "Coverstitch / Interlock"
       }
     ]
+  },
+  "hat": {
+    "name": "Hat / Toy Cap and Brim",
+    "default_smv": 7.2,
+    "steps": [
+      {
+        "step_num": 1,
+        "operation": "Join crown panel segments",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 2,
+        "operation": "Assemble brim and attach heavy lining",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 3,
+        "operation": "Join brim panel to assembled crown",
+        "required_machine_type": "Overlock / Safety Stitch"
+      },
+      {
+        "step_num": 4,
+        "operation": "Topstitch brim edges and crown seam joints",
+        "required_machine_type": "1-needle Lockstitch"
+      },
+      {
+        "step_num": 5,
+        "operation": "Attach interior sweatband or elastic gather",
+        "required_machine_type": "Coverstitch / Interlock"
+      }
+    ]
   }
 }

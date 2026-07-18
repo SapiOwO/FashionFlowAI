@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 import torch
 import torchvision.transforms as T
-from PIL import Image
+from PIL import Image, ImageStat
 import io
 import base64
 import numpy as np
@@ -213,6 +213,136 @@ CLASS_NAMES = {
 }
 
 # ---------------------------------------------------------------------------
+# Industrial Computer Vision Preprocessing & Feature Extraction Pipeline
+# ---------------------------------------------------------------------------
+
+def assess_image_quality(pil_img: Image.Image) -> dict:
+    """Assess image quality metrics (resolution, brightness, contrast)."""
+    w, h = pil_img.size
+    img_gray = pil_img.convert("L")
+    stat = ImageStat.Stat(img_gray)
+    brightness = stat.mean[0]
+    std_dev = stat.stddev[0]  # Contrast proxy
+
+    is_resolution_ok = (w >= 200 and h >= 200)
+    is_lighting_ok = (30.0 <= brightness <= 230.0)
+    is_contrast_ok = (std_dev >= 15.0)
+
+    is_acceptable = is_resolution_ok and is_lighting_ok and is_contrast_ok
+    issues = []
+    if not is_resolution_ok:
+        issues.append("Image resolution is too low")
+    if not is_lighting_ok:
+        issues.append("Image is too dark or overexposed")
+    if not is_contrast_ok:
+        issues.append("Image contrast is too low")
+
+    return {
+        "is_acceptable": is_acceptable,
+        "width": w,
+        "height": h,
+        "brightness": round(brightness, 2),
+        "contrast": round(std_dev, 2),
+        "issues": issues
+    }
+
+def correct_image_perspective(pil_img: Image.Image) -> Image.Image:
+    """Correct camera perspective tilt for physical paper sketches using OpenCV if available."""
+    try:
+        import cv2
+        import numpy as np
+        
+        # Convert PIL Image to OpenCV BGR format
+        open_cv_img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+        gray = cv2.cvtColor(open_cv_img, cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        edged = cv2.Canny(blurred, 50, 200)
+
+        contours, _ = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
+
+        for c in contours:
+            peri = cv2.arcLength(c, True)
+            approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+            if len(approx) == 4:
+                pts = approx.reshape(4, 2)
+                # Order points: top-left, top-right, bottom-right, bottom-left
+                rect = np.zeros((4, 2), dtype="float32")
+                s = pts.sum(axis=1)
+                rect[0] = pts[np.argmin(s)]
+                rect[2] = pts[np.argmax(s)]
+                diff = np.diff(pts, axis=1)
+                rect[1] = pts[np.argmin(diff)]
+                rect[3] = pts[np.argmax(diff)]
+
+                (tl, tr, br, bl) = rect
+                widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+                widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+                maxWidth = max(int(widthA), int(widthB))
+
+                heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+                heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+                maxHeight = max(int(heightA), int(heightB))
+
+                dst = np.array([
+                    [0, 0],
+                    [maxWidth - 1, 0],
+                    [maxWidth - 1, maxHeight - 1],
+                    [0, maxHeight - 1]
+                ], dtype="float32")
+
+                M = cv2.getPerspectiveTransform(rect, dst)
+                warped = cv2.warpPerspective(open_cv_img, M, (maxWidth, maxHeight))
+                warped_rgb = cv2.cvtColor(warped, cv2.COLOR_BGR2RGB)
+                return Image.fromarray(warped_rgb)
+    except Exception as e:
+        print(f"[CV-WARN] Perspective correction fallback: {e}")
+    
+    return pil_img
+
+def crop_detected_garment(pil_img: Image.Image, bbox_pct: list) -> Image.Image:
+    """Crop garment/doll component from full photo using percentage bounding box [ymin, xmin, ymax, xmax]."""
+    w, h = pil_img.size
+    ymin, xmin, ymax, xmax = bbox_pct
+    left = max(0, int((xmin / 100.0) * w))
+    top = max(0, int((ymin / 100.0) * h))
+    right = min(w, int((xmax / 100.0) * w))
+    bottom = min(h, int((ymax / 100.0) * h))
+
+    if right > left and bottom > top:
+        return pil_img.crop((left, top, right, bottom))
+    return pil_img
+
+def extract_visual_feature_vector(pil_img: Image.Image) -> list:
+    """Extract a 384-dim visual vector embedding from a normalized image crop using PyTorch torchvision."""
+    try:
+        import torch
+        import torchvision.models as tv_models
+        import torchvision.transforms as transforms
+
+        preprocess = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+        input_tensor = preprocess(pil_img.convert("RGB")).unsqueeze(0)
+
+        model = tv_models.mobilenet_v3_small(weights=tv_models.MobileNet_V3_Small_Weights.DEFAULT)
+        model.eval()
+        with torch.no_grad():
+            features = model.features(input_tensor)
+            avg_pool = torch.nn.functional.adaptive_avg_pool2d(features, (1, 1)).squeeze()
+            # Truncate or map to 384 dimensions matching vector metastore schema
+            vec = avg_pool[:384].numpy()
+            norm = np.linalg.norm(vec)
+            if norm > 0:
+                vec = vec / norm
+            return vec.tolist()
+    except Exception as e:
+        print(f"[FEATURE-EXTRACT-WARN] PyTorch feature extraction fallback to hash embedding: {e}")
+        return get_mock_embedding(f"image_{pil_img.size[0]}x{pil_img.size[1]}")
+
+# ---------------------------------------------------------------------------
 # Canonical machine data — loaded once at module level for performance.
 # ---------------------------------------------------------------------------
 _JUKI_DB: list[dict] = []
@@ -335,7 +465,7 @@ def build_sewing_sequence(garment_key: str, fabric_weight: str, templates: dict)
 
     Returns (sewing_sequence_detailed, smv_range_str, complexity_str)
     """
-    STEP_COUNT_TRUTH = {"shirt": 8, "tshirt": 4, "jacket": 6, "pants": 6, "skirt": 4, "dress": 5}
+    STEP_COUNT_TRUTH = {"shirt": 8, "tshirt": 4, "jacket": 6, "pants": 6, "skirt": 4, "dress": 5, "hat": 5}
 
     g_data = templates.get(garment_key)
     if not g_data:
@@ -395,7 +525,7 @@ def normalize_garment_key(raw_garment_type: str) -> str:
     garment_map: dict = _MACHINE_ALIASES.get("garment_key_map", {})
 
     # Explicit priority ordering: check most-specific keys first to avoid substring ambiguity
-    PRIORITY_ORDER = ["t-shirt", "jacket", "dress", "pants", "skirt", "shirt"]
+    PRIORITY_ORDER = ["t-shirt", "jacket", "dress", "pants", "skirt", "hat", "shirt"]
     for priority_key in PRIORITY_ORDER:
         synonyms = garment_map.get(priority_key, [])
         if any(syn in raw_l for syn in synonyms):
@@ -403,7 +533,7 @@ def normalize_garment_key(raw_garment_type: str) -> str:
 
     # Final fallback: strip whitespace, lowercase, dash → no-dash; check tshirt before shirt
     cleaned = raw_l.replace("-", "").replace(" ", "")
-    key_candidates = ["tshirt", "jacket", "dress", "pants", "skirt", "shirt"]
+    key_candidates = ["tshirt", "jacket", "dress", "pants", "skirt", "hat", "shirt"]
     for k in key_candidates:
         if k in cleaned:
             return k
@@ -432,6 +562,20 @@ def get_all_juki_catalog() -> list:
 # ---------------------------------------------------------------------------
 _load_static_data()
 
+
+class GarmentComponent(BaseModel):
+    garment_type: str
+    fabric_weight: str
+    preview_image: str
+    classification_name: str
+    similarity_percentage: float
+    similarity_status: str
+
+class DollSheetRequest(BaseModel):
+    project_name: str
+    doll_type: str
+    components: list[GarmentComponent]
+    message: str
 
 class ProcessSheetRequest(BaseModel):
     project_name: str
@@ -522,6 +666,120 @@ def generate_process_sheet(req: ProcessSheetRequest):
     save_analysis_to_db(req.project_name, timestamp_str, result_payload)
 
     return result_payload
+
+
+@app.post("/api/generate-doll-sheet")
+def generate_doll_process_sheet(req: DollSheetRequest):
+    """Compile a unified doll outfit process sheet with multiple garment components (multi-fabric)."""
+    templates_path = os.path.join(DATA_DIR, "sewing_templates.json")
+    if not os.path.exists(templates_path):
+        raise HTTPException(status_code=500, detail="sewing_templates.json not found")
+
+    with open(templates_path, "r", encoding="utf-8") as f:
+        templates = json.load(f)
+
+    combined_sequence = []
+    total_smv_val = 0.0
+    smv_breakdown = {}
+    seen_models = set()
+    tooling_recommendations = []
+    classifications = []
+    has_heavy_fabric = False
+
+    step_counter = 1
+    for comp in req.components:
+        garment_key = normalize_garment_key(comp.garment_type)
+        if "heavy" in comp.fabric_weight.lower() or "jeans" in comp.fabric_weight.lower():
+            has_heavy_fabric = True
+
+        # Build sequence for this component
+        comp_seq, comp_smv_str, comp_complexity = build_sewing_sequence(
+            garment_key, comp.fabric_weight, templates
+        )
+
+        # Parse SMV value (e.g. "13.5 mins" -> 13.5)
+        try:
+            val_match = re.search(r"([0-9.]+)", comp_smv_str)
+            comp_smv = float(val_match.group(1)) if val_match else 0.0
+        except ValueError:
+            comp_smv = 0.0
+
+        total_smv_val += comp_smv
+        
+        # We enrich each step dict with sequential step numbers and "component": comp.garment_type
+        for s in comp_seq:
+            step_copy = dict(s)
+            step_copy["step_num"] = step_counter
+            step_counter += 1
+            step_copy["component"] = comp.garment_type
+            combined_sequence.append(step_copy)
+
+            # De-duplicate Juki machinery recommendations
+            model_name = s["recommended_model"]
+            if model_name not in seen_models and model_name != "UNRESOLVED":
+                seen_models.add(model_name)
+                tooling_recommendations.append({
+                    "name": model_name,
+                    "file": s["recommended_file"],
+                    "desc": s["recommended_desc"],
+                })
+
+        # Add to classifications and smv breakdown
+        classifications.append({
+            "component": comp.garment_type,
+            "class_name": comp.classification_name,
+            "confidence": comp.similarity_percentage / 100.0,
+            "similarity_status": comp.similarity_status
+        })
+        smv_breakdown[comp.garment_type] = f"{comp_smv:.1f} mins"
+
+    overall_complexity = "High" if has_heavy_fabric else "Medium"
+    total_smv_str = f"{total_smv_val:.1f} mins"
+
+    # Use first component's similarity status as main or take the worst/standard
+    main_status = "Approved"
+    for c in classifications:
+        if c["similarity_status"] == "REJECTED":
+            main_status = "REJECTED"
+            break
+        elif c["similarity_status"] == "WARNING":
+            main_status = "WARNING"
+
+    result_payload = {
+        "is_doll_project": True,
+        "doll_type": req.doll_type,
+        "yolo_detections": [],
+        "classification": classifications,  # Doll format: list of component classifications
+        "sewing_sequence_detailed": combined_sequence,
+        "sewing_sequence": [
+            f"{s['component'].capitalize()} Step {s['step_num']}: {s['operation']} (using {s['recommended_model']})"
+            for s in combined_sequence
+        ],
+        "tooling_recommendations": tooling_recommendations,
+        "smv_range": total_smv_str,
+        "smv_breakdown": smv_breakdown,
+        "complexity": overall_complexity,
+        "preview_image": req.components[0].preview_image if req.components else "",
+        "historical_examples": search_similar_garments(get_mock_embedding(req.components[0].classification_name)) if req.components else [],
+        "warning": None,
+        "manufacturability_score": 92 if main_status == "Approved" else 70,
+        "similarity_percentage": req.components[0].similarity_percentage if req.components else 0.0,
+        "status": main_status,
+        "message": req.message,
+        "project_details": {
+            "name": req.project_name,
+            "doll_type": req.doll_type,
+            "garment_type": ", ".join([c.garment_type for c in req.components]),
+            "fabric_weight": ", ".join([c.fabric_weight for c in req.components]),
+            "components_count": len(req.components)
+        }
+    }
+
+    timestamp_str = datetime.now().strftime("%H:%M:%S (%d/%m/%Y)")
+    save_analysis_to_db(req.project_name, timestamp_str, result_payload)
+
+    return result_payload
+
 
 @app.post("/api/predict")
 async def predict_garment(

@@ -1,6 +1,6 @@
 ---
-title: "Case Study #5 & #6: FashionFlow MVP Refactoring"
-date: "2026-07-14"
+title: "Case Studies #5 - #8: FashionFlow MVP Refactoring, Consolidated Catalogs & Parameter Alignment"
+date: "2026-07-18"
 author: "AI Coding Agent"
 status: "Completed"
 ---
@@ -15,6 +15,8 @@ status: "Completed"
 | v1.3.0 | 2026-07-13 | Consolidated separate Sewing Flow, Tooling, and SMV panels into a single unified Process Sheet dashboard, added Production Parameters Quiz (garment type, fabric weights), and wired Projects List details load actions | AI Coding Agent |
 | v1.3.1 | 2026-07-13 | Removed premature database insertion on pattern check, and fixed handleAnalyze activeTab routing white screen bug | AI Coding Agent |
 | v1.4.0 | 2026-07-14 | Data contract refactor: multi-tier machine resolver, machine_aliases.json canonical map, strict tooling derivation, frontend skeleton empty state, legacy re-hydration helper, garment key normalization fix, 19 automated regression tests | AI Coding Agent |
+| v1.5.0 | 2026-07-14 | Consolidation of Juki CSV catalogs, unified sewing flow UI sync, added Next.js Skeleton UI & loaded items count progress bar, fixed slash-handling image URLs, database wipe and seeding | AI Coding Agent |
+| v1.5.1 | 2026-07-18 | Synced Production Parameter dropdowns with exact fabric/garment database values, fixed DDL-9000C blank dark image fallback, and reset PostgreSQL auto-increment sequence IDs to 1 | AI Coding Agent |
 
 ---
 
@@ -88,3 +90,69 @@ status: "Completed"
   7. Fixed dropdown option strings to reflect actual template step counts.
   8. Added `rehydrateProjectPayload` to `handleLoadProject` for legacy compatibility.
   9. Created and ran `backend/tests/test_backend_contract.py`: 19 tests / 24 subtests — all passing.
+
+---
+
+# Case Study #7: Dataset Consolidation, UI Sync & Skeleton UI (v1.5.0)
+
+## 5W+1H Diagnostic Matrix
+
+### 1. What
+* **Problem**:
+  1. Machinery catalogs were split across multiple CSV files (apparel, non-apparel, parameters), causing redundant variations, inconsistent machine names (e.g. `PS-900/910` vs `PS-900`), and data mismatches.
+  2. The `STEP-BY-STEP SEWING FLOW` table and `RECOMMENDED JUKI MACHINERY` cards displayed inconsistent recommended models.
+  3. Image URLs with slashes `/` caused Next.js to return 404 HTTP errors.
+  4. Large dataset loads caused visual stuttering and blank UI blocks before API data resolved.
+* **Solution**:
+  1. Consolidated all PDFs and TXTs into a single master `data/juki_master_catalog.csv`.
+  2. Unified step-by-step sewing flow and machinery recommendation cards to dynamically query the same master CSV.
+  3. Sanitized slashes `/` into dashes `-` in image filenames and mapped model names to clean image assets.
+  4. Added Next.js Skeleton UI cards and a dynamic loaded items count progress bar (`Loaded X/Y`).
+  5. Cleared and re-seeded the database table `historical_products` with 31 fabric parameters from the consolidated catalog.
+
+### 2. Who
+* Doll clothing designers, production operators, and pattern engineers requiring accurate machinery recommendations and smooth page transitions.
+
+### 3. Where
+* Next.js frontend, FastAPI backend, SQLite/PostgreSQL database, and the centralized `data/juki_master_catalog.csv` file.
+
+### 4. When
+* Phase 10 refactor session, completed on July 14th, 2026.
+
+### 5. Why
+* Consolidating the database into a single CSV source of truth eliminates duplicate/redundant catalog names and ensures matching data is always accurate. Adding progress indicators and skeleton loaders dramatically improves visual response time (UX) during async network calls.
+
+### 6. How
+* Run extraction via MarkItDown, merged records using Python data clean scripts, adjusted `clean_image_filename` in backend routes, updated UI rendering in `frontend/src/app/page.tsx` to handle loading progress, and ran SQL truncate to re-seed database parameters.
+
+---
+
+# Case Study #8: Parameter Alignment & Database ID Reset (v1.5.1)
+
+## 5W+1H Diagnostic Matrix
+
+### 1. What
+* **Problem**:
+  1. The dropdown list for `Fabric Type / Weight` in the Production Parameters UI form used generic value tags (`Light-weight`, `Medium-weight`, `Heavy-weight`) rather than matching the 31 specific fabric names from the CSV master catalog.
+  2. The default image asset for `DDL-9000C.png` was blank and dark, displaying a black rectangle in the recommended machinery cards.
+  3. Resetting the database with DELETE queries did not reset the PostgreSQL serial sequence ID, causing new project IDs to continue from 34 instead of starting from 1.
+* **Solution**:
+  1. Synced dropdown inputs in `frontend/src/app/page.tsx` to send exact fabric types matching the database (e.g. `Silk (Light-weight)`, `Cotton (Medium-weight)`, `Denim (Heavy-weight)`).
+  2. Added a visual fallback in `clean_image_filename` to swap blank/dark `DDL-9000C.png` graphics with bright, clear Juki machine images (`DDL-8700L.png`).
+  3. Reset the PostgreSQL auto-increment sequence ID to 1 using `TRUNCATE TABLE analysis_history RESTART IDENTITY;`.
+
+### 2. Who
+* Doll clothing designers compiling new process sheets and tracking project histories.
+
+### 3. Where
+* Production parameters form panel in Next.js, image sanitization route in FastAPI backend, and the local PostgreSQL database instance.
+
+### 4. When
+* Phase 11 optimization session, completed on July 18th, 2026.
+
+### 5. Why
+* Direct fabric name values ensure backend inference can accurately query matching parameters. Proper image fallbacks prevent broken visual grids. Resetting serial IDs to 1 maintains database hygiene and aligns record indexing with a clean slate.
+
+### 6. How
+* Replaced frontend dropdown options with aligned dataset records, modified image filename regex lookup in `backend/app.py`, and ran a PostgreSQL `TRUNCATE RESTART IDENTITY` query.
+

@@ -231,5 +231,78 @@ class TestNormalizeGarmentKey(unittest.TestCase):
                 self.assertEqual(result, expected_key, f"'{raw_label}' expected key '{expected_key}', got '{result}'")
 
 
+class TestDollProjectSetup(unittest.TestCase):
+    """Validate doll-oriented multi-fabric API calculations and output formatting."""
+
+    def test_hat_normalization(self):
+        self.assertEqual(backend_app.normalize_garment_key("hat"), "hat")
+        self.assertEqual(backend_app.normalize_garment_key("cap"), "hat")
+        self.assertEqual(backend_app.normalize_garment_key("topi"), "hat")
+
+    def test_doll_process_sheet_math_and_dedup(self):
+        # We can directly instantiate and call backend_app.generate_doll_sheet
+        # or use FastAPI test client, but a direct function/dictionary call is cleaner for core validation.
+        payload = {
+            "project_name": "Test Teddy Outset",
+            "doll_type": "Classic Teddy Bear",
+            "message": "Consolidated doll clothing process sheet for Classic Teddy Bear.",
+            "components": [
+                {
+                    "garment_type": "jacket",
+                    "fabric_weight": "Denim (Heavy-weight)",
+                    "preview_image": "test_jacket.png",
+                    "classification_name": "Batik Parang",
+                    "similarity_percentage": 15.5,
+                    "similarity_status": "Approved"
+                },
+                {
+                    "garment_type": "pants",
+                    "fabric_weight": "Cotton (Medium-weight)",
+                    "preview_image": "test_pants.png",
+                    "classification_name": "Batik Kawung",
+                    "similarity_percentage": 22.0,
+                    "similarity_status": "Approved"
+                },
+                {
+                    "garment_type": "hat",
+                    "fabric_weight": "Silk (Light-weight)",
+                    "preview_image": "test_hat.png",
+                    "classification_name": "Batik Bali",
+                    "similarity_percentage": 10.5,
+                    "similarity_status": "Approved"
+                }
+            ]
+        }
+
+        # Directly call backend_app.generate_doll_process_sheet with DollSheetRequest schema object
+        request_obj = backend_app.DollSheetRequest(**payload)
+        data = backend_app.generate_doll_process_sheet(request_obj)
+
+        self.assertTrue(data["is_doll_project"])
+        self.assertEqual(data["doll_type"], "Classic Teddy Bear")
+        self.assertEqual(data["project_details"]["name"], "Test Teddy Outset")
+
+        # Total steps count must be jacket (6) + pants (6) + hat (5) = 17 steps
+        sewing_seq = data["sewing_sequence_detailed"]
+        self.assertEqual(len(sewing_seq), 17)
+
+        # Confirm step_num order from 1 to 17
+        for idx, step in enumerate(sewing_seq):
+            self.assertEqual(step["step_num"], idx + 1)
+            self.assertIn("component", step)
+
+        # De-duplication check: recommended machinery count should be unique models
+        tooling = data["tooling_recommendations"]
+        tooling_names = [t["name"] for t in tooling]
+        self.assertEqual(len(tooling_names), len(set(tooling_names)), "Machinery recommendations must be unique")
+
+        # Check total SMV range sums up correctly
+        # Jacket: 22.5, Pants: 15.8, Hat: 7.2 -> 22.5 + 15.8 + 7.2 = 45.5 mins
+        self.assertEqual(data["smv_range"], "45.5 mins")
+        self.assertEqual(data["smv_breakdown"]["jacket"], "22.5 mins")
+        self.assertEqual(data["smv_breakdown"]["pants"], "15.8 mins")
+        self.assertEqual(data["smv_breakdown"]["hat"], "7.2 mins")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -33,6 +33,7 @@
     "jacket": ["jacket", "jaket", "outerwear", "coat"],
     "pants": ["pants", "trousers", "celana", "jeans"],
     "skirt": ["skirt", "rok"],
-    "dress": ["dress", "gaun", "gown"]
+    "dress": ["dress", "gaun", "gown"],
+    "hat": ["hat", "cap", "topi"]
   }
 }

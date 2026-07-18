@@ -49,6 +49,15 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
 * **Phase 9: Multi-Container Docker Infrastructure**
   * Created optimized Dockerfiles for Next.js frontend (multi-stage alpine runner) and FastAPI backend (slim python runner with dependencies).
   * Built orchestration layout using `docker-compose.yml` configured for dev SQLite/postgres pgvector DB modes.
+* **Phase 10: Master CSV Consolidation & Skeleton UI**
+  * Consolidated separate PDF and TXT datasets into a single source of truth: `data/juki_master_catalog.csv`.
+  * Unified the Step-by-Step Sewing Flow table and Recommended Juki Machinery cards.
+  * Added animated Skeleton UI cards and dynamic loaded items progress bar indicators to the catalog view.
+  * Sanitized forward slashes in machine model names to prevent Next.js image loading 404 HTTP errors.
+* **Phase 11: Production Form Alignment & Sequence Reset**
+  * Synced Production Parameter dropdown selections to map directly to the 31 fabric parameters in the database.
+  * Swapped blank dark `DDL-9000C.png` image with a bright and clear visual fallback (`DDL-8700L.png`).
+  * Reset the PostgreSQL auto-increment primary key sequence for the project history table to start at 1.
 
 ---
 
