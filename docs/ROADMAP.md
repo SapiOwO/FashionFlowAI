@@ -68,6 +68,12 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Pre-loaded `dinov2_vits14` once at startup into `_DINO_MODEL` module-level cache — zero per-request model re-instantiation.
   * Documented explicit **2-Pipeline Architecture**: Pipeline A (Classification: YOLO + MobileNetV3-L/ResNet50/EfficientNet-B0) decoupled from Pipeline B (Visual Retrieval: DINOv2 → pgvector HNSW → Top-3 Historical Records).
   * Added 5 DINOv2 regression tests to `backend/tests/test_backend_contract.py` — all 26 tests passing.
+* **Phase 14: Native pgvector HNSW Migration (v1.8.0)**:
+  * Added dedicated native `visual_vector vector(384)` and `image_md5 TEXT` columns to the `analysis_history` table.
+  * Built an HNSW index (`idx_hnsw_analysis_cosine`) for fast cosine similarity visual searches.
+  * Replaced Python loop-based linear scans with native SQL `ORDER BY <=> LIMIT 1` (duplication check) and `ORDER BY <=> LIMIT 3` (Top-K retrieval), scaling searches to O(log n) efficiency.
+  * Preserved SQLite compatibility using Python-loop fallback logic in local development/CI environments.
+  * Upgraded regression tests and verified that all 34 tests pass cleanly.
 
 ---
 

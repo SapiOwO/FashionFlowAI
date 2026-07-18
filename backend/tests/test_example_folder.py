@@ -32,11 +32,15 @@ from db import (
     get_analysis_history_from_db
 )
 
-EXAMPLE_DIR = r"C:\Users\pasca\Downloads\example"
+# Resolve example directory dynamically from environment or home folder to avoid hardcoded absolute paths
+EXAMPLE_DIR = os.getenv("TEST_EXAMPLE_DIR")
+if not EXAMPLE_DIR:
+    home_dir = os.path.expanduser("~")
+    EXAMPLE_DIR = os.path.join(home_dir, "Downloads", "example")
 
 
 class TestExampleFolderScenarios(unittest.TestCase):
-    """Integration test suite using the real user files in C:\\Users\\pasca\\Downloads\\example."""
+    """Integration test suite using the real user files from the resolved example directory."""
 
     @classmethod
     def setUpClass(cls):

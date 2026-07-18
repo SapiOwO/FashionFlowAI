@@ -1,9 +1,9 @@
 # FashionFlow AI — Garment Production Intelligence System
 
-> **Intelligent pattern recognition + process sheet generation for garment production.**  
+> **Intelligent pattern recognition + process sheet generation for garmen production.**  
 > Upload a garment sketch → AI checks design originality via DINOv2 vector retrieval → Fill in parameters → Get a full production spec sheet with sewing steps, Juki machine recommendations, SMV estimates, and Top-3 historical project baselines.
 
-*Last Updated: 2026-07-19 (v1.7.0 DINOv2 2-Pipeline Upgrade)*
+*Last Updated: 2026-07-19 (v1.8.0 Native pgvector Migration)*
 
 ---
 
@@ -36,7 +36,7 @@
 
 ## 📊 Empirical Model Evaluation & Real-World Benchmarks
 
-FashionFlow AI employs a **Decoupled 2-Pipeline Architecture** separating Garment Recognition from Visual Similarity Retrieval.
+# FashionFlow AI employs a **Decoupled 2-Pipeline Architecture** separating Garment Recognition from Visual Similarity Retrieval.
 
 ### 1. DINOv2 Image Transformation Robustness Benchmark
 
@@ -50,7 +50,7 @@ Tested against real-world smartphone camera photo distortions (upscaling, bright
 | **Kamera Miring / Rotasi 10°** | **92.0%** | Match | `HISTORICAL_MATCH_FOUND` |
 | **Pola Garmen Berbeda Sama Sekali** | **< 85.0%** | No Match | `APPROVED` (Safe for Production) |
 
-### 2. Real User Dataset Benchmarks (`C:\Users\pasca\Downloads\example`)
+### 2. Real User Dataset Benchmarks (`~/Downloads/example`)
 
 Evaluated against non-real-life illustrations, plush dolls, and complex batik patterns:
 
