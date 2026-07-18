@@ -54,6 +54,7 @@ interface AnalysisResult {
   similarity_percentage: number;
   status: string;
   message: string;
+  visual_vector?: number[];
 }
 
 interface SavedAnalysis {
@@ -443,7 +444,9 @@ export default function Home() {
         similarity_percentage: result.similarity_percentage,
         similarity_status: result.status,
         classification_name: result.classification[0].class_name,
-        message: result.message
+        message: result.message,
+        // CRITICAL: send visual_vector so backend can persist it for future cosine-similarity duplicate detection
+        visual_vector: result.visual_vector || []
       };
 
       const res = await fetch("http://127.0.0.1:8000/api/generate-sheet", {
@@ -1083,25 +1086,24 @@ export default function Home() {
 
                               {/* Component AI Verification Info */}
                               {compState.result ? (() => {
-                                const compRes = compState.result;
-                                const validScores = (compRes.model_results || []).filter((mr: any) => mr.status === "ok").map((mr: any) => mr.confidence_pct);
-                                const maxScore = validScores.length > 0 ? Math.max(...validScores) : compRes.similarity_percentage;
-                                const isRejected = maxScore >= 95.0;
-                                return (
-                                  <div className={`p-3 rounded-lg border text-[11px] font-medium leading-normal ${
-                                    isRejected ? "bg-red-50 border-red-200 text-red-900" : "bg-green-50 border-green-200 text-green-900"
-                                  }`}>
-                                    <div className="flex justify-between items-center mb-1">
-                                      <span className="font-bold uppercase tracking-wider text-[9px] opacity-75">AI Verdict</span>
-                                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
-                                        isRejected ? "bg-red-200 text-red-955" : "bg-green-200 text-green-955"
-                                      }`}>{isRejected ? "REJECTED" : "APPROVED"}</span>
-                                    </div>
-                                    <div className="truncate">Motif: {compRes.classification[0].class_name}</div>
-                                    <div>Similarity: {maxScore.toFixed(1)}%</div>
-                                  </div>
-                                );
-                              })() : compState.previewUrl ? (
+                                 const compRes = compState.result;
+                                 const isRejected = compRes.status && compRes.status.toUpperCase() === "REJECTED";
+                                 const dbScore = compRes.similarity_percentage || 0;
+                                 return (
+                                   <div className={`p-3 rounded-lg border text-[11px] font-medium leading-normal ${
+                                     isRejected ? "bg-red-50 border-red-200 text-red-900" : "bg-green-50 border-green-200 text-green-900"
+                                   }`}>
+                                     <div className="flex justify-between items-center mb-1">
+                                       <span className="font-bold uppercase tracking-wider text-[9px] opacity-75">AI Verdict</span>
+                                       <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
+                                         isRejected ? "bg-red-200 text-red-955" : "bg-green-200 text-green-955"
+                                       }`}>{isRejected ? "REJECTED" : "APPROVED"}</span>
+                                     </div>
+                                     <div className="truncate">Motif: {compRes.classification[0].class_name}</div>
+                                     <div>DB Similarity: {dbScore.toFixed(1)}%</div>
+                                   </div>
+                                 );
+                               })() : compState.previewUrl ? (
                                 <div className="bg-slate-50 border border-zinc-200 p-3 rounded-lg text-center text-[10px] text-slate-400 font-medium">
                                   Running pattern analysis...
                                 </div>
@@ -1245,11 +1247,9 @@ export default function Home() {
                         {result ? (
                           <div className="mt-6 flex flex-col gap-3">
                             {/* Clean, Unified Originality Check Results */}
-                            {result.model_results && result.model_results.length > 0 && (() => {
-                              const validScores = result.model_results.filter(mr => mr.status === "ok").map(mr => mr.confidence_pct);
-                              const maxScore = validScores.length > 0 ? Math.max(...validScores) : result.similarity_percentage;
-                              const topModel = result.model_results.reduce((prev, curr) => (curr.confidence_pct > prev.confidence_pct ? curr : prev), result.model_results[0]);
-                              const isRejected = maxScore >= 95.0;
+                            {result && (() => {
+                              const isRejected = result.status && result.status.toUpperCase() === "REJECTED";
+                              const dbScore = result.similarity_percentage || 0;
 
                               return (
                                 <div className="flex flex-col gap-3">
@@ -1267,28 +1267,28 @@ export default function Home() {
                                     <div className="flex items-baseline gap-2 mt-1">
                                       <span className={`font-display font-bold text-3xl ${
                                         isRejected ? "text-red-700" : "text-green-700"
-                                      }`}>{maxScore.toFixed(2)}%</span>
+                                      }`}>{dbScore.toFixed(2)}%</span>
                                       <span className="text-xs font-semibold opacity-75">
-                                        {result.model_results.length > 1 ? "max match similarity" : "similarity score"}
+                                        database similarity score
                                       </span>
                                     </div>
 
                                     <p className="text-xs leading-relaxed opacity-90 font-medium mt-1">
-                                      {isRejected 
-                                        ? `Critical Warning: ${maxScore.toFixed(2)}% match detected with ${topModel.class_name} (via ${topModel.model_name}). This pattern already exists in copyright records.` 
-                                        : (result.model_results.length > 1
-                                            ? `Clear: Highest similarity is ${maxScore.toFixed(2)}% with ${topModel.class_name}. Safe for garment production.`
-                                            : `Clear: ${maxScore.toFixed(2)}% similarity detected with ${topModel.class_name} using ${topModel.model_name}. Safe for garment production.`)}
+                                      {result.message || (isRejected 
+                                        ? `Critical Warning: ${dbScore.toFixed(2)}% duplicate image match detected in database. Pattern already exists.` 
+                                        : `Clear: ${dbScore.toFixed(2)}% database similarity detected. Safe for garment production.`)}
                                     </p>
 
-                                    <div className="pt-2 flex justify-end">
-                                      <button
-                                        onClick={() => setShowModelDetails(!showModelDetails)}
-                                        className="text-xs font-semibold underline flex items-center gap-1 opacity-80 hover:opacity-100"
-                                      >
-                                        {showModelDetails ? "Hide Model Details ▲" : `View Model Details (${result.model_results.length} Model${result.model_results.length > 1 ? "s" : ""}) ▼`}
-                                      </button>
-                                    </div>
+                                    {result.model_results && result.model_results.length > 0 && (
+                                      <div className="pt-2 flex justify-end">
+                                        <button
+                                          onClick={() => setShowModelDetails(!showModelDetails)}
+                                          className="text-xs font-semibold underline flex items-center gap-1 opacity-80 hover:opacity-100"
+                                        >
+                                          {showModelDetails ? "Hide Experimental Pattern Models ▲" : `View Experimental Pattern Models (${result.model_results.length}) ▼`}
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Collapsible Model Breakdown Details */}
@@ -1324,10 +1324,6 @@ export default function Home() {
                                 </div>
                               );
                             })()}
-
-                            <p className="text-[11px] leading-relaxed text-slate-500 font-medium px-1">
-                              {result.message}
-                            </p>
                           </div>
                         ) : null}
 
@@ -1346,9 +1342,8 @@ export default function Home() {
                     {/* Right Column: Quiz parameters form */}
                     <div className="xl:col-span-1">
                       {result && (() => {
-                        const validScores = (result.model_results || []).filter(mr => mr.status === "ok").map(mr => mr.confidence_pct);
-                        const maxScore = validScores.length > 0 ? Math.max(...validScores) : result.similarity_percentage;
-                        return maxScore < 95.0;
+                        const isRejected = result.status && result.status.toUpperCase() === "REJECTED";
+                        return !isRejected;
                       })() ? (
                         <form onSubmit={handleGenerateProcessSheet} className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs flex flex-col gap-5">
                           <h3 className="font-display font-bold text-lg text-black">Production Parameters</h3>
@@ -1665,7 +1660,11 @@ export default function Home() {
                                 alt={tool.name}
                                 className="max-w-full max-h-full object-contain transition-transform duration-300 hover:scale-105"
                                 onError={(e) => {
-                                  e.currentTarget.src = "/globe.svg";
+                                  e.currentTarget.style.display = 'none';
+                                  if (e.currentTarget.parentElement) {
+                                    e.currentTarget.parentElement.classList.add('bg-slate-100');
+                                    e.currentTarget.parentElement.innerHTML = `<div className="flex flex-col items-center justify-center text-center p-4"><svg class="w-10 h-10 text-slate-400 mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.594 15.12a2 2 0 00-1.022.548l-.066.066A2 2 0 004 17.152V19a2 2 0 002 2h12a2 2 0 002-2v-1.848a2 2 0 00-.506-1.341l-.066-.066z"/></svg><span class="text-xs font-mono font-bold text-slate-600">${tool.name}</span><span class="text-[10px] font-mono text-slate-400">JUKI Industrial Spec</span></div>`;
+                                  }
                                 }}
                               />
                             </div>

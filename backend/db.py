@@ -157,29 +157,115 @@ def init_database():
     except Exception as e:
         print(f"[DB-ERR] Failed to initialize database: {str(e)}")
 
+def check_saved_history_similarity(query_vector: list = None, image_b64: str = "", project_name: str = "") -> tuple[float, str, bool]:
+    """
+    Check if an uploaded sketch image or project name already exists in analysis_history DB table.
+    Uses PyTorch visual vector cosine similarity + MD5 image hash + project name matching.
+    Returns (highest_similarity_percentage, matched_project_name, is_duplicate).
+    """
+    import hashlib
+
+    def get_img_hash(b64_str: str) -> str:
+        clean_b64 = b64_str.split(",")[-1] if "," in b64_str else b64_str
+        return hashlib.md5(clean_b64.encode("utf-8")).hexdigest()
+
+    target_hash = get_img_hash(image_b64) if image_b64 else ""
+
+    history = get_analysis_history_from_db()
+    max_cosine_sim = 0.0
+    best_match_name = ""
+
+    # Count how many DB records actually have a stored vector for diagnostics
+    records_with_vector = sum(1 for item in history if item.get("result", {}).get("visual_vector"))
+    print(f"[DB-SIMILARITY] Scanning {len(history)} DB records ({records_with_vector} have visual vectors).")
+
+    for item in history:
+        res = item.get("result", {})
+        prev_img = res.get("preview_image", "")
+        prev_name = item.get("fileName", "")
+        prev_vector = res.get("visual_vector", [])
+
+        # 1. Exact image hash match (MD5)
+        if target_hash and prev_img:
+            prev_hash = get_img_hash(prev_img)
+            if target_hash == prev_hash:
+                print(f"[DB-SIMILARITY] Exact image match (MD5) found with saved project '{prev_name}' (ID: {item.get('id')})")
+                return 99.8, prev_name, True
+
+        # 2. PyTorch Visual Feature Vector Cosine Similarity
+        if query_vector and prev_vector and len(query_vector) == len(prev_vector):
+            try:
+                dot_val = np.dot(query_vector, prev_vector)
+                norm_q = np.linalg.norm(query_vector)
+                norm_p = np.linalg.norm(prev_vector)
+                if norm_q > 0 and norm_p > 0:
+                    cosine_sim = float(dot_val / (norm_q * norm_p))
+                    sim_pct = round(cosine_sim * 100.0, 1)
+                    print(f"[DB-SIMILARITY] Comparing vs '{prev_name}': cosine={sim_pct:.1f}% (vector dims: {len(prev_vector)})")
+                    if sim_pct > max_cosine_sim:
+                        max_cosine_sim = sim_pct
+                        best_match_name = prev_name
+                    if cosine_sim >= 0.90:
+                        print(f"[DB-SIMILARITY] ✓ MATCH! 384-dim visual embedding {sim_pct}% ≥ 90% threshold → REJECTED ('{prev_name}', ID: {item.get('id')})")
+                        return sim_pct, prev_name, True
+            except Exception as e:
+                print(f"[VECTOR-SEARCH-ERR] Vector comparison failed: {e}")
+
+        # 3. Same project name match
+        if project_name and prev_name and project_name.strip().lower() == prev_name.strip().lower():
+            print(f"[DB-SIMILARITY] Duplicate project name match found for '{prev_name}' (ID: {item.get('id')})")
+            return 98.5, prev_name, True
+
+    if max_cosine_sim > 0:
+        print(f"[DB-SIMILARITY] Best visual match: {max_cosine_sim:.1f}% with project '{best_match_name}' (below 90% threshold → APPROVED)")
+    else:
+        print(f"[DB-SIMILARITY] No visual vector matches found (0 stored vectors or all below threshold) → APPROVED")
+
+    return max_cosine_sim, best_match_name, False
+
+
 def save_analysis_to_db(filename: str, timestamp: str, result_data: dict):
-    """Save an analysis record to the database for persistent history logs."""
+    """Save or update an analysis record in database for persistent history logs, preventing duplicate entries."""
     try:
         conn = get_connection()
         cursor = conn.cursor()
         result_json_str = json.dumps(result_data, ensure_ascii=False)
         
+        # Check if an entry with the exact same project filename already exists
         if is_sqlite():
-            cursor.execute("""
-                INSERT INTO analysis_history (filename, timestamp, result)
-                VALUES (?, ?, ?);
-            """, (filename, timestamp, result_json_str))
-            conn.commit()
+            cursor.execute("SELECT id FROM analysis_history WHERE filename = ?;", (filename,))
+            existing = cursor.fetchone()
+            if existing:
+                cursor.execute("""
+                    UPDATE analysis_history SET timestamp = ?, result = ? WHERE id = ?;
+                """, (timestamp, result_json_str, existing[0]))
+                conn.commit()
+                print(f"[DB] Updated existing analysis for '{filename}' (ID: {existing[0]}) in database.")
+            else:
+                cursor.execute("""
+                    INSERT INTO analysis_history (filename, timestamp, result)
+                    VALUES (?, ?, ?);
+                """, (filename, timestamp, result_json_str))
+                conn.commit()
+                print(f"[DB] Saved new analysis for '{filename}' to database.")
         else:
             conn.autocommit = True
-            cursor.execute("""
-                INSERT INTO analysis_history (filename, timestamp, result)
-                VALUES (%s, %s, %s);
-            """, (filename, timestamp, result_json_str))
+            cursor.execute("SELECT id FROM analysis_history WHERE filename = %s;", (filename,))
+            existing = cursor.fetchone()
+            if existing:
+                cursor.execute("""
+                    UPDATE analysis_history SET timestamp = %s, result = %s WHERE id = %s;
+                """, (timestamp, result_json_str, existing[0]))
+                print(f"[DB] Updated existing analysis for '{filename}' (ID: {existing[0]}) in database.")
+            else:
+                cursor.execute("""
+                    INSERT INTO analysis_history (filename, timestamp, result)
+                    VALUES (%s, %s, %s);
+                """, (filename, timestamp, result_json_str))
+                print(f"[DB] Saved new analysis for '{filename}' to database.")
             
         cursor.close()
         conn.close()
-        print(f"[DB] Saved analysis for {filename} to database.")
     except Exception as e:
         print(f"[DB-ERR] Failed to save analysis log: {str(e)}")
 

@@ -17,7 +17,7 @@ import numpy as np
 from datetime import datetime
 
 # Import database module
-from db import init_database, search_similar_garments, get_mock_embedding, save_analysis_to_db, get_analysis_history_from_db, delete_analysis_from_db, rename_analysis_in_db
+from db import init_database, search_similar_garments, get_mock_embedding, save_analysis_to_db, get_analysis_history_from_db, delete_analysis_from_db, rename_analysis_in_db, check_saved_history_similarity
 
 # Add models path
 MODELS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
@@ -247,11 +247,20 @@ def assess_image_quality(pil_img: Image.Image) -> dict:
     }
 
 def correct_image_perspective(pil_img: Image.Image) -> Image.Image:
-    """Correct camera perspective tilt for physical paper sketches using OpenCV if available."""
+    """
+    Correct camera perspective tilt for physical paper sketches using OpenCV.
+    Only applies warp if a dominant quadrilateral contour covers at least 20% of the
+    image area AND the result is at least 150×150px. This prevents catastrophic warping
+    on digital images, illustrations, or photos where spurious small contours exist.
+    """
     try:
         import cv2
         import numpy as np
         
+        img_w, img_h = pil_img.size
+        img_area = img_w * img_h
+        min_contour_area_ratio = 0.20  # Must cover ≥20% of image area
+
         # Convert PIL Image to OpenCV BGR format
         open_cv_img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
         gray = cv2.cvtColor(open_cv_img, cv2.COLOR_BGR2GRAY)
@@ -262,11 +271,15 @@ def correct_image_perspective(pil_img: Image.Image) -> Image.Image:
         contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
 
         for c in contours:
+            # Guard: contour area must be at least 20% of image area
+            contour_area = cv2.contourArea(c)
+            if contour_area < img_area * min_contour_area_ratio:
+                continue
+
             peri = cv2.arcLength(c, True)
             approx = cv2.approxPolyDP(c, 0.02 * peri, True)
             if len(approx) == 4:
                 pts = approx.reshape(4, 2)
-                # Order points: top-left, top-right, bottom-right, bottom-left
                 rect = np.zeros((4, 2), dtype="float32")
                 s = pts.sum(axis=1)
                 rect[0] = pts[np.argmin(s)]
@@ -283,6 +296,11 @@ def correct_image_perspective(pil_img: Image.Image) -> Image.Image:
                 heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
                 heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
                 maxHeight = max(int(heightA), int(heightB))
+
+                # Guard: output must be at least 150×150px to be meaningful
+                if maxWidth < 150 or maxHeight < 150:
+                    print(f"[CV-PERSPECTIVE] Skipped warp — output too small ({maxWidth}×{maxHeight}px), not a paper sketch quad.")
+                    continue
 
                 dst = np.array([
                     [0, 0],
@@ -586,6 +604,7 @@ class ProcessSheetRequest(BaseModel):
     similarity_status: str
     classification_name: str
     message: str
+    visual_vector: list = []   # 384-dim embedding — MUST be sent from frontend to persist for duplicate detection
 
 @app.get("/api/validate-catalog")
 def validate_catalog():
@@ -654,6 +673,8 @@ def generate_process_sheet(req: ProcessSheetRequest):
         "similarity_percentage": req.similarity_percentage,
         "status": req.similarity_status,
         "message": req.message,
+        # CRITICAL: visual_vector MUST be stored so future uploads can detect this as duplicate via cosine similarity
+        "visual_vector": req.visual_vector if hasattr(req, "visual_vector") and req.visual_vector else [],
         "project_details": {
             "name": req.project_name,
             "garment_type": req.garment_type,
@@ -661,6 +682,9 @@ def generate_process_sheet(req: ProcessSheetRequest):
             "garment_key": garment_key,
         }
     }
+
+    if req.similarity_status.upper() == "REJECTED":
+        raise HTTPException(status_code=400, detail="Production Blocked: Similarity status is REJECTED. Cannot save duplicate pattern to database.")
 
     timestamp_str = datetime.now().strftime("%H:%M:%S (%d/%m/%Y)")
     save_analysis_to_db(req.project_name, timestamp_str, result_payload)
@@ -962,35 +986,56 @@ async def predict_garment(
         except Exception as err:
             print(f"[ERR] Failed in dynamic predict sequence generator: {str(err)}")
 
-    # Calculate similarity score based on classification/YOLO confidence
-    highest_match_score = 0.0
-    if classifications and classifications[0]["confidence"] > 0:
-        highest_match_score = max(c["confidence"] for c in classifications) * 100.0
-    elif yolo_detections:
-        highest_match_score = max(d["confidence"] for d in yolo_detections) * 100.0
-    else:
-        # If no models loaded, we provide a placeholder to help UI testing
-        highest_match_score = 12.4
-        
-    # Apply the 95% threshold logic
-    if highest_match_score >= 95.00:
-        similarity_status = "REJECTED"
-        similarity_message = f"Critical Warning: {highest_match_score:.2f}% similarity detected. This pattern already exists. Please modify your sketch."
-    else:
-        similarity_status = "APPROVED"
-        similarity_message = f"Clear: {highest_match_score:.2f}% similarity detected. Safe for garment production."
-
-    # Convert uploaded image to Base64 to return to frontend
+    # Convert uploaded image to Base64 to return to frontend & check database history
     buffered = io.BytesIO()
     pil_img.save(buffered, format="JPEG")
     img_b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    # Query similarity search using classifications / detections
+    # ─── CV Pipeline Stage 1: Image Quality Assessment ───────────────────────
+    quality_assessment = assess_image_quality(pil_img)
+    print(f"[CV-QUALITY] Resolution: {quality_assessment.get('width')}×{quality_assessment.get('height')}px | "
+          f"Brightness: {quality_assessment.get('brightness', 0):.1f} | "
+          f"Contrast: {quality_assessment.get('contrast', 0):.1f} | "
+          f"Acceptable: {quality_assessment.get('is_acceptable')}")
+
+    # ─── CV Pipeline Stage 2: Perspective Correction (smartphone/tilted sketch) ─
+    processed_img = correct_image_perspective(pil_img)
+    if processed_img is not pil_img:
+        print(f"[CV-PERSPECTIVE] Perspective correction applied → {processed_img.size[0]}×{processed_img.size[1]}px")
+    else:
+        print(f"[CV-PERSPECTIVE] No dominant contour detected — using original image.")
+
+    # ─── CV Pipeline Stage 3: YOLO Garment Bbox Auto-Crop (if detection exists) ─
+    if yolo_detections and len(yolo_detections) > 0:
+        bbox = yolo_detections[0].get("bbox_pct")
+        if bbox:
+            processed_img = crop_detected_garment(processed_img, bbox)
+            print(f"[CV-CROP] Auto-cropped to detected garment region → {processed_img.size[0]}×{processed_img.size[1]}px")
+    else:
+        print(f"[CV-CROP] No YOLO detection — using full perspective-corrected image for embedding.")
+
+    # ─── CV Pipeline Stage 4: Extract 384-dim Visual Vector Embedding ─────────
     query_text = classifications[0]["class_name"] if classifications else (yolo_detections[0]["label"] if yolo_detections else "Default Garment")
-    query_vector = get_mock_embedding(query_text)
-    historical_examples = search_similar_garments(query_vector)
+    query_vector = extract_visual_feature_vector(processed_img)
+    print(f"[VECTOR-SEARCH] Extracted {len(query_vector)}-dim PyTorch visual vector embedding.")
+
+    historical_examples = search_similar_garments(query_vector, query_str=query_text)
+
+    # Primary Originality Decision Rule: Strictly Database Vector Search & Image Duplication Check
+    hist_sim, matched_proj, is_dup = check_saved_history_similarity(query_vector=query_vector, image_b64=img_b64)
+    
+    if is_dup or hist_sim >= 90.0:
+        similarity_status = "REJECTED"
+        similarity_percentage = hist_sim if hist_sim > 0 else 99.8
+        similarity_message = f"Critical Warning: {similarity_percentage:.1f}% duplicate image match detected with saved database record ('{matched_proj}'). This pattern already exists in production records."
+    else:
+        similarity_status = "APPROVED"
+        similarity_percentage = round(hist_sim, 2)
+        similarity_message = f"Clear: {similarity_percentage:.2f}% database similarity detected. Safe for garment production."
 
     result_payload = {
+        "image_quality": quality_assessment,
+        "visual_vector": query_vector,
         "yolo_detections": yolo_detections,
         "classification": classifications if classifications else [{"class_name": "No Classification Model Loaded", "confidence": 0.0}],
         "model_results": model_results,
@@ -1003,7 +1048,7 @@ async def predict_garment(
         "historical_examples": historical_examples,
         "warning": warning_msg,
         "manufacturability_score": 85 if (classifications or yolo_detections) else 0,
-        "similarity_percentage": round(highest_match_score, 2),
+        "similarity_percentage": round(similarity_percentage, 2),
         "status": similarity_status,
         "message": similarity_message
     }

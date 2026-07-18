@@ -58,12 +58,21 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Synced Production Parameter dropdown selections to map directly to the 31 fabric parameters in the database.
   * Swapped blank dark `DDL-9000C.png` image with a bright and clear visual fallback (`DDL-8700L.png`).
   * Reset the PostgreSQL auto-increment primary key sequence for the project history table to start at 1.
+* **Phase 12: Visual Vector Persistence & CV Pipeline Area Guards**
+  * Added `visual_vector` to `ProcessSheetRequest` in `app.py` and `handleGenerateProcessSheet` payload in `page.tsx` so visual embeddings are persisted to the database upon process sheet creation.
+  * Added 20% minimum contour area ratio and 150×150px output size guards to `correct_image_perspective()` to prevent catastrophic warping on non-sketch/digital images.
+  * Decoupled frontend UI verdict banners and right panel form visibility to strictly rely on backend `status` (`REJECTED` / `APPROVED`), eliminating Batik classification score false positives.
+  * Enhanced `check_saved_history_similarity()` in `db.py` with verbose diagnostic logging for vector search counts, per-record cosine scores, and verdict thresholds.
 
 ---
 
 ## Remaining Tasks (For Your Team)
 
 ### 1. Bootcamp Next Iteration (Immediate Scope - Toy Manufacturer Feedback)
+* [ ] **Phase 13: Feature Extractor Upgrade & Benchmark (DINOv2 / CLIP)**:
+  * Validate end-to-end vector retrieval on MobileNetV3 (Phase 1 pipeline validation).
+  * Benchmark image retrieval robustness across rotation, brightness, scaling, and cropping.
+  * Upgrade `extract_visual_feature_vector()` from `MobileNetV3` to **DINOv2 Small (`dinov2_vits14`)** for self-supervised visual representation matching.
 * [ ] **Per-Doll Project Setup**: Shift frontend/backend focus from single fabric pieces to complete doll projects comprising multiple garments (e.g. jacket + pants + hat).
 * [ ] **Multi-Fabric Sequence Support**: Generate combined engineering process workflows for multiple distinct fabric components within the same doll outfit.
 * [ ] **Batch SMV Scaling**: Integrate SMV batching to multiply single-garment assembly times (SAM/SMV) into production run quantities (e.g., 100 to 1,000 pieces).
