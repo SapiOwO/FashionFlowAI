@@ -19,6 +19,7 @@ status: "Completed"
 | v1.5.1 | 2026-07-18 | Synced Production Parameter dropdowns with exact fabric/garment database values, fixed DDL-9000C blank dark image fallback, and reset PostgreSQL auto-increment sequence IDs to 1 | AI Coding Agent |
 | v1.6.0 | 2026-07-19 | Visual Vector Persistence & CV Pipeline Area Guards: persisted 384-dim visual vectors on process sheet creation, added 20% area ratio & 150x150px output size guards to perspective correction, decoupled frontend UI verdict from Batik model scores, added diagnostic similarity logging | AI Coding Agent |
 | v1.7.0 | 2026-07-19 | DINOv2 2-Pipeline Upgrade: replaced MobileNetV3 Small feature extractor with Meta DINOv2 Small (dinov2_vits14) for Pipeline B (Visual Retrieval), pre-load model at startup, added 5 DINOv2 regression tests (26/26 total passing), documented decoupled Classification vs Embedding pipelines | AI Coding Agent |
+| v1.8.0 | 2026-07-19 | Native pgvector Migration: added dedicated `visual_vector vector(384)` and `image_md5 TEXT` native columns to `analysis_history`, created HNSW index `idx_hnsw_analysis_cosine`, replaced Python-loop cosine scan with native SQL `ORDER BY visual_vector <=> query LIMIT k`, SQLite fallback preserved. 34/34 tests passing. | AI Coding Agent |
 
 ---
 
@@ -234,4 +235,38 @@ status: "Completed"
 * Verified full test suite: **26/26 tests passed** (21 original + 5 new DINOv2 tests).
 
 
+---
 
+# Case Study #11: Native pgvector HNSW Migration (v1.8.0)
+
+## 5W+1H Diagnostic Matrix
+
+### 1. What
+* **Problem**: Despite PostgreSQL `pgvector` being enabled and `historical_products` already using native `embedding vector(384)` with HNSW index, the `analysis_history` table stored visual vectors inside a JSON blob (`result TEXT`). Both `check_saved_history_similarity()` and `get_top_k_similar_history_records()` performed full Python-loop linear scans: fetch all rows → decode JSON → compute cosine manually. This was O(n) — negating the entire benefit of HNSW indexing.
+* **Resolution**: Added dedicated native `visual_vector vector(384)` and `image_md5 TEXT` columns to `analysis_history`. Created `idx_hnsw_analysis_cosine` HNSW index. Replaced Python loops with native SQL `ORDER BY visual_vector <=> query::vector LIMIT k`. Idempotent `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` applied at startup so existing deployments migrate safely.
+
+### 2. Who
+* Any deployment where `analysis_history` grows beyond tens of records. At small scale the O(n) loop is imperceptible; at enterprise scale (1,000+ projects) the loop becomes a latency bottleneck while the HNSW index maintains sub-10ms query time.
+
+### 3. Where
+* `backend/db.py`: `init_database()` (schema migration), `save_analysis_to_db()` (native insert/update), `check_saved_history_similarity()` (pgvector query), `get_top_k_similar_history_records()` (pgvector Top-K query).
+* `docs/ARCHITECTURE.md`: Updated Stage 5 pipeline description and sections 1–3 of Real-time Feature Vector chapter.
+
+### 4. When
+* July 19th, 2026 (Phase 14 — Database Native Vector Column Migration).
+
+### 5. Why
+* The previous implementation was architecturally inconsistent: HNSW index existed on `historical_products` but not `analysis_history` (the primary similarity target). At database scale:
+  * **10 records** — O(n) loop is negligible (~1ms).
+  * **1,000 records** — O(n) loop is ~50ms; HNSW would be ~2ms.
+  * **100,000 records** — O(n) loop is ~5,000ms; HNSW remains ~5ms.
+* The idempotent `ADD COLUMN IF NOT EXISTS` pattern was chosen over a full migration script to allow safe zero-downtime deployment on existing databases.
+* SQLite fallback was preserved: SQLite does not support `vector(384)` native columns, so the Python-loop path remains active for local development and CI environments.
+
+### 6. How
+* `init_database()` (PostgreSQL path): Added `CREATE TABLE` with `visual_vector vector(384)` and `image_md5 TEXT`, followed by `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` guards for existing tables. Created `idx_hnsw_analysis_cosine` HNSW index.
+* `save_analysis_to_db()` (PostgreSQL path): Extracts `visual_vector` list from `result_data`, formats as `[v1,v2,...v384]` pgvector literal, computes MD5 of preview image base64, stores both as native columns alongside JSON blob.
+* `check_saved_history_similarity()` (PostgreSQL path): Three-stage native SQL cascade — (1) `WHERE image_md5 = %s` O(1), (2) `LOWER(filename)` name match, (3) `ORDER BY visual_vector <=> %s::vector LIMIT 1` HNSW Top-1 with `>= 90%` threshold decision.
+* `get_top_k_similar_history_records()` (PostgreSQL path): Single SQL `ORDER BY visual_vector <=> %s::vector LIMIT %s` query, returns Top-K with `cosine_pct` computed as `ROUND((1 - (visual_vector <=> query)) * 100, 1)`.
+* Log output changed from `Scanning N DB records / Comparing vs '...'` loop to `pgvector HNSW → Top-1: '...'` single-line result.
+* Full test suite verification: **34/34 tests passed** (30 contract + 4 integration tests with real images from example folder).

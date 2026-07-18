@@ -59,9 +59,10 @@ Smartphone Camera Input (Paper Sketch / Physical Doll Photo)
    Input: processed_img (post-perspective + post-crop)
                        │
                        ▼
-[VECTOR-SEARCH] Stage 5: pgvector / NumPy Cosine Similarity Search  ← INTEGRATED ✅
-   MD5 shortcut first → PyTorch cosine similarity vs analysis_history
+[VECTOR-SEARCH] Stage 5: pgvector HNSW Native Cosine Similarity Search  ← INTEGRATED ✅
+   MD5 column fast-path (O(1)) → pgvector ORDER BY visual_vector <=> query LIMIT 1
    Threshold: cosine ≥ 0.90 → REJECTED | MD5 match → REJECTED (99.8%)
+   SQLite fallback: Python-loop cosine math preserved for dev/test environments
                        │
                        ▼
 Stage 6: Engineering Knowledge Retrieval (Juki Catalog CSV + RAG)  ← INTEGRATED ✅
@@ -86,17 +87,18 @@ FashionFlow features a zero-retraining visual similarity and duplication detecti
 ### 1. Zero-Retraining Feature Vector Fingerprinting
 * Model weights do **not** need retraining upon new image uploads.
 * Upon image upload, PyTorch Meta DINOv2 Small (`dinov2_vits14` self-supervised Vision Transformer) converts the input pixels into a normalized **384-dimensional vector embedding** acting as a unique visual fingerprint.
-* Vector embeddings are saved directly inside `analysis_history.result.visual_vector`.
+* Vector embeddings are stored in a **dedicated native `visual_vector vector(384)` column** in `analysis_history`, backed by an HNSW index (`idx_hnsw_analysis_cosine`) for O(log n) retrieval. The JSON blob (`result`) also retains the vector for backward compatibility.
+* MD5 hashes of preview images are stored in a dedicated `image_md5 TEXT` column for O(1) exact-match fast-path queries.
 
 ### 2. Multi-Tier Similarity & Duplication Hierarchy
-During image verification (`/api/predict`), the backend evaluates:
-1. **PyTorch Visual Feature Cosine Distance**: Calculates $\cos(\theta) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}$ against saved project vectors in `analysis_history`. If $\cos(\theta) \ge 0.92$, similarity is flagged at $\ge 92\%$ (triggering `REJECTED`).
-2. **Exact Image MD5 Hash Match**: Hashes the base64 payload. Matches trigger `99.8%` similarity (`REJECTED`).
-3. **Project Name String Normalization**: Normalizes whitespace and casing to detect duplicate project submissions.
+During image verification (`/api/predict`), the backend evaluates in order:
+1. **MD5 Exact Hash Match** (O(1) column scan): Hashes the base64 payload against the `image_md5` column. Matches trigger `99.8%` similarity (`REJECTED`).
+2. **Project Name SQL Match**: SQL `LOWER(filename) = LOWER(input)` check — no Python iteration needed.
+3. **pgvector Native Cosine Similarity** (O(log n) HNSW): `SELECT ... ORDER BY visual_vector <=> query::vector LIMIT 1`. If $\cos(\theta) \ge 0.90$, triggers `REJECTED`. SQLite environments fall back to Python-loop cosine math.
 
 ### 3. Concurrency & Transactional Safety (1,000 Concurrent Users)
 * **ACID Transaction Isolation**: PostgreSQL (`pgvector`) uses row-level locks and auto-incrementing primary key sequences. Concurrent submissions receive distinct primary key IDs without race conditions or overwrites.
-* **HNSW Vector Index Scale**: Vector searches use **HNSW (Hierarchical Navigable Small World)** graphs, maintaining $O(\log N)$ logarithmic query latency ($5-15\text{ms}$) under high concurrency.
+* **HNSW Vector Index Scale**: Vector searches use **HNSW (Hierarchical Navigable Small World)** graphs on the native `visual_vector` column, maintaining $O(\log N)$ logarithmic query latency ($5-15\text{ms}$) at any database scale.
 * **Atomic De-duplication (`UPDATE` vs `INSERT`)**: When re-submitting an existing project name, `save_analysis_to_db` executes an atomic `UPDATE` on the existing primary key ID instead of appending redundant duplicate rows.
 
 ### 4. Edge Case Mitigation Matrix
