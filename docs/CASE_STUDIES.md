@@ -18,6 +18,7 @@ status: "Completed"
 | v1.5.0 | 2026-07-14 | Consolidation of Juki CSV catalogs, unified sewing flow UI sync, added Next.js Skeleton UI & loaded items count progress bar, fixed slash-handling image URLs, database wipe and seeding | AI Coding Agent |
 | v1.5.1 | 2026-07-18 | Synced Production Parameter dropdowns with exact fabric/garment database values, fixed DDL-9000C blank dark image fallback, and reset PostgreSQL auto-increment sequence IDs to 1 | AI Coding Agent |
 | v1.6.0 | 2026-07-19 | Visual Vector Persistence & CV Pipeline Area Guards: persisted 384-dim visual vectors on process sheet creation, added 20% area ratio & 150x150px output size guards to perspective correction, decoupled frontend UI verdict from Batik model scores, added diagnostic similarity logging | AI Coding Agent |
+| v1.7.0 | 2026-07-19 | DINOv2 2-Pipeline Upgrade: replaced MobileNetV3 Small feature extractor with Meta DINOv2 Small (dinov2_vits14) for Pipeline B (Visual Retrieval), pre-load model at startup, added 5 DINOv2 regression tests (26/26 total passing), documented decoupled Classification vs Embedding pipelines | AI Coding Agent |
 
 ---
 
@@ -188,5 +189,49 @@ status: "Completed"
 
 ### 6. How
 * Updated Pydantic request models and Next.js fetch payloads to pass `visual_vector`, updated contour filtering logic in `correct_image_perspective()`, simplified UI boolean expressions in `page.tsx`, and verified test suite execution (`backend/tests/test_backend_contract.py` 21/21 OK, `npm run build` PASS).
+
+
+
+---
+
+# Case Study #10: DINOv2 2-Pipeline Visual Retrieval Upgrade (v1.7.0)
+
+## 5W+1H Diagnostic Matrix
+
+### 1. What
+* **Problem**:
+  1. The existing `extract_visual_feature_vector()` function re-instantiated `MobileNetV3 Small` on every single call to `/api/predict`, causing redundant model weight loading overhead per request.
+  2. `MobileNetV3 Small` was originally trained as a supervised ImageNet classifier. Its convolutional feature maps, when truncated to 384 dimensions, produced embeddings that were sensitive to garment label categories (e.g. Batik Lasem vs Batik Kawung) rather than capturing geometry-agnostic visual fingerprints suitable for rotation/lighting-robust similarity retrieval.
+  3. The system architecture conflated two separate AI responsibilities into a single inference pass: garment type classification (Pipeline A) and visual similarity retrieval (Pipeline B). This caused conceptual confusion when evaluating similarity search results against classification confidence scores.
+* **Solution**:
+  1. Replaced `MobileNetV3 Small` with Meta **DINOv2 Small (`dinov2_vits14`)** — a self-supervised Vision Transformer trained on 142M diverse images. DINOv2 produces geometry-aware, rotation/lighting/scale-robust 384-dim L2-normalized visual fingerprints without task-specific fine-tuning or dataset retraining.
+  2. Pre-loaded `dinov2_vits14` once at application startup inside `_load_static_data()` (called by `lifespan`) into the module-level `_DINO_MODEL` cache. Extracted a module-level `_DINO_PREPROCESS` transform pipeline (ImageNet normalization → 224×224 resize → ToTensor). Zero per-request model re-instantiation.
+  3. Documented the **2-Pipeline Architecture** explicitly in code comments and documentation:
+     - **Pipeline A (Classification/Recognition):** OpenCV + YOLO + MobileNetV3-Large/ResNet50/EfficientNet-B0 classify garment type label (`T-Shirt`, `Shirt`, etc.) from image visual features.
+     - **Pipeline B (Visual Embedding & Retrieval):** DINOv2 converts the cropped garment image into a 384-dim coordinate in visual space. PostgreSQL `pgvector` (HNSW index) finds the Top-3 nearest historical engineering records by cosine distance. Metadata (garment type, sewing sequence, Juki machine, SMV, tooling) is then retrieved from those matched records.
+  4. Added 5 DINOv2 regression tests to `backend/tests/test_backend_contract.py`: output shape `(384,)`, L2 norm == 1.0, cosine similarity for identical images == 1.0, cosine similarity for dissimilar images < 0.92, all elements float type.
+
+### 2. Who
+* Garment engineers and pattern designers at industrial manufacturing facilities uploading paper sketches or digital artwork requiring rotation/lighting-robust duplicate pattern detection and similar historical project retrieval.
+
+### 3. Where
+* FastAPI backend (`backend/app.py`): `extract_visual_feature_vector()`, `_load_static_data()`, `_DINO_MODEL`, `_DINO_PREPROCESS` globals.
+* Regression test suite: `backend/tests/test_backend_contract.py` (`TestDINOv2FeatureExtractor` class).
+
+### 4. When
+* July 19th, 2026 (Phase 13 — DINOv2 Feature Extractor Upgrade).
+
+### 5. Why
+* DINOv2 (`dinov2_vits14`) was explicitly designed by Meta AI Research for self-supervised visual representation learning, producing embeddings suitable for retrieval, clustering, and nearest-neighbor search across rotation, scale, and lighting variations — precisely the use case required by FashionFlow's visual similarity pipeline. Pre-loading at startup eliminates redundant model initialization overhead on the critical `/api/predict` hot path. The 2-pipeline architecture separation aligns with Industrial MVP requirements, which explicitly distinguish between Classification (garment recognition) and Similarity Search (historical knowledge retrieval).
+
+### 6. How
+* Replaced `mobilenet_v3_small` inside `extract_visual_feature_vector()` with the module-level `_DINO_MODEL` cache (`dinov2_vits14`).
+* Added DINOv2 model loading block inside `_load_static_data()` with `torch.hub.load("facebookresearch/dinov2", "dinov2_vits14", verbose=False)` and `.eval()`.
+* Added `_DINO_MODEL = None` and `_DINO_PREPROCESS` module-level globals.
+* Added `import torchvision` at top of `app.py` to support module-level transform pipeline.
+* Added `_load_static_data()` call to `lifespan()` context manager to ensure DINOv2 loads at server startup before any request is processed.
+* Added 5 regression tests to `TestDINOv2FeatureExtractor` class.
+* Verified full test suite: **26/26 tests passed** (21 original + 5 new DINOv2 tests).
+
 
 

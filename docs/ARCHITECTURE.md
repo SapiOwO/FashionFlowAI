@@ -54,8 +54,8 @@ Smartphone Camera Input (Paper Sketch / Physical Doll Photo)
    Fallback: full perspective-corrected frame used if no YOLO detection
                        │
                        ▼
-[VECTOR-SEARCH] Stage 4: Feature Extraction (MobileNetV3 Small)  ← INTEGRATED ✅
-   PyTorch torchvision → 384-dim L2-normalized visual vector embedding
+[VECTOR-SEARCH] Stage 4: Feature Extraction (Meta DINOv2 Small: dinov2_vits14)  ← INTEGRATED ✅
+   PyTorch Hub dinov2_vits14 → 384-dim L2-normalized visual vector embedding
    Input: processed_img (post-perspective + post-crop)
                        │
                        ▼
@@ -85,7 +85,7 @@ FashionFlow features a zero-retraining visual similarity and duplication detecti
 
 ### 1. Zero-Retraining Feature Vector Fingerprinting
 * Model weights do **not** need retraining upon new image uploads.
-* Upon image upload, PyTorch (`MobileNetV3` feature pooling) converts the input pixels into a normalized **384-dimensional vector embedding** acting as a unique visual fingerprint.
+* Upon image upload, PyTorch Meta DINOv2 Small (`dinov2_vits14` self-supervised Vision Transformer) converts the input pixels into a normalized **384-dimensional vector embedding** acting as a unique visual fingerprint.
 * Vector embeddings are saved directly inside `analysis_history.result.visual_vector`.
 
 ### 2. Multi-Tier Similarity & Duplication Hierarchy

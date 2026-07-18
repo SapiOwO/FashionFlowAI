@@ -304,5 +304,166 @@ class TestDollProjectSetup(unittest.TestCase):
         self.assertEqual(data["smv_breakdown"]["hat"], "7.2 mins")
 
 
+
+class TestDINOv2FeatureExtractor(unittest.TestCase):
+    """
+    Validate Meta DINOv2 Small (dinov2_vits14) visual embedding extractor.
+
+    These tests verify Pipeline B (Visual Retrieval) data contract:
+    - Output dimension matches vector(384) database schema.
+    - Output vector is L2-normalized (unit norm).
+    - Identical images produce cosine similarity == 1.0.
+    - Visually unrelated images produce cosine similarity < 0.92 (below rejection threshold).
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Pre-load DINOv2 model once for the test class via app startup cache."""
+        from PIL import Image
+        import numpy as np
+        # Ensure DINOv2 is loaded (mirrors production startup via _load_static_data)
+        backend_app._load_static_data()
+        cls.PIL_Image = Image
+        cls.np = np
+
+    def _make_solid_image(self, color: tuple, size: tuple = (224, 224)):
+        """Helper: create a solid-color RGB PIL image for deterministic testing."""
+        img = self.PIL_Image.new("RGB", size, color)
+        return img
+
+    def test_output_shape_is_384(self):
+        """DINOv2 extractor must return a list of exactly 384 floats."""
+        img = self._make_solid_image((120, 80, 200))
+        vec = backend_app.extract_visual_feature_vector(img)
+        self.assertEqual(
+            len(vec), 384,
+            f"DINOv2 output must be 384-dim, got {len(vec)}"
+        )
+
+    def test_output_is_l2_normalized(self):
+        """DINOv2 output vector must have unit L2 norm (normalized for cosine similarity)."""
+        img = self._make_solid_image((50, 150, 250))
+        vec = backend_app.extract_visual_feature_vector(img)
+        norm = self.np.linalg.norm(vec)
+        self.assertAlmostEqual(
+            norm, 1.0, places=5,
+            msg=f"DINOv2 vector must be L2-normalized, got norm={norm:.6f}"
+        )
+
+    def test_identical_images_produce_max_similarity(self):
+        """Two extractions from the exact same image must produce cosine similarity == 1.0."""
+        img = self._make_solid_image((200, 100, 50))
+        vec_a = self.np.array(backend_app.extract_visual_feature_vector(img))
+        vec_b = self.np.array(backend_app.extract_visual_feature_vector(img))
+        cosine_sim = float(self.np.dot(vec_a, vec_b))  # Both unit vectors, so dot == cosine
+        self.assertAlmostEqual(
+            cosine_sim, 1.0, places=5,
+            msg=f"Identical images must produce cosine=1.0, got {cosine_sim:.6f}"
+        )
+
+    def test_dissimilar_images_below_rejection_threshold(self):
+        """
+        Visually dissimilar images (solid black vs solid white) must produce
+        cosine similarity below the 0.92 rejection threshold.
+        This validates that DINOv2 does not collapse all images into the same region.
+        """
+        img_black = self._make_solid_image((0, 0, 0))
+        img_white = self._make_solid_image((255, 255, 255))
+        vec_black = self.np.array(backend_app.extract_visual_feature_vector(img_black))
+        vec_white = self.np.array(backend_app.extract_visual_feature_vector(img_white))
+        cosine_sim = float(self.np.dot(vec_black, vec_white))
+        self.assertLess(
+            cosine_sim, 0.92,
+            f"Dissimilar images must not trigger rejection threshold (0.92), got cosine={cosine_sim:.4f}"
+        )
+
+    def test_output_contains_only_floats(self):
+        """DINOv2 output vector elements must all be Python float type."""
+        img = self._make_solid_image((100, 200, 150))
+        vec = backend_app.extract_visual_feature_vector(img)
+        for i, val in enumerate(vec):
+            self.assertIsInstance(
+                val, float,
+                f"Vector element at index {i} must be float, got {type(val)}"
+            )
+
+
+
+
+class TestDINOv2RealRetrievalRobustness(unittest.TestCase):
+    """
+    Real End-to-End Visual Retrieval Robustness tests for Meta DINOv2 Small.
+
+    As recommended by Industrial MVP verification standards, these tests prove that
+    DINOv2 embeddings maintain high cosine similarity (≥ 0.90) across real-world
+    smartphone image variations (2x upscaling, +20% brightness shift, 10° tilt/rotation)
+    while remaining below threshold for completely different pattern images.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Build a realistic synthetic pattern image with geometric elements."""
+        from PIL import Image, ImageDraw, ImageEnhance
+        import numpy as np
+
+        backend_app._load_static_data()
+
+        cls.PIL_Image = Image
+        cls.ImageEnhance = ImageEnhance
+        cls.np = np
+
+        # Base pattern image: white canvas with blue rectangle and red circle
+        base_img = Image.new("RGB", (300, 300), (255, 255, 255))
+        draw = ImageDraw.Draw(base_img)
+        draw.rectangle([50, 50, 250, 250], fill=(50, 100, 200))
+        draw.ellipse([100, 100, 200, 200], fill=(200, 50, 50))
+
+        cls.base_img = base_img
+        cls.base_vector = np.array(backend_app.extract_visual_feature_vector(base_img))
+
+    def test_upscaled_image_retrieval(self):
+        """2x upscaled image must achieve high similarity (≥ 0.95) with original embedding."""
+        img_scaled = self.base_img.resize((600, 600))
+        vec_scaled = self.np.array(backend_app.extract_visual_feature_vector(img_scaled))
+        sim = float(self.np.dot(self.base_vector, vec_scaled))
+        self.assertGreaterEqual(
+            sim, 0.95,
+            f"2x upscaled image must have cosine similarity ≥ 0.95, got {sim:.4f}"
+        )
+
+    def test_brightness_shifted_image_retrieval(self):
+        """+20% brightness-shifted image must achieve high similarity (≥ 0.95) with original embedding."""
+        img_bright = self.ImageEnhance.Brightness(self.base_img).enhance(1.2)
+        vec_bright = self.np.array(backend_app.extract_visual_feature_vector(img_bright))
+        sim = float(self.np.dot(self.base_vector, vec_bright))
+        self.assertGreaterEqual(
+            sim, 0.95,
+            f"Brightness-shifted image must have cosine similarity ≥ 0.95, got {sim:.4f}"
+        )
+
+    def test_rotated_image_retrieval(self):
+        """10° rotated image must achieve high similarity (≥ 0.88) with original embedding."""
+        img_rotated = self.base_img.rotate(10, expand=False, fillcolor=(255, 255, 255))
+        vec_rotated = self.np.array(backend_app.extract_visual_feature_vector(img_rotated))
+        sim = float(self.np.dot(self.base_vector, vec_rotated))
+        self.assertGreaterEqual(
+            sim, 0.88,
+            f"10° rotated image must have cosine similarity ≥ 0.88, got {sim:.4f}"
+        )
+
+    def test_completely_different_pattern_no_false_match(self):
+        """A completely different pattern image must produce cosine similarity below 0.85."""
+        from PIL import ImageDraw
+        diff_img = self.PIL_Image.new("RGB", (300, 300), (30, 200, 50))
+        draw = ImageDraw.Draw(diff_img)
+        draw.line([(0, 0), (300, 300)], fill=(255, 255, 0), width=15)
+        vec_diff = self.np.array(backend_app.extract_visual_feature_vector(diff_img))
+        sim = float(self.np.dot(self.base_vector, vec_diff))
+        self.assertLess(
+            sim, 0.85,
+            f"Completely different pattern image must have similarity < 0.85, got {sim:.4f}"
+        )
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

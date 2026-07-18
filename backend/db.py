@@ -157,11 +157,11 @@ def init_database():
     except Exception as e:
         print(f"[DB-ERR] Failed to initialize database: {str(e)}")
 
-def check_saved_history_similarity(query_vector: list = None, image_b64: str = "", project_name: str = "") -> tuple[float, str, bool]:
+def check_saved_history_similarity(query_vector: list = None, image_b64: str = "", project_name: str = "") -> tuple[float, str, int | None, bool]:
     """
     Check if an uploaded sketch image or project name already exists in analysis_history DB table.
     Uses PyTorch visual vector cosine similarity + MD5 image hash + project name matching.
-    Returns (highest_similarity_percentage, matched_project_name, is_duplicate).
+    Returns (highest_similarity_percentage, matched_project_name, matched_id, is_duplicate).
     """
     import hashlib
 
@@ -174,6 +174,7 @@ def check_saved_history_similarity(query_vector: list = None, image_b64: str = "
     history = get_analysis_history_from_db()
     max_cosine_sim = 0.0
     best_match_name = ""
+    best_match_id = None
 
     # Count how many DB records actually have a stored vector for diagnostics
     records_with_vector = sum(1 for item in history if item.get("result", {}).get("visual_vector"))
@@ -183,16 +184,17 @@ def check_saved_history_similarity(query_vector: list = None, image_b64: str = "
         res = item.get("result", {})
         prev_img = res.get("preview_image", "")
         prev_name = item.get("fileName", "")
+        prev_id = item.get("id")
         prev_vector = res.get("visual_vector", [])
 
         # 1. Exact image hash match (MD5)
         if target_hash and prev_img:
             prev_hash = get_img_hash(prev_img)
             if target_hash == prev_hash:
-                print(f"[DB-SIMILARITY] Exact image match (MD5) found with saved project '{prev_name}' (ID: {item.get('id')})")
-                return 99.8, prev_name, True
+                print(f"[DB-SIMILARITY] Exact image match (MD5) found with saved project '{prev_name}' (ID: {prev_id})")
+                return 99.8, prev_name, prev_id, True
 
-        # 2. PyTorch Visual Feature Vector Cosine Similarity
+        # 2. DINOv2 Visual Feature Vector Cosine Similarity
         if query_vector and prev_vector and len(query_vector) == len(prev_vector):
             try:
                 dot_val = np.dot(query_vector, prev_vector)
@@ -201,27 +203,91 @@ def check_saved_history_similarity(query_vector: list = None, image_b64: str = "
                 if norm_q > 0 and norm_p > 0:
                     cosine_sim = float(dot_val / (norm_q * norm_p))
                     sim_pct = round(cosine_sim * 100.0, 1)
-                    print(f"[DB-SIMILARITY] Comparing vs '{prev_name}': cosine={sim_pct:.1f}% (vector dims: {len(prev_vector)})")
+                    print(f"[DB-SIMILARITY] Comparing vs '{prev_name}' (ID #{prev_id}): cosine={sim_pct:.1f}% (vector dims: {len(prev_vector)})")
                     if sim_pct > max_cosine_sim:
                         max_cosine_sim = sim_pct
                         best_match_name = prev_name
+                        best_match_id = prev_id
                     if cosine_sim >= 0.90:
-                        print(f"[DB-SIMILARITY] ✓ MATCH! 384-dim visual embedding {sim_pct}% ≥ 90% threshold → REJECTED ('{prev_name}', ID: {item.get('id')})")
-                        return sim_pct, prev_name, True
+                        print(f"[DB-SIMILARITY] ✓ MATCH! 384-dim visual embedding {sim_pct}% ≥ 90% threshold → REJECTED ('{prev_name}', ID: {prev_id})")
+                        return sim_pct, prev_name, prev_id, True
             except Exception as e:
                 print(f"[VECTOR-SEARCH-ERR] Vector comparison failed: {e}")
 
         # 3. Same project name match
         if project_name and prev_name and project_name.strip().lower() == prev_name.strip().lower():
-            print(f"[DB-SIMILARITY] Duplicate project name match found for '{prev_name}' (ID: {item.get('id')})")
-            return 98.5, prev_name, True
+            print(f"[DB-SIMILARITY] Duplicate project name match found for '{prev_name}' (ID: {prev_id})")
+            return 98.5, prev_name, prev_id, True
 
     if max_cosine_sim > 0:
-        print(f"[DB-SIMILARITY] Best visual match: {max_cosine_sim:.1f}% with project '{best_match_name}' (below 90% threshold → APPROVED)")
+        print(f"[DB-SIMILARITY] Best visual match: {max_cosine_sim:.1f}% with project '{best_match_name}' (ID #{best_match_id}) (below 90% threshold → APPROVED)")
     else:
         print(f"[DB-SIMILARITY] No visual vector matches found (0 stored vectors or all below threshold) → APPROVED")
 
-    return max_cosine_sim, best_match_name, False
+    return max_cosine_sim, best_match_name, best_match_id, False
+
+
+def get_top_k_similar_history_records(query_vector: list, limit: int = 3) -> list[dict]:
+    """
+    Retrieve Top-K most similar historical saved projects from analysis_history DB table.
+    Returns a list of dicts with: id, title, similarity_pct, garment_type, sewing_sequence, tooling, smv, learnings.
+    Conforms to Industrial MVP requirement: 'Retrieve at least three similar historical examples'.
+    """
+    if not query_vector:
+        return []
+
+    history = get_analysis_history_from_db()
+    candidates = []
+
+    for item in history:
+        res = item.get("result", {})
+        prev_vector = res.get("visual_vector", [])
+        prev_id = item.get("id")
+        prev_name = item.get("fileName", "")
+
+        if prev_vector and len(query_vector) == len(prev_vector):
+            try:
+                dot_val = np.dot(query_vector, prev_vector)
+                norm_q = np.linalg.norm(query_vector)
+                norm_p = np.linalg.norm(prev_vector)
+                if norm_q > 0 and norm_p > 0:
+                    cosine_sim = float(dot_val / (norm_q * norm_p))
+                    sim_pct = round(cosine_sim * 100.0, 1)
+                    candidates.append({
+                        "id": prev_id,
+                        "title": prev_name,
+                        "similarity_pct": sim_pct,
+                        "garment_type": res.get("garment_type", "garment"),
+                        "sewing_sequence": res.get("sewing_sequence", []),
+                        "tooling": res.get("tooling_recommendations", []),
+                        "smv": res.get("smv_range", "N/A"),
+                        "learnings": f"Historical project ID #{prev_id} ('{prev_name}') baseline with {sim_pct}% visual similarity."
+                    })
+            except Exception as e:
+                print(f"[TOP-K-ERR] Failed candidate comparison for ID #{prev_id}: {e}")
+
+    candidates.sort(key=lambda x: x["similarity_pct"], reverse=True)
+    return candidates[:limit]
+
+
+def clear_analysis_history_in_db() -> bool:
+    """Clear all records from analysis_history and reset auto-increment primary key ID sequence to 1."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        if is_sqlite():
+            cursor.execute("DELETE FROM analysis_history;")
+            cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'analysis_history';")
+        else:
+            cursor.execute("TRUNCATE TABLE analysis_history RESTART IDENTITY;")
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("[DB] Cleared all analysis history records and reset ID sequence to 1.")
+        return True
+    except Exception as e:
+        print(f"[DB-ERR] Failed to clear analysis history: {str(e)}")
+        return False
 
 
 def save_analysis_to_db(filename: str, timestamp: str, result_data: dict):

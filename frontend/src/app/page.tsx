@@ -378,8 +378,8 @@ export default function Home() {
         garment_type: g,
         fabric_weight: comp.fabricWeight,
         preview_image: comp.previewUrl || "globe.svg",
-        classification_name: compResult.classification[0].class_name,
-        similarity_percentage: compResult.similarity_percentage || (compResult.classification[0].confidence * 100),
+        classification_name: compResult?.classification?.[0]?.class_name || "Original Pattern",
+        similarity_percentage: compResult.similarity_percentage || ((compResult?.classification?.[0]?.confidence || 0.9) * 100),
         similarity_status: compResult.status
       });
     }
@@ -443,7 +443,7 @@ export default function Home() {
         preview_image: result.preview_image,
         similarity_percentage: result.similarity_percentage,
         similarity_status: result.status,
-        classification_name: result.classification[0].class_name,
+        classification_name: result?.classification?.[0]?.class_name || "Original Pattern",
         message: result.message,
         // CRITICAL: send visual_vector so backend can persist it for future cosine-similarity duplicate detection
         visual_vector: result.visual_vector || []
@@ -501,6 +501,10 @@ export default function Home() {
   // Migration helper: re-hydrate legacy project payloads to the current normalized schema.
   // Ensures projects saved before the multi-tier resolver refactor load cleanly.
   const rehydrateProjectPayload = (pResult: any): any => {
+    // Ensure classification array exists and is non-empty
+    if (!Array.isArray(pResult.classification) || pResult.classification.length === 0) {
+      pResult.classification = [{ class_name: "Original Sketch Pattern", confidence: 1.0 }];
+    }
     // If sewing_sequence_detailed is missing or empty but sewing_sequence text exists, reconstruct stubs
     if (!pResult.sewing_sequence_detailed || pResult.sewing_sequence_detailed.length === 0) {
       const textSeq: string[] = pResult.sewing_sequence || [];
@@ -1087,7 +1091,8 @@ export default function Home() {
                               {/* Component AI Verification Info */}
                               {compState.result ? (() => {
                                  const compRes = compState.result;
-                                 const isRejected = compRes.status && compRes.status.toUpperCase() === "REJECTED";
+                                 const _s = (compRes.status || "").toUpperCase();
+                                 const isRejected = _s === "REJECTED" || _s === "HISTORICAL_MATCH_FOUND";
                                  const dbScore = compRes.similarity_percentage || 0;
                                  return (
                                    <div className={`p-3 rounded-lg border text-[11px] font-medium leading-normal ${
@@ -1099,7 +1104,7 @@ export default function Home() {
                                          isRejected ? "bg-red-200 text-red-955" : "bg-green-200 text-green-955"
                                        }`}>{isRejected ? "REJECTED" : "APPROVED"}</span>
                                      </div>
-                                     <div className="truncate">Motif: {compRes.classification[0].class_name}</div>
+                                     <div className="truncate">Motif: {compRes?.classification?.[0]?.class_name || "Original Pattern"}</div>
                                      <div>DB Similarity: {dbScore.toFixed(1)}%</div>
                                    </div>
                                  );
@@ -1248,7 +1253,8 @@ export default function Home() {
                           <div className="mt-6 flex flex-col gap-3">
                             {/* Clean, Unified Originality Check Results */}
                             {result && (() => {
-                              const isRejected = result.status && result.status.toUpperCase() === "REJECTED";
+                              const _s = (result.status || "").toUpperCase();
+                              const isRejected = _s === "REJECTED" || _s === "HISTORICAL_MATCH_FOUND";
                               const dbScore = result.similarity_percentage || 0;
 
                               return (
@@ -1342,7 +1348,8 @@ export default function Home() {
                     {/* Right Column: Quiz parameters form */}
                     <div className="xl:col-span-1">
                       {result && (() => {
-                        const isRejected = result.status && result.status.toUpperCase() === "REJECTED";
+                        const _s = (result.status || "").toUpperCase();
+                        const isRejected = _s === "REJECTED" || _s === "HISTORICAL_MATCH_FOUND";
                         return !isRejected;
                       })() ? (
                         <form onSubmit={handleGenerateProcessSheet} className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs flex flex-col gap-5">
@@ -1424,7 +1431,7 @@ export default function Home() {
                             {isLoading ? "Generating Specs..." : "Compile Process Sheet"}
                           </button>
                         </form>
-                      ) : result && result.status === "REJECTED" ? (
+                      ) : result && (["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase())) ? (
                         <div className="bg-red-50 border border-red-200 rounded-xl p-6 shadow-xs flex flex-col gap-4 text-center">
                           <svg className="w-10 h-10 text-red-500 mx-auto" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -1568,7 +1575,7 @@ export default function Home() {
                           <>
                             <div className="flex justify-between items-center text-xs">
                               <span className="text-slate-400">Classified Motif:</span>
-                              <span className="font-semibold text-black">{fullResult.classification[0].class_name}</span>
+                              <span className="font-semibold text-black">{fullResult?.classification?.[0]?.class_name || "Original Sketch Pattern"}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs border-t border-zinc-100 pt-2.5">
                               <span className="text-slate-400">Similarity Match Score:</span>
@@ -1742,7 +1749,7 @@ export default function Home() {
                   <div>
                     <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">Sewing Sequence</span>
                     <h1 className="font-display font-bold text-4xl text-black mt-1">
-                      {result.classification[0].class_name}
+                      {result?.classification?.[0]?.class_name || "Original Sketch Pattern"}
                     </h1>
                   </div>
 
@@ -2218,7 +2225,7 @@ export default function Home() {
                       analysisHistory.map((item, idx) => (
                         <tr key={idx} className="border-b border-zinc-150 hover:bg-slate-50/50">
                           <td className="py-4 px-6 font-semibold">{item.id}</td>
-                          <td className="py-4 px-6 font-medium text-black">{item.fileName || item.result.classification[0].class_name}</td>
+                          <td className="py-4 px-6 font-medium text-black">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</td>
                           <td className="py-4 px-6">{item.timestamp}</td>
                           <td className="py-4 px-6">
                             <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 border border-blue-200">
