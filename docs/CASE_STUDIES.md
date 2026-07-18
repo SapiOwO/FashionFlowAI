@@ -1,6 +1,6 @@
 ---
-title: "Case Studies #5 - #8: FashionFlow MVP Refactoring, Consolidated Catalogs & Parameter Alignment"
-date: "2026-07-18"
+title: "Case Studies #5 - #9: FashionFlow MVP Refactoring, Consolidated Catalogs, Parameter Alignment & Vector Retrieval Fixes"
+date: "2026-07-19"
 author: "AI Coding Agent"
 status: "Completed"
 ---
@@ -17,6 +17,7 @@ status: "Completed"
 | v1.4.0 | 2026-07-14 | Data contract refactor: multi-tier machine resolver, machine_aliases.json canonical map, strict tooling derivation, frontend skeleton empty state, legacy re-hydration helper, garment key normalization fix, 19 automated regression tests | AI Coding Agent |
 | v1.5.0 | 2026-07-14 | Consolidation of Juki CSV catalogs, unified sewing flow UI sync, added Next.js Skeleton UI & loaded items count progress bar, fixed slash-handling image URLs, database wipe and seeding | AI Coding Agent |
 | v1.5.1 | 2026-07-18 | Synced Production Parameter dropdowns with exact fabric/garment database values, fixed DDL-9000C blank dark image fallback, and reset PostgreSQL auto-increment sequence IDs to 1 | AI Coding Agent |
+| v1.6.0 | 2026-07-19 | Visual Vector Persistence & CV Pipeline Area Guards: persisted 384-dim visual vectors on process sheet creation, added 20% area ratio & 150x150px output size guards to perspective correction, decoupled frontend UI verdict from Batik model scores, added diagnostic similarity logging | AI Coding Agent |
 
 ---
 
@@ -155,4 +156,37 @@ status: "Completed"
 
 ### 6. How
 * Replaced frontend dropdown options with aligned dataset records, modified image filename regex lookup in `backend/app.py`, and ran a PostgreSQL `TRUNCATE RESTART IDENTITY` query.
+
+---
+
+# Case Study #9: Visual Vector Persistence, Perspective Guards & Verdict Decoupling (v1.6.0)
+
+## 5W+1H Diagnostic Matrix
+
+### 1. What
+* **Problem**:
+  1. Uploading duplicate or upscaled versions of previously saved sketch images returned 0.0% database similarity score because `visual_vector` (the 384-dimensional PyTorch embedding) was extracted during `/api/predict` but omitted from the `/api/generate-sheet` payload, resulting in empty vector fields (`visual_vector = []`) when persisted to PostgreSQL/SQLite.
+  2. OpenCV perspective correction (`correct_image_perspective`) detected minor non-paper contours in high-resolution digital illustrations and warped full images down to distorted 91×106px patches, causing extreme embedding feature drift.
+  3. The Next.js frontend form panel and verdict banners checked `maxClassScore >= 95.0` against batik classification models, overriding the backend `status: "APPROVED"` response when non-batik images scored high confidence on irrelevant training classes (e.g., Batik Lasem 99.77%).
+* **Solution**:
+  1. Added `visual_vector` to `ProcessSheetRequest` in `backend/app.py` and `handleGenerateProcessSheet` in `frontend/src/app/page.tsx` so visual embeddings are saved to the `analysis_history` table upon process sheet creation.
+  2. Implemented a 20% minimum contour area ratio guard and 150×150px minimum output dimension guard in `correct_image_perspective()` to prevent catastrophic warping on non-sketch/digital artwork.
+  3. Decoupled frontend UI verdict evaluation to strictly check backend `status === "REJECTED"`, eliminating false positive form blocks caused by batik classification scores.
+  4. Added verbose diagnostic logging in `check_saved_history_similarity()` (`db.py`) to output stored vector counts, per-record cosine similarity percentages, and threshold evaluation results.
+
+### 2. Who
+* Garment engineers and pattern designers uploading physical paper sketches or digital artwork requiring reliable duplicate pattern detection and process sheet creation.
+
+### 3. Where
+* FastAPI backend (`app.py`, `db.py`), Next.js frontend (`page.tsx`), and PostgreSQL (`pgvector`) / SQLite metastore.
+
+### 4. When
+* July 19th, 2026.
+
+### 5. Why
+* Persisting visual vectors guarantees that historical projects can be searched via cosine similarity. Adding area and size guards ensures OpenCV perspective transform applies only to physical paper sketches. Relying strictly on backend verdict status keeps UI state synchronized with database originality rules rather than unrelated ML classification outputs.
+
+### 6. How
+* Updated Pydantic request models and Next.js fetch payloads to pass `visual_vector`, updated contour filtering logic in `correct_image_perspective()`, simplified UI boolean expressions in `page.tsx`, and verified test suite execution (`backend/tests/test_backend_contract.py` 21/21 OK, `npm run build` PASS).
+
 
