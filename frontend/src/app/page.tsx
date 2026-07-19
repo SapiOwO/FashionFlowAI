@@ -1080,91 +1080,76 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIEW 2: Create Process Sheet (Stepper Wizard: Step 1 → Step 2 → Step 3) */}
+        {/* VIEW 2: Create Process Sheet (Figma-styled Stepper Wizard: 1 → 2 → 3) */}
         {activeTab === "design-input-view" && (
-          <div className="fade-in w-full">
-            {/* ── Stepper Wizard Header ── */}
-            {!isQuizSubmitted && (
-              <div className="mb-8">
-                <header className="mb-6">
-                  <h1 className="font-display font-bold text-4xl text-black mb-1">
-                    Create Process Sheet
-                  </h1>
-                  <p className="text-slate-500 text-base">
-                    Follow the guided steps to generate a complete engineering process specification.
-                  </p>
-                </header>
-
-                {/* Step Progress Bar */}
-                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
-                  <div className="flex items-center w-full max-w-2xl">
-                    {/* Step 1 */}
-                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 ${
-                        currentStep > 1
-                          ? "bg-green-500 border-green-500 text-white"
-                          : currentStep === 1
-                          ? "bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100"
-                          : "bg-white border-zinc-300 text-zinc-400"
-                      }`}>
-                        {currentStep > 1 ? (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : "1"}
-                      </div>
-                      <span className={`text-[10px] font-bold text-center leading-tight max-w-[72px] ${
-                        currentStep === 1 ? "text-blue-600" : currentStep > 1 ? "text-green-600" : "text-slate-400"
-                      }`}>Upload &amp; Originality</span>
-                    </div>
-
-                    {/* Connector Line 1-2 */}
-                    <div className={`flex-1 h-0.5 mx-3 rounded-full transition-all duration-500 ${
-                      currentStep > 1 ? "bg-green-400" : "bg-zinc-200"
-                    }`} />
-
-                    {/* Step 2 */}
-                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 ${
-                        currentStep > 2
-                          ? "bg-green-500 border-green-500 text-white"
-                          : currentStep === 2
-                          ? "bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100"
-                          : "bg-white border-zinc-300 text-zinc-400"
-                      }`}>
-                        {currentStep > 2 ? (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : "2"}
-                      </div>
-                      <span className={`text-[10px] font-bold text-center leading-tight max-w-[72px] ${
-                        currentStep === 2 ? "text-blue-600" : currentStep > 2 ? "text-green-600" : "text-slate-400"
-                      }`}>Engineering Parameters</span>
-                    </div>
-
-                    {/* Connector Line 2-3 */}
-                    <div className={`flex-1 h-0.5 mx-3 rounded-full transition-all duration-500 ${
-                      currentStep > 2 ? "bg-green-400" : "bg-zinc-200"
-                    }`} />
-
-                    {/* Step 3 */}
-                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 ${
-                        currentStep === 3
-                          ? "bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100"
-                          : "bg-white border-zinc-300 text-zinc-400"
-                      }`}>
-                        3
-                      </div>
-                      <span className={`text-[10px] font-bold text-center leading-tight max-w-[72px] ${
-                        currentStep === 3 ? "text-blue-600" : "text-slate-400"
-                      }`}>Process Sheet &amp; SMV</span>
-                    </div>
-                  </div>
-                </div>
+          <div className="fade-in w-full flex flex-col gap-6">
+            {/* Header & Centered Stepper Node Bar */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
+              <div>
+                <h1 className="font-display font-bold text-3xl text-black mb-1">
+                  Create Process Sheet
+                </h1>
+                <p className="text-slate-500 text-sm">
+                  AI-assisted pre-production engineering &amp; process sheet compilation.
+                </p>
               </div>
-            )}
+
+              {/* Centered Stepper Nodes (1 - 2 - 3) matching user's Figma UI */}
+              {!isQuizSubmitted && (
+                <div className="flex items-center gap-3 bg-slate-100/80 px-4 py-2 rounded-full border border-zinc-200/80 self-center md:self-auto shadow-2xs">
+                  {/* Step 1 Node */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(1)}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-xs cursor-pointer ${
+                      currentStep === 1
+                        ? "bg-blue-600 text-white ring-4 ring-blue-100"
+                        : currentStep > 1
+                        ? "bg-green-600 text-white"
+                        : "bg-white text-slate-600 border border-zinc-300 hover:border-blue-400"
+                    }`}
+                    title="Step 1: Upload & Originality Check"
+                  >
+                    {currentStep > 1 ? "✓" : "1"}
+                  </button>
+
+                  <div className={`w-6 h-0.5 rounded-full ${currentStep > 1 ? "bg-green-500" : "bg-zinc-300"}`} />
+
+                  {/* Step 2 Node */}
+                  <button
+                    type="button"
+                    onClick={() => { if (result || projectMode === "doll") setCurrentStep(2); }}
+                    disabled={!result && projectMode !== "doll"}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-xs cursor-pointer disabled:opacity-50 ${
+                      currentStep === 2
+                        ? "bg-blue-600 text-white ring-4 ring-blue-100"
+                        : currentStep > 2
+                        ? "bg-green-600 text-white"
+                        : "bg-white text-slate-600 border border-zinc-300 hover:border-blue-400"
+                    }`}
+                    title="Step 2: Engineering Parameters"
+                  >
+                    {currentStep > 2 ? "✓" : "2"}
+                  </button>
+
+                  <div className={`w-6 h-0.5 rounded-full ${currentStep > 2 ? "bg-green-500" : "bg-zinc-300"}`} />
+
+                  {/* Step 3 Node */}
+                  <button
+                    type="button"
+                    disabled={!isQuizSubmitted}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-xs disabled:opacity-50 ${
+                      currentStep === 3
+                        ? "bg-blue-600 text-white ring-4 ring-blue-100"
+                        : "bg-white text-slate-600 border border-zinc-300"
+                    }`}
+                    title="Step 3: Process Sheet Result"
+                  >
+                    3
+                  </button>
+                </div>
+              )}
+            </div>
 
             {!isQuizSubmitted ? (              // Quiz Form & Input Step
               <div className="w-full">
