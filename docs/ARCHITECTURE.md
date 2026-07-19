@@ -108,6 +108,30 @@ During image verification (`/api/predict`), the backend evaluates in order:
 | **User uploads identical sketch image under a different project name** | Caught by PyTorch Visual Vector Cosine Similarity ($\ge 92\%$) and MD5 hash match against `analysis_history` records. | `REJECTED (99.8%)` & Production Blocked |
 | **User submits identical project name with a modified sketch** | Caught by project name string normalization check in `save_analysis_to_db`. | Atomic `UPDATE` on existing ID (No Duplicate Rows) |
 | **1,000 users upload identical sketch simultaneously** | Transaction 1 commits first (ID #1). Transactions 2-1000 running milliseconds later perform real-time vector search, detect ID #1, and reject remaining submissions. | 1 Saved Project + 999 `REJECTED` Block Alerts |
+| **DINOv2 cosine similarity yields negative value (anti-parallel vectors)** | Raw cosine values below 0.0 are clamped to `max(0.0, ...)` in `db.py`, `app.py`, and `page.tsx` display layer. | `0.00%` displayed — `APPROVED` |
+
+---
+
+## Create Process Sheet Studio UX
+
+The Create Process Sheet view uses a **2-phase studio layout**:
+
+### Phase 1: Studio Configuration & Input
+* **Section 1 (Pattern Sketch & Originality)**: Live DINOv2 scan triggers immediately upon image upload — no second button press required.
+  * Displays an inline **Top Matched Projects in Catalog** list (up to 5 entries) with thumbnail, project ID, name, garment category, and per-project similarity badge.
+  * Similarity scores are clamped to `≥ 0.00%` and displayed as `X.X% match`.
+  * If any match scores `≥ 90%`, the Workflow Status panel changes to an amber **"Locked (Duplicate Pattern Detected)"** state and the Generate Process Sheet button is disabled.
+* **Section 2 (Engineering Specifications)**: Project name, garment category, and fabric weight inputs. Workflow Status badge reflects real-time lock state.
+
+### Phase 2: Generated Output
+* Displays the compiled process sheet with sewing sequence, machine allocations, SMV estimates, and historical context.
+
+### garment_type Resolution in Top-K Inspector
+When reading matched projects from `analysis_history` in `get_top_k_similar_history_records`, `garment_type` is resolved via a three-tier fallback:
+1. `result_json["garment_type"]` — set on predict calls that carry garment context.
+2. `result_json["project_details"]["garment_type"]` — set by `/api/generate-sheet` after user selects category.
+3. `result_json["project_details"]["garment_key"]` — internal canonical key (e.g. `"shirt"`, `"jacket"`).
+4. Default: `"Garment"` if none of the above fields are present.
 
 ---
 
