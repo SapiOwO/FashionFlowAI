@@ -948,16 +948,16 @@ export default function Home() {
       </aside>
 
       {/* Main Panel Content (Scrolls independently - Fluid Full Screen Layout) */}
-      <main className={`flex-grow h-full overflow-y-auto print:p-0 print:m-0 print:w-full print:h-auto print:overflow-visible print:bg-white ${activeTab === "design-input-view" ? "p-0 bg-white" : "p-12"}`}>
-                {/* VIEW 1: Pre-Production Engineering Dashboard */}
+      <main className={`flex-grow h-full overflow-y-auto print:p-0 print:m-0 print:w-full print:h-auto print:overflow-visible print:bg-white ${activeTab === "design-input-view" ? "p-0 bg-white" : "px-10 py-6"}`}>
+        {/* VIEW 1: Pre-Production Engineering Dashboard */}
         {activeTab === "dashboard-view" && (
           <div className="fade-in w-full">
-            <header className="mb-8">
-              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">Pre-Production Engineering</span>
-              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
+            <header className="mb-6">
+              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Pre-Production Engineering</span>
+              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
                 Engineering Dashboard
               </h1>
-              <p className="text-slate-500 text-sm max-w-2xl">
+              <p className="text-slate-500 text-xs max-w-2xl leading-relaxed">
                 AI-assisted garment analysis, originality verification, and process sheet generation for pre-production engineering.
               </p>
             </header>
@@ -1183,21 +1183,21 @@ export default function Home() {
 
           return (
             <div className="fade-in w-full flex flex-col min-h-screen bg-white">
-              {/* ── BANNER — Flush full-width header matching Penpot ── */}
-              <div className="bg-[#155DFC] px-12 pt-12 pb-6 flex items-center justify-between no-print print:hidden">
+              {/* ── BANNER — Sleek compact header matching exact Y baseline ── */}
+              <div className="bg-[#155DFC] px-10 py-6 flex items-center justify-between no-print print:hidden">
                 <div>
-                  <span className="text-xs font-mono text-blue-200/90 font-bold uppercase tracking-widest">Interactive Engineering Studio</span>
-                  <h1 className="font-display font-bold text-3xl md:text-4xl text-white mt-1 mb-2 tracking-tight">
+                  <span className="text-[10px] font-mono text-blue-200/90 font-bold uppercase tracking-widest bg-blue-600/50 px-2 py-0.5 rounded-md inline-block">Process Sheet Engineering</span>
+                  <h1 className="font-display font-bold text-2xl md:text-3xl text-white tracking-tight mt-1 mb-1.5">
                     Create Process Sheet
                   </h1>
-                  <p className="text-blue-100/90 text-sm font-normal max-w-2xl leading-relaxed">
-                    Compile industrial sewing specifications, machine allocations, and SMV timing for production planning.
+                  <p className="text-blue-100/90 text-xs max-w-xl leading-relaxed">
+                    Compile industrial sewing specifications, machine allocations, and SMV timing.
                   </p>
                 </div>
               </div>
 
               {/* ── STEPPER TABS — Wide, balanced equal-width tabs matching Penpot ── */}
-              <div className="bg-[#155DFC] flex items-end px-12 no-print print:hidden">
+              <div className="bg-[#155DFC] flex items-end px-10 no-print print:hidden">
                 {[
                   { n: 1, label: "STEP 1" },
                   { n: 2, label: "STEP 2" },
@@ -1239,8 +1239,8 @@ export default function Home() {
                       <div className="max-w-4xl mx-auto w-full my-auto flex flex-col gap-8">
                         <div className="text-center">
                           <span className="text-xs font-mono font-bold text-[#155DFC] uppercase tracking-widest">Step 1 of 3</span>
-                          <h2 className="text-2xl font-black text-slate-900 mt-1">Select Garment Engineering Mode</h2>
-                          <p className="text-slate-500 text-sm mt-1 max-w-md mx-auto">
+                          <h2 className="font-display font-bold text-2xl md:text-3xl text-slate-900 mt-1">Select Garment Engineering Mode</h2>
+                          <p className="text-slate-500 text-sm mt-1 max-w-md mx-auto leading-relaxed">
                             Choose your production setup before compiling sewing specifications and machine allocations.
                           </p>
                         </div>
@@ -1271,7 +1271,7 @@ export default function Home() {
                             </div>
 
                             <div>
-                              <h3 className="font-bold text-slate-900 text-lg">Single Garment Specification</h3>
+                              <h3 className="font-display font-bold text-slate-900 text-base">Single Garment Specification</h3>
                               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                                 Compile process sheet for an individual garment (Shirt, T-Shirt, Jacket, Pants, Dress, or Hat). Includes DINOv2 originality check.
                               </p>
@@ -1303,7 +1303,7 @@ export default function Home() {
                             </div>
 
                             <div>
-                              <h3 className="font-bold text-slate-900 text-lg">Doll Outfit Set Project</h3>
+                              <h3 className="font-display font-bold text-slate-900 text-base">Doll Outfit Set Project</h3>
                               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                                 Multi-component specification set for doll apparel (Teddy Bear, Fashion Doll, Plushie Mascot, or School Academy outfit sets).
                               </p>
@@ -2136,12 +2136,12 @@ export default function Home() {
         {/* VIEW 4: All Sewing Tools Catalog */}
         {activeTab === "tooling-view" && (
           <div className="fade-in w-full">
-            <header className="mb-8">
-              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">Industrial Tooling Library</span>
-              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
+            <header className="mb-6">
+              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Industrial Tooling Library</span>
+              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
                 Sewing Machinery Catalog
               </h1>
-              <p className="text-slate-500 text-sm max-w-2xl mb-6">
+              <p className="text-slate-500 text-xs max-w-2xl mb-4 leading-relaxed">
                 Explore specialized Juki sewing machinery catalog, stitch technical specifications, needles, and attachments.
               </p>
 
@@ -2388,12 +2388,12 @@ export default function Home() {
         {/* VIEW 7: Knowledge Base */}
         {activeTab === "knowledge-view" && (
           <div className="fade-in w-full">
-            <header className="mb-8">
-              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">Engineering Standard Operating Procedures</span>
-              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
+            <header className="mb-6">
+              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Engineering SOP & Technical Specs</span>
+              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
                 Manufacturing Knowledge Base
               </h1>
-              <p className="text-slate-500 text-sm max-w-2xl mb-6">
+              <p className="text-slate-500 text-xs max-w-2xl mb-4 leading-relaxed">
                 Corporate engineering database, garment quality standards, and assembly reference manuals.
               </p>
 
@@ -2533,12 +2533,12 @@ export default function Home() {
         {/* VIEW 8: Projects */}
         {activeTab === "projects-view" && (
           <div className="fade-in w-full">
-            <header className="mb-8">
-              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">Database Management</span>
-              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
+            <header className="mb-6">
+              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Database Management</span>
+              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
                 Active Projects &amp; History
               </h1>
-              <p className="text-slate-500 text-sm max-w-xl">
+              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
                 Manage your active garment styles, persistent analysis runs, and process sheet history.
               </p>
             </header>
@@ -2643,12 +2643,12 @@ export default function Home() {
         {/* VIEW 9: System Settings */}
         {activeTab === "settings-view" && (
           <div className="fade-in w-full">
-            <header className="mb-8">
-              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">System Preferences</span>
-              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
+            <header className="mb-6">
+              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">System Preferences</span>
+              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
                 System Settings
               </h1>
-              <p className="text-slate-500 text-sm max-w-xl">
+              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
                 Configure your API hosts, DINOv2 AI embedding engine, and persistent database credentials.
               </p>
             </header>
