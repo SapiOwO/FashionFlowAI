@@ -49,6 +49,8 @@ interface AnalysisResult {
   complexity: string;
   preview_image: string;
   historical_examples: HistoricalExample[];
+  top_3_saved_projects?: any[];
+  top_match?: any;
   warning?: string;
   manufacturability_score?: number;
   similarity_percentage: number;
@@ -1227,38 +1229,79 @@ export default function Home() {
 
                               {/* Instant DINOv2 Originality Analysis Result Box */}
                               {previewUrl && (
-                                <div className={`border rounded-xl p-4 flex flex-col gap-2 text-xs transition-colors ${
+                                <div className={`border rounded-xl p-4 flex flex-col gap-2.5 text-xs transition-colors ${
                                   isSingleRejected
                                     ? "bg-amber-50/70 border-amber-200"
                                     : "bg-slate-50 border-slate-200/80"
                                 }`}>
                                   <div className="flex items-center justify-between text-slate-700">
-                                    <span className="font-semibold">DINOv2 Originality Score:</span>
-                                    <span className={`font-mono font-bold ${isSingleRejected ? "text-amber-700" : "text-[#005CEA]"}`}>
-                                      {isLoading ? (
-                                        <span className="flex items-center gap-1 text-[#005CEA]">
-                                          <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                          </svg>
-                                          Scanning...
-                                        </span>
-                                      ) : result ? (
-                                        `${(result.similarity_percentage || 0).toFixed(2)}%`
-                                      ) : (
-                                        "Scanning..."
-                                      )}
-                                    </span>
+                                    <span className="font-semibold">DINOv2 Originality Analysis:</span>
+                                    {isLoading && (
+                                      <span className="flex items-center gap-1.5 text-[#005CEA] font-mono text-[11px] font-bold">
+                                        <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                        Scanning...
+                                      </span>
+                                    )}
                                   </div>
                                   <p className="text-slate-500 leading-relaxed">
                                     {isLoading
-                                      ? "Extracting DINOv2 visual embeddings & checking vector database..."
+                                      ? "Extracting DINOv2 visual embeddings & searching pgvector database..."
                                       : result
                                       ? (isSingleRejected
-                                          ? `Duplicate pattern match detected (${(result.similarity_percentage || 0).toFixed(1)}% similarity). Process sheet creation is locked for duplicate patterns.`
+                                          ? `Duplicate pattern match detected (${Math.max(0, result.similarity_percentage || 0).toFixed(1)}% match). Process sheet creation is locked for duplicate patterns.`
                                           : "Pattern uniqueness verified. Ready for process sheet compilation.")
                                       : "Analyzing sketch originality..."}
                                   </p>
+
+                                  {/* In-place Top Matched Catalog Projects List */}
+                                  {result?.top_3_saved_projects && result.top_3_saved_projects.filter((p: any) => p.similarity_pct > 0).length > 0 && (
+                                    <div className="mt-1 pt-2.5 border-t border-slate-200/80 flex flex-col gap-2">
+                                      <span className="text-[11px] font-semibold text-slate-700">
+                                        Top Matched Projects in Catalog:
+                                      </span>
+                                      
+                                      <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                                        {result.top_3_saved_projects
+                                          .filter((p: any) => p.similarity_pct > 0)
+                                          .map((item: any, idx: number) => (
+                                            <div key={idx} className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-lg border border-slate-200/90 shadow-2xs">
+                                              <div className="flex items-center gap-2.5 min-w-0">
+                                                {item.preview_image ? (
+                                                  <img
+                                                    src={item.preview_image}
+                                                    alt={item.title}
+                                                    className="w-10 h-10 object-contain rounded border border-slate-100 bg-slate-50 flex-shrink-0"
+                                                  />
+                                                ) : (
+                                                  <div className="w-10 h-10 rounded border border-slate-100 bg-slate-100 flex items-center justify-center text-slate-400 text-[10px] font-mono flex-shrink-0">
+                                                    #{item.id}
+                                                  </div>
+                                                )}
+                                                <div className="flex flex-col min-w-0">
+                                                  <span className="font-semibold text-slate-900 text-xs truncate">
+                                                    ID #{item.id} — {item.title}
+                                                  </span>
+                                                  <span className="text-[10px] text-slate-500 truncate">
+                                                    Category: {item.garment_type || "Garment"}
+                                                  </span>
+                                                </div>
+                                              </div>
+
+                                              <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded flex-shrink-0 ${
+                                                item.similarity_pct >= 90
+                                                  ? "bg-amber-100 text-amber-800"
+                                                  : "bg-blue-50 text-[#005CEA]"
+                                              }`}>
+                                                {item.similarity_pct.toFixed(1)}% match
+                                              </span>
+                                            </div>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>

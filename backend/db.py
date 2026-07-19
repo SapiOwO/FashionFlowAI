@@ -237,7 +237,7 @@ def check_saved_history_similarity(query_vector: list = None, image_b64: str = "
                 row = cursor.fetchone()
                 if row:
                     matched_id, matched_name, sim_pct = row
-                    sim_pct = float(sim_pct)
+                    sim_pct = max(0.0, float(sim_pct))
                     if sim_pct >= 90.0:
                         print(f"[DB-SIMILARITY] pgvector HNSW → Top-1: '{matched_name}' (ID #{matched_id}) cosine={sim_pct:.1f}%")
                         print(f"[DB-SIMILARITY] ✓ MATCH! {sim_pct:.1f}% ≥ 90% threshold → REJECTED ('{matched_name}', ID: {matched_id})")
@@ -287,7 +287,7 @@ def check_saved_history_similarity(query_vector: list = None, image_b64: str = "
                 norm_p = np.linalg.norm(prev_vector)
                 if norm_q > 0 and norm_p > 0:
                     cosine_sim = float(dot_val / (norm_q * norm_p))
-                    sim_pct = round(cosine_sim * 100.0, 1)
+                    sim_pct = round(max(0.0, cosine_sim) * 100.0, 1)
                     print(f"[DB-SIMILARITY] Comparing vs '{prev_name}' (ID #{prev_id}): cosine={sim_pct:.1f}%")
                     if sim_pct > max_cosine_sim:
                         max_cosine_sim = sim_pct
@@ -309,7 +309,7 @@ def check_saved_history_similarity(query_vector: list = None, image_b64: str = "
     else:
         print("[DB-SIMILARITY] No visual vector matches found → APPROVED")
 
-    return max_cosine_sim, best_match_name, best_match_id, False
+    return max(0.0, max_cosine_sim), best_match_name, best_match_id, False
 
 
 def get_top_k_similar_history_records(query_vector: list, limit: int = 3) -> list[dict]:
@@ -358,6 +358,7 @@ def get_top_k_similar_history_records(query_vector: list, limit: int = 3) -> lis
                     "title": rname,
                     "similarity_pct": sim_pct,
                     "garment_type": res.get("garment_type", "garment"),
+                    "preview_image": res.get("preview_image", ""),
                     "sewing_sequence": res.get("sewing_sequence", []),
                     "tooling": res.get("tooling_recommendations", []),
                     "smv": res.get("smv_range", "N/A"),
@@ -388,6 +389,7 @@ def get_top_k_similar_history_records(query_vector: list, limit: int = 3) -> lis
                         "title": prev_name,
                         "similarity_pct": sim_pct,
                         "garment_type": res.get("garment_type", "garment"),
+                        "preview_image": res.get("preview_image", ""),
                         "sewing_sequence": res.get("sewing_sequence", []),
                         "tooling": res.get("tooling_recommendations", []),
                         "smv": res.get("smv_range", "N/A"),

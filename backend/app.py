@@ -1073,7 +1073,7 @@ async def predict_garment(
     # Stage 5 & 6: Vector Search & Knowledge Retrieval
     historical_examples = search_similar_garments(query_vector, query_str=query_text)
     hist_sim, matched_proj, matched_id, is_dup = check_saved_history_similarity(query_vector=query_vector, image_b64=img_b64)
-    top_3_saved_projects = get_top_k_similar_history_records(query_vector, limit=3)
+    top_3_saved_projects = get_top_k_similar_history_records(query_vector, limit=5)
     t_db_end = time.time()
 
     timings_ms = {
@@ -1086,16 +1086,27 @@ async def predict_garment(
     # Professional Manufacturing Decision Wording & Status
     if is_dup or hist_sim >= 90.0:
         similarity_status = "HISTORICAL_MATCH_FOUND"
-        similarity_percentage = hist_sim if hist_sim > 0 else 99.8
+        similarity_percentage = max(0.0, hist_sim) if hist_sim > 0 else 99.8
         id_str = f"ID #{matched_id} " if matched_id is not None else ""
         similarity_message = f"Historical Match Found: {similarity_percentage:.1f}% similarity detected with saved project {id_str}('{matched_proj}'). Reusing historical engineering specification as baseline."
     else:
         similarity_status = "APPROVED"
-        similarity_percentage = round(hist_sim, 2)
+        similarity_percentage = max(0.0, round(hist_sim, 2))
         if matched_id is not None and hist_sim > 0:
             similarity_message = f"Clear: {similarity_percentage:.2f}% database similarity detected (highest match vs ID #{matched_id} '{matched_proj}'). Safe for new garment production."
         else:
             similarity_message = f"Clear: {similarity_percentage:.2f}% database similarity detected. Safe for new garment production."
+
+    top_match = None
+    if top_3_saved_projects and len(top_3_saved_projects) > 0 and top_3_saved_projects[0].get("similarity_pct", 0) > 0:
+        top_cand = top_3_saved_projects[0]
+        top_match = {
+            "id": top_cand.get("id"),
+            "project_name": top_cand.get("title"),
+            "similarity_pct": round(top_cand.get("similarity_pct", 0), 2),
+            "preview_image": top_cand.get("preview_image", ""),
+            "garment_type": top_cand.get("garment_type", "")
+        }
 
     result_payload = {
         "image_quality": quality_assessment,
@@ -1112,6 +1123,7 @@ async def predict_garment(
         "preview_image": f"data:image/jpeg;base64,{img_b64}",
         "historical_examples": historical_examples,
         "top_3_saved_projects": top_3_saved_projects,
+        "top_match": top_match,
         "timings_ms": timings_ms,
         "warning": warning_msg,
         "manufacturability_score": 85 if (classifications or yolo_detections) else 0,
