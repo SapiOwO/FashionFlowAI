@@ -113,9 +113,19 @@ def init_database():
                     id SERIAL PRIMARY KEY,
                     filename VARCHAR(255) NOT NULL,
                     timestamp VARCHAR(100) NOT NULL,
-                    result TEXT NOT NULL
+                    result TEXT NOT NULL,
+                    visual_vector vector(384),
+                    image_md5 TEXT
                 );
             """)
+            # Ensure native columns exist on older DB instances (safe idempotent migration)
+            cursor.execute("ALTER TABLE analysis_history ADD COLUMN IF NOT EXISTS visual_vector vector(384);")
+            cursor.execute("ALTER TABLE analysis_history ADD COLUMN IF NOT EXISTS image_md5 TEXT;")
+            # HNSW index on analysis_history for O(log n) cosine search
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_hnsw_analysis_cosine "
+                "ON analysis_history USING hnsw (visual_vector vector_cosine_ops);"
+            )
             # Seed Knowledge Base dynamically from juki_master_catalog.csv if empty
             cursor.execute("SELECT COUNT(*) FROM historical_products;")
             count = cursor.fetchone()[0]
@@ -157,29 +167,335 @@ def init_database():
     except Exception as e:
         print(f"[DB-ERR] Failed to initialize database: {str(e)}")
 
+def check_saved_history_similarity(query_vector: list = None, image_b64: str = "", project_name: str = "") -> tuple[float, str, int | None, bool]:
+    """
+    Check if an uploaded sketch image or project name already exists in analysis_history DB table.
+
+    PostgreSQL path: Uses native pgvector HNSW index (O log n) for cosine similarity, plus MD5
+    column for exact-match fast-path. No Python-side iteration.
+
+    SQLite fallback: Python-loop cosine math (preserves dev/test compatibility).
+
+    Returns (highest_similarity_percentage, matched_project_name, matched_id, is_duplicate).
+    """
+    import hashlib
+
+    def get_img_hash(b64_str: str) -> str:
+        """Return MD5 hex digest of the raw base64 payload (without data URI prefix)."""
+        clean_b64 = b64_str.split(",")[-1] if "," in b64_str else b64_str
+        return hashlib.md5(clean_b64.encode("utf-8")).hexdigest()
+
+    target_hash = get_img_hash(image_b64) if image_b64 else ""
+
+    # ── PostgreSQL path: native pgvector queries ────────────────────────────────
+    if not is_sqlite():
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            # 1. Exact MD5 hash match (O(1) index scan)
+            if target_hash:
+                cursor.execute(
+                    "SELECT id, filename FROM analysis_history WHERE image_md5 = %s LIMIT 1;",
+                    (target_hash,)
+                )
+                row = cursor.fetchone()
+                if row:
+                    matched_id, matched_name = row
+                    print(f"[DB-SIMILARITY] Exact image match (MD5) found with saved project '{matched_name}' (ID: {matched_id})")
+                    cursor.close(); conn.close()
+                    return 99.8, matched_name, matched_id, True
+
+            # 2. Same project name match
+            if project_name:
+                cursor.execute(
+                    "SELECT id, filename FROM analysis_history WHERE LOWER(filename) = LOWER(%s) LIMIT 1;",
+                    (project_name.strip(),)
+                )
+                row = cursor.fetchone()
+                if row:
+                    matched_id, matched_name = row
+                    print(f"[DB-SIMILARITY] Duplicate project name match found for '{matched_name}' (ID: {matched_id})")
+                    cursor.close(); conn.close()
+                    return 98.5, matched_name, matched_id, True
+
+            # 3. pgvector HNSW cosine similarity — O(log n) via HNSW index
+            if query_vector:
+                vec_pg = "[" + ",".join(str(round(v, 8)) for v in query_vector) + "]"
+                # Fetch Top-1 closest neighbour (highest cosine similarity)
+                cursor.execute(
+                    """
+                    SELECT id, filename,
+                           ROUND(CAST((1 - (visual_vector <=> %s::vector)) * 100 AS numeric), 1) AS cosine_pct
+                    FROM analysis_history
+                    WHERE visual_vector IS NOT NULL
+                    ORDER BY visual_vector <=> %s::vector
+                    LIMIT 1;
+                    """,
+                    (vec_pg, vec_pg)
+                )
+                row = cursor.fetchone()
+                if row:
+                    matched_id, matched_name, sim_pct = row
+                    sim_pct = float(sim_pct)
+                    if sim_pct >= 90.0:
+                        print(f"[DB-SIMILARITY] pgvector HNSW → Top-1: '{matched_name}' (ID #{matched_id}) cosine={sim_pct:.1f}%")
+                        print(f"[DB-SIMILARITY] ✓ MATCH! {sim_pct:.1f}% ≥ 90% threshold → REJECTED ('{matched_name}', ID: {matched_id})")
+                        cursor.close(); conn.close()
+                        return sim_pct, matched_name, matched_id, True
+                    else:
+                        print(f"[DB-SIMILARITY] pgvector HNSW → Top-1: '{matched_name}' (ID #{matched_id}) cosine={sim_pct:.1f}% (below 90% → APPROVED)")
+                        cursor.close(); conn.close()
+                        return sim_pct, matched_name, matched_id, False
+
+            cursor.close(); conn.close()
+            print("[DB-SIMILARITY] No query vector provided — APPROVED")
+            return 0.0, "", None, False
+
+        except Exception as e:
+            print(f"[DB-SIMILARITY-ERR] pgvector query failed, falling back to Python loop: {e}")
+            # Fall through to SQLite-compatible Python fallback below
+
+    # ── SQLite / fallback path: Python-loop cosine math ────────────────────────
+    history = get_analysis_history_from_db()
+    max_cosine_sim = 0.0
+    best_match_name = ""
+    best_match_id = None
+
+    records_with_vector = sum(1 for item in history if item.get("result", {}).get("visual_vector"))
+    print(f"[DB-SIMILARITY] SQLite scan: {len(history)} records ({records_with_vector} have visual vectors).")
+
+    for item in history:
+        res = item.get("result", {})
+        prev_img = res.get("preview_image", "")
+        prev_name = item.get("fileName", "")
+        prev_id = item.get("id")
+        prev_vector = res.get("visual_vector", [])
+
+        # MD5 exact match
+        if target_hash and prev_img:
+            prev_hash = get_img_hash(prev_img)
+            if target_hash == prev_hash:
+                print(f"[DB-SIMILARITY] Exact image match (MD5) found with saved project '{prev_name}' (ID: {prev_id})")
+                return 99.8, prev_name, prev_id, True
+
+        # Cosine similarity
+        if query_vector and prev_vector and len(query_vector) == len(prev_vector):
+            try:
+                dot_val = np.dot(query_vector, prev_vector)
+                norm_q = np.linalg.norm(query_vector)
+                norm_p = np.linalg.norm(prev_vector)
+                if norm_q > 0 and norm_p > 0:
+                    cosine_sim = float(dot_val / (norm_q * norm_p))
+                    sim_pct = round(cosine_sim * 100.0, 1)
+                    print(f"[DB-SIMILARITY] Comparing vs '{prev_name}' (ID #{prev_id}): cosine={sim_pct:.1f}%")
+                    if sim_pct > max_cosine_sim:
+                        max_cosine_sim = sim_pct
+                        best_match_name = prev_name
+                        best_match_id = prev_id
+                    if cosine_sim >= 0.90:
+                        print(f"[DB-SIMILARITY] ✓ MATCH! {sim_pct:.1f}% ≥ 90% → REJECTED ('{prev_name}', ID: {prev_id})")
+                        return sim_pct, prev_name, prev_id, True
+            except Exception as e:
+                print(f"[VECTOR-SEARCH-ERR] Vector comparison failed: {e}")
+
+        # Project name match
+        if project_name and prev_name and project_name.strip().lower() == prev_name.strip().lower():
+            print(f"[DB-SIMILARITY] Duplicate project name match found for '{prev_name}' (ID: {prev_id})")
+            return 98.5, prev_name, prev_id, True
+
+    if max_cosine_sim > 0:
+        print(f"[DB-SIMILARITY] Best visual match: {max_cosine_sim:.1f}% with '{best_match_name}' (ID #{best_match_id}) (below 90% → APPROVED)")
+    else:
+        print("[DB-SIMILARITY] No visual vector matches found → APPROVED")
+
+    return max_cosine_sim, best_match_name, best_match_id, False
+
+
+def get_top_k_similar_history_records(query_vector: list, limit: int = 3) -> list[dict]:
+    """
+    Retrieve Top-K most similar historical saved projects from analysis_history.
+
+    PostgreSQL path: Uses native pgvector HNSW ORDER BY <=> LIMIT query — O(log n).
+    SQLite fallback: Python-loop cosine math for dev/test environments.
+
+    Returns a list of dicts per enterprise MVP spec: id, title, similarity_pct, garment_type,
+    sewing_sequence, tooling, smv, learnings.
+    """
+    if not query_vector:
+        return []
+
+    # ── PostgreSQL path: native pgvector Top-K ──────────────────────────────────
+    if not is_sqlite():
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            vec_pg = "[" + ",".join(str(round(v, 8)) for v in query_vector) + "]"
+            cursor.execute(
+                """
+                SELECT id, filename,
+                       ROUND(CAST((1 - (visual_vector <=> %s::vector)) * 100 AS numeric), 1) AS cosine_pct,
+                       result
+                FROM analysis_history
+                WHERE visual_vector IS NOT NULL
+                ORDER BY visual_vector <=> %s::vector
+                LIMIT %s;
+                """,
+                (vec_pg, vec_pg, limit)
+            )
+            rows = cursor.fetchall()
+            cursor.close(); conn.close()
+            candidates = []
+            for row in rows:
+                rid, rname, sim_pct, result_json = row
+                sim_pct = float(sim_pct)
+                try:
+                    res = json.loads(result_json) if isinstance(result_json, str) else result_json
+                except Exception:
+                    res = {}
+                candidates.append({
+                    "id": rid,
+                    "title": rname,
+                    "similarity_pct": sim_pct,
+                    "garment_type": res.get("garment_type", "garment"),
+                    "sewing_sequence": res.get("sewing_sequence", []),
+                    "tooling": res.get("tooling_recommendations", []),
+                    "smv": res.get("smv_range", "N/A"),
+                    "learnings": f"Historical project ID #{rid} ('{rname}') baseline with {sim_pct:.1f}% visual similarity."
+                })
+            return candidates
+        except Exception as e:
+            print(f"[TOP-K-ERR] pgvector Top-K query failed, falling back to Python loop: {e}")
+
+    # ── SQLite / fallback path: Python-loop cosine math ────────────────────────
+    history = get_analysis_history_from_db()
+    candidates = []
+    for item in history:
+        res = item.get("result", {})
+        prev_vector = res.get("visual_vector", [])
+        prev_id = item.get("id")
+        prev_name = item.get("fileName", "")
+        if prev_vector and len(query_vector) == len(prev_vector):
+            try:
+                dot_val = np.dot(query_vector, prev_vector)
+                norm_q = np.linalg.norm(query_vector)
+                norm_p = np.linalg.norm(prev_vector)
+                if norm_q > 0 and norm_p > 0:
+                    cosine_sim = float(dot_val / (norm_q * norm_p))
+                    sim_pct = round(cosine_sim * 100.0, 1)
+                    candidates.append({
+                        "id": prev_id,
+                        "title": prev_name,
+                        "similarity_pct": sim_pct,
+                        "garment_type": res.get("garment_type", "garment"),
+                        "sewing_sequence": res.get("sewing_sequence", []),
+                        "tooling": res.get("tooling_recommendations", []),
+                        "smv": res.get("smv_range", "N/A"),
+                        "learnings": f"Historical project ID #{prev_id} ('{prev_name}') baseline with {sim_pct:.1f}% visual similarity."
+                    })
+            except Exception as e:
+                print(f"[TOP-K-ERR] Failed candidate comparison for ID #{prev_id}: {e}")
+    candidates.sort(key=lambda x: x["similarity_pct"], reverse=True)
+    return candidates[:limit]
+
+
+def clear_analysis_history_in_db() -> bool:
+    """Clear all records from analysis_history and reset auto-increment primary key ID sequence to 1."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        if is_sqlite():
+            cursor.execute("DELETE FROM analysis_history;")
+            cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'analysis_history';")
+        else:
+            cursor.execute("TRUNCATE TABLE analysis_history RESTART IDENTITY;")
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("[DB] Cleared all analysis history records and reset ID sequence to 1.")
+        return True
+    except Exception as e:
+        print(f"[DB-ERR] Failed to clear analysis history: {str(e)}")
+        return False
+
+
 def save_analysis_to_db(filename: str, timestamp: str, result_data: dict):
-    """Save an analysis record to the database for persistent history logs."""
+    """
+    Save or update an analysis record in the database for persistent history logs.
+
+    PostgreSQL path: Extracts visual_vector and image_md5 from result_data and stores them
+    in native columns so pgvector HNSW index can accelerate future similarity queries.
+
+    SQLite path: Stores only the JSON blob (no native vector column support).
+    """
+    import hashlib
+
     try:
         conn = get_connection()
         cursor = conn.cursor()
         result_json_str = json.dumps(result_data, ensure_ascii=False)
-        
+
         if is_sqlite():
-            cursor.execute("""
-                INSERT INTO analysis_history (filename, timestamp, result)
-                VALUES (?, ?, ?);
-            """, (filename, timestamp, result_json_str))
-            conn.commit()
+            # SQLite: plain JSON blob only
+            cursor.execute("SELECT id FROM analysis_history WHERE filename = ?;", (filename,))
+            existing = cursor.fetchone()
+            if existing:
+                cursor.execute(
+                    "UPDATE analysis_history SET timestamp = ?, result = ? WHERE id = ?;",
+                    (timestamp, result_json_str, existing[0])
+                )
+                conn.commit()
+                print(f"[DB] Updated existing analysis for '{filename}' (ID: {existing[0]}) in database.")
+            else:
+                cursor.execute(
+                    "INSERT INTO analysis_history (filename, timestamp, result) VALUES (?, ?, ?);",
+                    (filename, timestamp, result_json_str)
+                )
+                conn.commit()
+                print(f"[DB] Saved new analysis for '{filename}' to database.")
         else:
+            # PostgreSQL: store native visual_vector and image_md5 alongside JSON blob
             conn.autocommit = True
-            cursor.execute("""
-                INSERT INTO analysis_history (filename, timestamp, result)
-                VALUES (%s, %s, %s);
-            """, (filename, timestamp, result_json_str))
-            
+
+            # Extract visual vector for native column storage
+            raw_vec = result_data.get("visual_vector", [])
+            vec_pg = None
+            if raw_vec and len(raw_vec) == 384:
+                vec_pg = "[" + ",".join(str(round(v, 8)) for v in raw_vec) + "]"
+
+            # Extract MD5 of preview image for fast exact-match lookup
+            preview_b64 = result_data.get("preview_image", "")
+            md5_hash = None
+            if preview_b64:
+                clean_b64 = preview_b64.split(",")[-1] if "," in preview_b64 else preview_b64
+                md5_hash = hashlib.md5(clean_b64.encode("utf-8")).hexdigest()
+
+            cursor.execute("SELECT id FROM analysis_history WHERE filename = %s;", (filename,))
+            existing = cursor.fetchone()
+            if existing:
+                cursor.execute(
+                    """
+                    UPDATE analysis_history
+                    SET timestamp = %s, result = %s,
+                        visual_vector = %s::vector,
+                        image_md5 = %s
+                    WHERE id = %s;
+                    """,
+                    (timestamp, result_json_str, vec_pg, md5_hash, existing[0])
+                )
+                print(f"[DB] Updated existing analysis for '{filename}' (ID: {existing[0]}) in database.")
+            else:
+                cursor.execute(
+                    """
+                    INSERT INTO analysis_history (filename, timestamp, result, visual_vector, image_md5)
+                    VALUES (%s, %s, %s, %s::vector, %s);
+                    """,
+                    (filename, timestamp, result_json_str, vec_pg, md5_hash)
+                )
+                print(f"[DB] Saved new analysis for '{filename}' to database.")
+
         cursor.close()
         conn.close()
-        print(f"[DB] Saved analysis for {filename} to database.")
     except Exception as e:
         print(f"[DB-ERR] Failed to save analysis log: {str(e)}")
 

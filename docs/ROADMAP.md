@@ -40,10 +40,52 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Added `rehydrateProjectPayload` migration helper to ensure legacy database projects load with the current normalized schema.
   * Added `/api/validate-catalog` diagnostic endpoint for verifying all template machine types resolve to real catalog entries.
   * Created `backend/tests/test_backend_contract.py` with 19 automated regression tests (all passing).
+* **Phase 8: QOL Navigation & Modern E-commerce E-commerce Layout**
+  * Renamed sidebar navigation items: `"All Sewing Tools"` ➔ `"Machine Catalog"` and `"Knowledge Base"` ➔ `"Garment Type Catalog"`.
+  * Restructured the Machine Catalog view into a modern e-commerce 2-column layout containing a Left Accordion Filter Drawer and a Right Product Catalog Grid.
+  * Added dropdown accordion filter options for needle size, presser foot type, fabric weight, and machine category, with collapsible chevron toggle headers.
+  * Added dual-range slider bounds filtering max speed RPM (1,500 to 6,000) and max stitch length (1.0 to 10.0 mm).
+  * Added top header "Kategori" Mega-Menu dropdown next to the brand logo to route across tops, bottoms, and machinery families.
+* **Phase 9: Multi-Container Docker Infrastructure**
+  * Created optimized Dockerfiles for Next.js frontend (multi-stage alpine runner) and FastAPI backend (slim python runner with dependencies).
+  * Built orchestration layout using `docker-compose.yml` configured for dev SQLite/postgres pgvector DB modes.
+* **Phase 10: Master CSV Consolidation & Skeleton UI**
+  * Consolidated separate PDF and TXT datasets into a single source of truth: `data/juki_master_catalog.csv`.
+  * Unified the Step-by-Step Sewing Flow table and Recommended Juki Machinery cards.
+  * Added animated Skeleton UI cards and dynamic loaded items progress bar indicators to the catalog view.
+  * Sanitized forward slashes in machine model names to prevent Next.js image loading 404 HTTP errors.
+* **Phase 11: Production Form Alignment & Sequence Reset**
+  * Synced Production Parameter dropdown selections to map directly to the 31 fabric parameters in the database.
+  * Swapped blank dark `DDL-9000C.png` image with a bright and clear visual fallback (`DDL-8700L.png`).
+  * Reset the PostgreSQL auto-increment primary key sequence for the project history table to start at 1.
+* **Phase 12: Visual Vector Persistence & CV Pipeline Area Guards**
+  * Added `visual_vector` to `ProcessSheetRequest` in `app.py` and `handleGenerateProcessSheet` payload in `page.tsx` so visual embeddings are persisted to the database upon process sheet creation.
+  * Added 20% minimum contour area ratio and 150×150px output size guards to `correct_image_perspective()` to prevent catastrophic warping on non-sketch/digital images.
+  * Decoupled frontend UI verdict banners and right panel form visibility to strictly rely on backend `status` (`REJECTED` / `APPROVED`), eliminating Batik classification score false positives.
+  * Enhanced `check_saved_history_similarity()` in `db.py` with verbose diagnostic logging for vector search counts, per-record cosine scores, and verdict thresholds.
+* **Phase 13: DINOv2 Feature Extractor Upgrade & 2-Pipeline Architecture (2026-07-19)**:
+  * Replaced `MobileNetV3 Small` feature extractor with Meta **DINOv2 Small (`dinov2_vits14`)** for Pipeline B (Visual Embedding & Retrieval).
+  * Pre-loaded `dinov2_vits14` once at startup into `_DINO_MODEL` module-level cache — zero per-request model re-instantiation.
+  * Documented explicit **2-Pipeline Architecture**: Pipeline A (Classification: YOLO + MobileNetV3-L/ResNet50/EfficientNet-B0) decoupled from Pipeline B (Visual Retrieval: DINOv2 → pgvector HNSW → Top-3 Historical Records).
+  * Added 5 DINOv2 regression tests to `backend/tests/test_backend_contract.py` — all 26 tests passing.
+* **Phase 14: Native pgvector HNSW Migration (2026-07-19)**:
+  * Added dedicated native `visual_vector vector(384)` and `image_md5 TEXT` columns to the `analysis_history` table.
+  * Built an HNSW index (`idx_hnsw_analysis_cosine`) for fast cosine similarity visual searches.
+  * Replaced Python loop-based linear scans with native SQL `ORDER BY <=> LIMIT 1` (duplication check) and `ORDER BY <=> LIMIT 3` (Top-K retrieval), scaling searches to O(log n) efficiency.
+  * Preserved SQLite compatibility using Python-loop fallback logic in local development/CI environments.
+  * Upgraded regression tests and verified that all 34 tests pass cleanly.
 
 ---
 
 ## Remaining Tasks (For Your Team)
 
-* [ ] **Docker Containers**
-  * Configure multi-container Dockerfile and Docker Compose settings for production deployments.
+### 1. Bootcamp Next Iteration (Immediate Scope - Toy Manufacturer Feedback)
+* [ ] **Per-Doll Project Setup**: Shift frontend/backend focus from single fabric pieces to complete doll projects comprising multiple garments (e.g. jacket + pants + hat).
+* [ ] **Multi-Fabric Sequence Support**: Generate combined engineering process workflows for multiple distinct fabric components within the same doll outfit.
+* [ ] **Batch SMV Scaling**: Integrate SMV batching to multiply single-garment assembly times (SAM/SMV) into production run quantities (e.g., 100 to 1,000 pieces).
+* [ ] **Operation Detail Expansion**: Add granular description fields for specific needle handling and presser foot actions in the sewing sequence.
+
+### 3. Internship & Post-Bootcamp Roadmap (Experimental Scope)
+* [ ] **3D Mannequin Preview (WebGL/WebGPU)**: Model a low-poly doll mannequin base mesh in Blender, optimize it via Meshopt and KTX2 compression, and load it dynamically in Next.js (via Three.js/React Three Fiber) to support real-time 2D fabric texture mapping overlays.
+* [ ] **Post-Production Defect Inspection (YOLOv11)**: Deploy the custom-trained `apparel_defect_detector` YOLO model to flag factory-floor stitching defects.
+* [ ] **Cross-Brand Portability**: Adapt the pattern recognition pipeline for other toy categories (e.g., die-cast toy decals alignment check).
