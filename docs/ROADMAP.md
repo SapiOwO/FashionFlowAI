@@ -74,11 +74,12 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Replaced Python loop-based linear scans with native SQL `ORDER BY <=> LIMIT 1` (duplication check) and `ORDER BY <=> LIMIT 3` (Top-K retrieval), scaling searches to O(log n) efficiency.
   * Preserved SQLite compatibility using Python-loop fallback logic in local development/CI environments.
   * Upgraded regression tests and verified that all 34 tests pass cleanly.
-* **Phase 15: Create Process Sheet UI Redesign & Streamlined Studio Flow (2026-07-20)**:
-  * Eliminated cheap/unprofessional emojis (`🧸`, `👕`, `🔒`, `📄`) and replaced them with precise, handcrafted SVG icons.
-  * Streamlined the 5-step wizard stepper into a unified, high-performance **2-Phase Studio Layout**: Phase 1 (Configure & Analyze Studio with live DINOv2 Originality Badge) and Phase 2 (Technical Process Sheet Output).
-  * Anchored action buttons cleanly inside card containers, removing floating/unstable navigation buttons.
-
+* **Phase 16: Global Penpot UI Modernization & Machinery/Knowledge Autocomplete Search UX (2026-07-20)**:
+  * Globalized Penpot-inspired `#155DFC` Cobalt design language across all 6 subtabs (`Engineering Dashboard`, `Create Process Sheet`, `Sewing Machinery Catalog`, `Garment Type Catalog`, `Active Projects & History`, `System Settings`).
+  * Fixed Activity Feed `Invalid Date` bug by implementing cross-browser ISO timestamp parser `formatActivityDate()`.
+  * Clarified database status handling: rejected/duplicate patterns are saved with `REJECTED` / `DUPLICATE_LOCKED` status for audit tracking without contaminating active DINOv2 vector index.
+  * Added **Invisible UX Autocomplete Search** and **Category Dropdown Filters** to Sewing Machinery Catalog and Knowledge Base catalogs.
+  * Standardized subtab naming 1-to-1 between sidebar navigation and viewport main headers.
 
 ---
 

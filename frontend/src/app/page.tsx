@@ -60,11 +60,26 @@ interface AnalysisResult {
 }
 
 interface SavedAnalysis {
-  id: string;
-  timestamp: string;
+  id: number | string;
   fileName: string;
   result: AnalysisResult;
+  timestamp?: string;
+  created_at?: string;
 }
+
+const formatActivityDate = (item: any): string => {
+  const rawDate = item?.timestamp || item?.created_at || item?.date;
+  if (!rawDate) return "Just now";
+  try {
+    const formattedStr = typeof rawDate === "string" ? rawDate.replace(" ", "T") : rawDate;
+    const d = new Date(formattedStr);
+    if (isNaN(d.getTime())) return "Just now";
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "Just now";
+  }
+};
+
 
 const renderSpecsDescription = (desc: string) => {
   if (!desc) return null;
@@ -171,8 +186,13 @@ export default function Home() {
   // Default machinery previews loaded from Juki CSV
   const [defaultMachines, setDefaultMachines] = useState<any[]>([]);
   const [machinerySearch, setMachinerySearch] = useState("");
+  const [selectedMachineCategory, setSelectedMachineCategory] = useState("All Categories");
+  const [showMachineryAutocomplete, setShowMachineryAutocomplete] = useState(false);
+
   const [knowledgeBase, setKnowledgeBase] = useState<any[]>([]);
   const [knowledgeSearch, setKnowledgeSearch] = useState("");
+  const [selectedKnowledgeCategory, setSelectedKnowledgeCategory] = useState("All Categories");
+  const [showKnowledgeAutocomplete, setShowKnowledgeAutocomplete] = useState(false);
 
   // Dataset library stats loaded from local directory
   const [datasetStats, setDatasetStats] = useState({
@@ -261,10 +281,10 @@ export default function Home() {
   }, [dollType, projectMode]);
 
   // CRUD States for Projects Database
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | number | null>(null);
 
   // Handle Project Deletion from DB
-  const handleDeleteProject = async (id: string) => {
+  const handleDeleteProject = async (id: string | number) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this project? This action cannot be undone.");
     if (!confirmDelete) return;
 
@@ -286,7 +306,7 @@ export default function Home() {
   };
 
   // Handle Project Rename in DB
-  const handleRenameProject = async (id: string, currentName: string) => {
+  const handleRenameProject = async (id: string | number, currentName: string) => {
     const newName = window.prompt("Enter new name for the project:", currentName);
     if (!newName || !newName.trim()) return;
 
@@ -928,45 +948,44 @@ export default function Home() {
 
       {/* Main Panel Content (Scrolls independently - Fluid Full Screen Layout) */}
       <main className={`flex-grow h-full overflow-y-auto print:p-0 print:m-0 print:w-full print:h-auto print:overflow-visible print:bg-white ${activeTab === "design-input-view" ? "p-0 bg-white" : "p-12"}`}>
-        
-        {/* VIEW 1: Pre-Production Engineering Dashboard */}
+                {/* VIEW 1: Pre-Production Engineering Dashboard */}
         {activeTab === "dashboard-view" && (
           <div className="fade-in w-full">
             <header className="mb-8">
-              <span className="text-xs font-mono text-blue-600 font-bold uppercase tracking-widest">Pre-Production Engineering</span>
-              <h1 className="font-display font-bold text-4xl text-black mt-1 mb-2">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">Pre-Production Engineering</span>
+              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
                 Engineering Dashboard
               </h1>
-              <p className="text-slate-500 text-base">
+              <p className="text-slate-500 text-sm max-w-2xl">
                 AI-assisted garment analysis, originality verification, and process sheet generation for pre-production engineering.
               </p>
             </header>
 
             {/* Engineering KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs hover:border-blue-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Total Analyses</span>
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                    <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
                 </div>
-                <p className="font-display font-bold text-3xl text-black">{analysisHistory.length}</p>
+                <p className="font-display font-bold text-3xl text-slate-900">{analysisHistory.length}</p>
                 <p className="text-xs text-slate-400 mt-1">Engineering runs logged</p>
               </div>
 
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs hover:border-green-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Unique Designs</span>
-                  <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors">
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                    <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                     </svg>
                   </div>
                 </div>
-                <p className="font-display font-bold text-3xl text-black">
+                <p className="font-display font-bold text-3xl text-slate-900">
                   {analysisHistory.filter(a => {
                     const s = (a.result?.status || "").toUpperCase();
                     return s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
@@ -975,31 +994,34 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Approved original patterns</p>
               </div>
 
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs hover:border-amber-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Historical Matches</span>
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                  <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
                     <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                     </svg>
                   </div>
                 </div>
-                <p className="font-display font-bold text-3xl text-black">
-                  {searchResults.length}
+                <p className="font-display font-bold text-3xl text-slate-900">
+                  {analysisHistory.filter(a => {
+                    const s = (a.result?.status || "").toUpperCase();
+                    return s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND" || (a.result?.similarity_percentage || 0) >= 90;
+                  }).length}
                 </p>
                 <p className="text-xs text-slate-400 mt-1">Vector DB reference records</p>
               </div>
 
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs hover:border-purple-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Avg. Est. SMV</span>
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                  <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                     <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
-                <p className="font-display font-bold text-3xl text-black">
+                <p className="font-display font-bold text-3xl text-slate-900 font-mono">
                   {analysisHistory.length > 0
                     ? (() => {
                         const smvValues = analysisHistory
@@ -1017,30 +1039,30 @@ export default function Home() {
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left: System Workflow Guide */}
-              <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-xl p-7 shadow-xs">
+              <div className="lg:col-span-2 bg-white border border-slate-100 rounded-2xl p-7 shadow-2xs">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-display font-semibold text-lg text-black">Engineering Workflow</h2>
+                  <h2 className="font-display font-bold text-lg text-slate-900">Engineering Workflow</h2>
                   <button
                     onClick={() => { setActiveTab("design-input-view"); setCurrentStep(1); }}
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                    className="text-xs font-semibold text-[#155DFC] hover:text-[#1249cc] bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
                   >
                     Start New Analysis →
                   </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-xl bg-blue-50/50 border-blue-200/60">
-                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">1</div>
-                    <h3 className="font-semibold text-black text-sm mt-1">Upload & Originality</h3>
+                  <div className="flex flex-col gap-2 p-5 border border-blue-100 rounded-xl bg-blue-50/40">
+                    <div className="w-8 h-8 rounded-full bg-[#155DFC] text-white flex items-center justify-center font-bold text-sm">1</div>
+                    <h3 className="font-bold text-slate-900 text-sm mt-1 font-display">Upload &amp; Originality</h3>
                     <p className="text-xs text-slate-500 leading-relaxed">Upload garment sketch. DINOv2 vector engine verifies originality against database records with 95% threshold.</p>
                   </div>
-                  <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-xl">
-                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">2</div>
-                    <h3 className="font-semibold text-black text-sm mt-1">Engineering Parameters</h3>
+                  <div className="flex flex-col gap-2 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">2</div>
+                    <h3 className="font-bold text-slate-900 text-sm mt-1 font-display">Engineering Parameters</h3>
                     <p className="text-xs text-slate-500 leading-relaxed">Define project parameters — garment type, fabric weight, component breakdown, and production specifications.</p>
                   </div>
-                  <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-xl">
-                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">3</div>
-                    <h3 className="font-semibold text-black text-sm mt-1">Process Sheet & SMV</h3>
+                  <div className="flex flex-col gap-2 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">3</div>
+                    <h3 className="font-bold text-slate-900 text-sm mt-1 font-display">Process Sheet &amp; SMV</h3>
                     <p className="text-xs text-slate-500 leading-relaxed">AI generates the sewing sequence, machine tooling recommendations, and estimated SMV for production planning.</p>
                   </div>
                 </div>
@@ -1055,18 +1077,18 @@ export default function Home() {
                   const rejected = total - approved;
                   const approvedPct = Math.round((approved / total) * 100);
                   return (
-                    <div className="mt-6 pt-6 border-t border-zinc-100">
+                    <div className="mt-6 pt-6 border-t border-slate-100">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Originality Ratio</span>
-                        <span className="text-xs font-bold text-green-600">{approvedPct}% Approved</span>
+                        <span className="text-xs font-bold text-emerald-600">{approvedPct}% Approved</span>
                       </div>
-                      <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-700"
+                          className="h-full rounded-full bg-emerald-500 transition-all duration-700"
                           style={{ width: `${approvedPct}%` }}
                         />
                       </div>
-                      <div className="flex justify-between mt-1.5">
+                      <div className="flex justify-between mt-2 font-mono">
                         <span className="text-[10px] text-slate-400">{approved} unique designs</span>
                         <span className="text-[10px] text-slate-400">{rejected} historical matches</span>
                       </div>
@@ -1076,13 +1098,13 @@ export default function Home() {
               </div>
 
               {/* Right: Activity Feed */}
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex flex-col">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-display font-semibold text-lg text-black">Activity Feed</h2>
-                  <span className="w-2 h-2 rounded-full bg-green-500 ring-2 ring-green-200 animate-pulse" title="Live"></span>
+                  <h2 className="font-display font-bold text-lg text-slate-900">Activity Feed</h2>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 animate-pulse" title="Live"></span>
                 </div>
                 {analysisHistory.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <div className="flex flex-col items-center justify-center py-10 text-center my-auto">
                     <svg className="w-8 h-8 text-slate-300 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -1093,15 +1115,13 @@ export default function Home() {
                     {analysisHistory.slice(0, 8).map((item, idx) => {
                       const s = (item.result?.status || "").toUpperCase();
                       const isRejected = s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND";
-                      const timeStr = item.timestamp
-                        ? new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                        : "--:--";
+                      const formattedTime = formatActivityDate(item);
                       return (
-                        <div key={idx} className="flex gap-3 py-3 border-b border-zinc-100 last:border-0">
-                          <div className="flex flex-col items-center gap-1 pt-0.5">
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isRejected ? "bg-amber-400" : "bg-blue-500"}`} />
+                        <div key={idx} className="flex gap-3 py-3 border-b border-slate-100 last:border-0 items-start">
+                          <div className="flex flex-col items-center gap-1 pt-1">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isRejected ? "bg-amber-400" : "bg-[#155DFC]"}`} />
                             {idx < analysisHistory.slice(0, 8).length - 1 && (
-                              <div className="w-px flex-1 bg-zinc-150 min-h-[16px]" />
+                              <div className="w-px flex-1 bg-slate-100 min-h-[16px]" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1110,14 +1130,14 @@ export default function Home() {
                             </p>
                             <p className="text-[11px] text-slate-400 truncate">{item.fileName || item.result?.classification?.[0]?.class_name || "Untitled"}</p>
                           </div>
-                          <span className="text-[10px] font-mono text-slate-400 flex-shrink-0">{timeStr}</span>
+                          <span className="text-[10px] font-mono text-slate-400 flex-shrink-0">{formattedTime}</span>
                         </div>
                       );
                     })}
                     {analysisHistory.length > 8 && (
                       <button
                         onClick={() => setActiveTab("projects-view")}
-                        className="mt-3 text-xs font-semibold text-blue-600 hover:text-blue-700 text-left"
+                        className="mt-3 text-xs font-semibold text-[#155DFC] hover:text-[#1249cc] text-left cursor-pointer"
                       >
                         View all {analysisHistory.length} projects →
                       </button>
@@ -2114,40 +2134,90 @@ export default function Home() {
         {/* VIEW 4: All Sewing Tools Catalog */}
         {activeTab === "tooling-view" && (
           <div className="fade-in w-full">
-            <header className="mb-10">
-              <h1 className="font-display font-bold text-4xl text-black mb-2">
-                All Sewing Tools Catalog
+            <header className="mb-8">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">Industrial Tooling Library</span>
+              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
+                Sewing Machinery Catalog
               </h1>
-              <p className="text-slate-500 text-lg mb-6">
+              <p className="text-slate-500 text-sm max-w-2xl mb-6">
                 Explore specialized Juki sewing machinery catalog, stitch technical specifications, needles, and attachments.
               </p>
-              
-              {/* Search catalog input */}
-              <div className="max-w-md relative">
-                <input 
-                  type="text" 
-                  placeholder="Search Juki model or machine type (e.g. DLU, lockstitch)..." 
-                  value={machinerySearch}
-                  onChange={(e) => setMachinerySearch(e.target.value)}
-                  className="w-full bg-white border border-zinc-200 rounded-lg py-2.5 pl-10 pr-4 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-                />
-                <svg className="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+
+              {/* Search catalog input with Category Dropdown & Autocomplete Suggestions */}
+              <div className="flex flex-col sm:flex-row gap-3 max-w-3xl relative">
+                {/* Category Dropdown */}
+                <select
+                  value={selectedMachineCategory}
+                  onChange={(e) => setSelectedMachineCategory(e.target.value)}
+                  className="bg-white border border-slate-200/80 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
+                >
+                  <option value="All Categories">All Categories</option>
+                  <option value="Lockstitch">Lockstitch (DDL / DLN / DLU)</option>
+                  <option value="Overlock">Overlock / Serger (MO)</option>
+                  <option value="Buttonholing">Buttonholing / Bartack (LBH / LK)</option>
+                  <option value="Pattern Sewer">Pattern Sewer (AMS / PS)</option>
+                  <option value="Heavy Duty">Heavy Duty / Walking Foot (LU / PLC)</option>
+                </select>
+
+                {/* Search Bar with Autocomplete Dropdown */}
+                <div className="relative flex-1">
+                  <input 
+                    type="text" 
+                    placeholder="Search Juki model or machine type (e.g. DDL-9000C, Overlock)..." 
+                    value={machinerySearch}
+                    onChange={(e) => {
+                      setMachinerySearch(e.target.value);
+                      setShowMachineryAutocomplete(true);
+                    }}
+                    onFocus={() => setShowMachineryAutocomplete(true)}
+                    onBlur={() => setTimeout(() => setShowMachineryAutocomplete(false), 200)}
+                    className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 pl-10 pr-4 text-xs font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
+                  />
+                  <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+
+                  {/* Autocomplete Popup Suggestions (Good UX) */}
+                  {showMachineryAutocomplete && machinerySearch.trim().length > 0 && defaultMachines && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
+                      {defaultMachines
+                        .filter(tool => 
+                          tool.name.toLowerCase().includes(machinerySearch.toLowerCase()) || 
+                          (tool.desc || "").toLowerCase().includes(machinerySearch.toLowerCase())
+                        )
+                        .slice(0, 8)
+                        .map((tool, idx) => (
+                          <button
+                            key={idx}
+                            onMouseDown={() => {
+                              setMachinerySearch(tool.name);
+                              setShowMachineryAutocomplete(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-xs flex justify-between items-center cursor-pointer transition-colors border-b border-slate-100 last:border-0"
+                          >
+                            <span className="font-bold text-slate-900 font-mono">{tool.name}</span>
+                            <span className="text-[10px] text-slate-400 truncate max-w-[200px]">{tool.desc || tool.description}</span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
               {defaultMachines && defaultMachines.length > 0 ? (
                 defaultMachines
-                  .filter(tool => 
-                    tool.name.toLowerCase().includes(machinerySearch.toLowerCase()) || 
-                    (tool.desc || "").toLowerCase().includes(machinerySearch.toLowerCase())
-                  )
+                  .filter(tool => {
+                    const matchesSearch = tool.name.toLowerCase().includes(machinerySearch.toLowerCase()) || 
+                      (tool.desc || "").toLowerCase().includes(machinerySearch.toLowerCase());
+                    if (selectedMachineCategory === "All Categories") return matchesSearch;
+                    return matchesSearch && (tool.name.toLowerCase().includes(selectedMachineCategory.toLowerCase()) || (tool.desc || "").toLowerCase().includes(selectedMachineCategory.toLowerCase()));
+                  })
                   .map((tool, idx) => (
-                    <div key={idx} className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs flex flex-col h-full hover:border-blue-500/40 transition duration-300">
+                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
                       {/* Machine Photo Rendering */}
-                      <div className="bg-slate-50 border-b border-zinc-200 aspect-[4/3] flex items-center justify-center p-2 relative overflow-hidden">
+                      <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-3 relative overflow-hidden">
                         <img 
                           src={"/image/" + tool.file} 
                           alt={tool.name}
@@ -2159,26 +2229,26 @@ export default function Home() {
                       </div>
                       
                       <div className="p-6 flex flex-col flex-grow">
-                        <h3 className="font-display font-semibold text-black text-md mb-2">{tool.name}</h3>
+                        <h3 className="font-display font-bold text-slate-900 text-sm mb-2">{tool.name}</h3>
                         {renderSpecsDescription(tool.desc || tool.description)}
                       </div>
                     </div>
                   ))
               ) : (
                 <div className="col-span-full py-12 flex flex-col items-center justify-center space-y-6">
-                  <div className="w-full max-w-md bg-slate-50 border border-zinc-200 rounded-xl p-6 text-center shadow-xs">
+                  <div className="w-full max-w-md bg-white border border-slate-100 rounded-2xl p-6 text-center shadow-2xs">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-2">
                       <span className="flex items-center gap-2">
                         <span className="relative flex h-2.5 w-2.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#155DFC]"></span>
                         </span>
                         Loading Juki Machinery Catalog...
                       </span>
-                      <span className="font-mono text-blue-600 font-bold">120 / 310</span>
+                      <span className="font-mono text-[#155DFC] font-bold">120 / 310</span>
                     </div>
-                    <div className="w-full bg-zinc-200 h-2 rounded-full overflow-hidden">
-                      <div className="bg-blue-600 h-full rounded-full animate-pulse transition-all duration-500 w-[40%]"></div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div className="bg-[#155DFC] h-full rounded-full animate-pulse transition-all duration-500 w-[40%]"></div>
                     </div>
                     <p className="text-[11px] text-slate-400 mt-2">Streaming specialized Juki tooling specifications asynchronously...</p>
                   </div>
@@ -2186,13 +2256,13 @@ export default function Home() {
                   {/* Skeleton Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full opacity-60">
                     {[1, 2, 3, 4].map((n) => (
-                      <div key={n} className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs animate-pulse space-y-4">
-                        <div className="bg-slate-200 aspect-[4/3] rounded-lg"></div>
-                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                      <div key={n} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-2xs animate-pulse space-y-4">
+                        <div className="bg-slate-100 aspect-[4/3] rounded-xl"></div>
+                        <div className="h-4 bg-slate-100 rounded w-3/4"></div>
                         <div className="space-y-2 pt-2">
-                          <div className="h-3 bg-slate-100 rounded w-full"></div>
-                          <div className="h-3 bg-slate-100 rounded w-5/6"></div>
-                          <div className="h-3 bg-slate-100 rounded w-4/6"></div>
+                          <div className="h-3 bg-slate-50 rounded w-full"></div>
+                          <div className="h-3 bg-slate-50 rounded w-5/6"></div>
+                          <div className="h-3 bg-slate-50 rounded w-4/6"></div>
                         </div>
                       </div>
                     ))}
@@ -2314,99 +2384,139 @@ export default function Home() {
         )}
 
         {/* VIEW 7: Knowledge Base */}
-
-
-                {/* VIEW 7: Knowledge Base */}
         {activeTab === "knowledge-view" && (
           <div className="fade-in w-full">
             <header className="mb-8">
-              <h1 className="font-display font-bold text-4xl text-black mb-2">
-                Knowledge Base
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">Engineering Standard Operating Procedures</span>
+              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
+                Manufacturing Knowledge Base
               </h1>
-              <p className="text-slate-500 text-lg">
+              <p className="text-slate-500 text-sm max-w-2xl mb-6">
                 Corporate engineering database, garment quality standards, and assembly reference manuals.
               </p>
-            </header>
 
-            {/* Search Input */}
-            <div className="mb-6 max-w-4xl">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search sewing parameters, fabric guides, or garment standards..."
-                  value={knowledgeSearch}
-                  onChange={(e) => setKnowledgeSearch(e.target.value)}
-                  className="w-full bg-white border border-zinc-250 rounded-lg py-3 px-4 pl-11 text-sm text-slate-800 focus:outline-hidden focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 placeholder-slate-400 transition"
-                />
-                <svg
-                  className="absolute left-4 top-3.5 h-4 w-4 text-slate-400"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
+              {/* Search Input with Category & Autocomplete */}
+              <div className="flex flex-col sm:flex-row gap-3 max-w-4xl relative">
+                <select
+                  value={selectedKnowledgeCategory}
+                  onChange={(e) => setSelectedKnowledgeCategory(e.target.value)}
+                  className="bg-white border border-slate-200/80 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                  <option value="All Categories">All Categories</option>
+                  <option value="Shirt">Formal &amp; Casual Shirts</option>
+                  <option value="Pants">Trousers &amp; Pants</option>
+                  <option value="Jacket">Outerwear &amp; Jackets</option>
+                  <option value="Doll">Doll Apparel Standards</option>
+                </select>
+
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search sewing parameters, fabric guides, or garment standards..."
+                    value={knowledgeSearch}
+                    onChange={(e) => {
+                      setKnowledgeSearch(e.target.value);
+                      setShowKnowledgeAutocomplete(true);
+                    }}
+                    onFocus={() => setShowKnowledgeAutocomplete(true)}
+                    onBlur={() => setTimeout(() => setShowKnowledgeAutocomplete(false), 200)}
+                    className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 pl-10 pr-4 text-xs font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
+                  />
+                  <svg
+                    className="absolute left-3.5 top-3 h-4 w-4 text-slate-400"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+
+                  {/* Autocomplete Popup */}
+                  {showKnowledgeAutocomplete && knowledgeSearch.trim().length > 0 && knowledgeBase && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
+                      {knowledgeBase
+                        .filter((k: any) => 
+                          k.title.toLowerCase().includes(knowledgeSearch.toLowerCase()) || 
+                          k.ref.toLowerCase().includes(knowledgeSearch.toLowerCase())
+                        )
+                        .slice(0, 8)
+                        .map((k, idx) => (
+                          <button
+                            key={idx}
+                            onMouseDown={() => {
+                              setKnowledgeSearch(k.title);
+                              setShowKnowledgeAutocomplete(false);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-xs flex justify-between items-center cursor-pointer transition-colors border-b border-slate-100 last:border-0"
+                          >
+                            <span className="font-bold text-slate-900 font-display">{k.title}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">{k.ref}</span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </header>
 
             <div className="space-y-6 max-w-4xl">
               {knowledgeBase.length === 0 ? (
-                <div className="bg-white border border-zinc-200 rounded-xl p-8 text-center text-slate-500 text-sm">
+                <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500 text-sm shadow-2xs">
                   Loading corporate reference guides and sewing parameters from database...
                 </div>
               ) : (
                 (() => {
                   const filtered = knowledgeBase.filter((k: any) => {
                     const term = knowledgeSearch.toLowerCase();
-                    return (
-                      k.title.toLowerCase().includes(term) ||
+                    const matchesSearch = k.title.toLowerCase().includes(term) ||
                       k.ref.toLowerCase().includes(term) ||
                       (k.features && k.features.toLowerCase().includes(term)) ||
-                      (k.learnings && k.learnings.toLowerCase().includes(term))
-                    );
+                      (k.learnings && k.learnings.toLowerCase().includes(term));
+                    if (selectedKnowledgeCategory === "All Categories") return matchesSearch;
+                    return matchesSearch && k.title.toLowerCase().includes(selectedKnowledgeCategory.toLowerCase());
                   });
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="bg-white border border-zinc-200 rounded-xl p-8 text-center text-slate-500 text-sm">
-                        No reference logs match your search.
+                      <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500 text-sm shadow-2xs">
+                        No reference logs match your search criteria.
                       </div>
                     );
                   }
 
                   return filtered.map((k: any, idx: number) => (
-                    <div key={idx} className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs hover:border-zinc-300 transition duration-200">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-150 pb-4 mb-4">
+                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
                         <div>
-                          <h2 className="font-display font-semibold text-xl text-black">{k.title}</h2>
+                          <h2 className="font-display font-bold text-lg text-slate-900">{k.title}</h2>
                           <p className="text-xs text-slate-400 font-mono mt-0.5">{k.ref}</p>
                         </div>
                         {k.smv && k.smv !== "N/A" && (
-                          <div className="bg-zinc-50 border border-zinc-200 rounded-md px-2.5 py-1 text-xs font-medium text-slate-700">
-                            SMV: <span className="font-semibold">{k.smv}</span>
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-xs font-mono font-bold text-[#155DFC]">
+                            SMV: <span>{k.smv}</span>
                           </div>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-600 leading-relaxed mb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-600 leading-relaxed mb-4">
                         {k.features && (
                           <div>
-                            <strong className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Key Features / Material Specs</strong>
-                            <p>{k.features}</p>
+                            <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">Key Features / Material Specs</strong>
+                            <p className="text-slate-700">{k.features}</p>
                           </div>
                         )}
                         {k.tooling && (
                           <div>
-                            <strong className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tooling Recommendations</strong>
-                            <p>{k.tooling}</p>
+                            <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">Tooling Recommendations</strong>
+                            <p className="text-slate-700">{k.tooling}</p>
                           </div>
                         )}
                       </div>
 
                       {k.learnings && (
-                        <div className="bg-zinc-50 border border-zinc-150 rounded-lg p-4 text-sm text-slate-700 leading-relaxed">
-                          <strong className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Guidelines & Manufacturing Learnings</strong>
+                        <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 text-xs text-slate-700 leading-relaxed">
+                          <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1.5">Guidelines &amp; Manufacturing Learnings</strong>
                           {k.learnings}
                         </div>
                       )}
@@ -2421,93 +2531,105 @@ export default function Home() {
         {/* VIEW 8: Projects */}
         {activeTab === "projects-view" && (
           <div className="fade-in w-full">
-            <header className="mb-10">
-              <h1 className="font-display font-bold text-4xl text-black mb-2">
-                Active Projects
+            <header className="mb-8">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">Database Management</span>
+              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
+                Active Projects &amp; History
               </h1>
-              <p className="text-slate-500 text-lg">
-                Manage your active garment styles, run lists, and process mappings.
+              <p className="text-slate-500 text-sm max-w-xl">
+                Manage your active garment styles, persistent analysis runs, and process sheet history.
               </p>
             </header>
 
-            <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs">
-              <h2 className="font-display font-semibold text-xl mb-4">Saved Projects Database</h2>
-              <div className="overflow-visible border border-zinc-150 rounded-lg">
-                 <table className="w-full text-left text-sm text-slate-600 border-collapse">
-                  <thead className="bg-slate-50 font-mono text-xs text-slate-400 border-b border-zinc-150">
+            <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs">
+              <h2 className="font-display font-bold text-base text-slate-900 mb-6">Saved Projects Database</h2>
+              <div className="overflow-hidden border border-slate-100 rounded-xl">
+                 <table className="w-full text-left text-xs text-slate-600 border-collapse">
+                  <thead className="bg-slate-50/70 font-mono text-[11px] text-slate-400 uppercase border-b border-slate-100">
                     <tr>
-                      <th className="py-4 px-6">ID</th>
-                      <th className="py-4 px-6">Project Name</th>
-                      <th className="py-4 px-6">Date Created</th>
-                      <th className="py-4 px-6">Status</th>
-                      <th className="py-4 px-6 text-right">Actions</th>
+                      <th className="py-4 px-6 font-bold w-16">ID</th>
+                      <th className="py-4 px-6 font-bold">Project Name</th>
+                      <th className="py-4 px-6 font-bold">Date Created</th>
+                      <th className="py-4 px-6 font-bold">Status</th>
+                      <th className="py-4 px-6 font-bold text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100 bg-white">
                     {analysisHistory.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-10 text-center text-slate-400">No active projects found. Upload sketches to populate database.</td>
+                        <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">No active projects found. Upload sketches in Create Process Sheet to populate database.</td>
                       </tr>
                     ) : (
-                      analysisHistory.map((item, idx) => (
-                        <tr key={idx} className="border-b border-zinc-150 hover:bg-slate-50/50">
-                          <td className="py-4 px-6 font-semibold">{item.id}</td>
-                          <td className="py-4 px-6 font-medium text-black">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</td>
-                          <td className="py-4 px-6">{item.timestamp}</td>
-                          <td className="py-4 px-6">
-                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 border border-blue-200">
-                              Analyzed
-                            </span>
-                          </td>
-                          <td className="py-4 px-6 text-right relative">
-                            <button
-                              onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
-                              className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition-colors focus:outline-none"
-                              aria-label="Actions Menu"
-                            >
-                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                              </svg>
-                            </button>
-                            
-                            {activeMenuId === item.id && (
-                              <div className="absolute right-6 bottom-full mb-1 z-50 bg-white border border-zinc-200 rounded-lg shadow-xl py-1.5 w-36 text-left animate-in fade-in slide-in-from-bottom-1 duration-100">
-                                <button
-                                  onClick={() => {
-                                    handleLoadProject(item);
-                                    setActiveMenuId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-blue-600 flex items-center gap-2 border-b border-zinc-100"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                  </svg>
-                                  Load Specs
-                                </button>
-                                <button
-                                  onClick={() => handleRenameProject(item.id, item.fileName || "")}
-                                  className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                                  </svg>
-                                  Rename
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteProject(item.id)}
-                                  className="w-full text-left px-4 py-2 text-xs hover:bg-red-50 text-red-600 flex items-center gap-2 border-t border-zinc-100"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                  Delete
-                                </button>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      ))
+                      analysisHistory.map((item, idx) => {
+                        const s = (item.result?.status || "").toUpperCase();
+                        const isRejected = s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND";
+                        const formattedDate = formatActivityDate(item);
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="py-4 px-6 font-semibold font-mono text-slate-900">{item.id}</td>
+                            <td className="py-4 px-6 font-semibold text-slate-900">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</td>
+                            <td className="py-4 px-6 font-mono text-slate-500">{formattedDate}</td>
+                            <td className="py-4 px-6">
+                              {isRejected ? (
+                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
+                                  Duplicate Locked
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                                  Approved
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-4 px-6 text-right relative">
+                              <button
+                                onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
+                                className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
+                                aria-label="Actions Menu"
+                              >
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                </svg>
+                              </button>
+                              
+                              {activeMenuId === item.id && (
+                                <div className="absolute right-6 top-full mt-1 z-50 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100">
+                                  <button
+                                    onClick={() => {
+                                      handleLoadProject(item);
+                                      setActiveMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-xs hover:bg-blue-50 text-[#155DFC] font-semibold flex items-center gap-2 border-b border-slate-100 cursor-pointer"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Load Specs
+                                  </button>
+                                  <button
+                                    onClick={() => handleRenameProject(item.id, item.fileName || "")}
+                                    className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                    </svg>
+                                    Rename
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteProject(item.id)}
+                                    className="w-full text-left px-4 py-2 text-xs hover:bg-red-50 text-red-600 flex items-center gap-2 border-t border-slate-100 cursor-pointer font-semibold"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -2516,33 +2638,34 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIEW 9: Settings */}
+        {/* VIEW 9: System Settings */}
         {activeTab === "settings-view" && (
           <div className="fade-in w-full">
             <header className="mb-8">
-              <h1 className="font-display font-bold text-3xl md:text-4xl text-black tracking-tight mb-2">
-                Settings
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">System Preferences</span>
+              <h1 className="font-display font-bold text-3xl md:text-4xl text-slate-900 mt-1 mb-2">
+                System Settings
               </h1>
               <p className="text-slate-500 text-sm max-w-xl">
                 Configure your API hosts, DINOv2 AI embedding engine, and persistent database credentials.
               </p>
             </header>
 
-            <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs max-w-4xl space-y-6">
+            <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs max-w-4xl space-y-6">
               <div>
-                <h3 className="font-semibold text-black text-sm mb-2">API Host Configuration</h3>
-                <input type="text" disabled value="http://127.0.0.1:8000" className="w-full bg-slate-50 border border-zinc-200 rounded-lg p-3 text-sm font-mono text-slate-600 font-medium" />
+                <h3 className="font-bold text-slate-900 text-xs font-mono uppercase tracking-wider mb-2">API Host Configuration</h3>
+                <input type="text" disabled value="http://127.0.0.1:8000" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-xs font-mono text-slate-700 font-semibold" />
               </div>
               <div>
-                <h3 className="font-semibold text-black text-sm mb-2">Visual Feature Extractor Engine</h3>
-                <input type="text" disabled value="DINOv2 ViT-S/14 Deep Neural Embedding Engine (384-dim)" className="w-full bg-slate-50 border border-zinc-200 rounded-lg p-3 text-sm font-mono text-slate-600 font-medium" />
+                <h3 className="font-bold text-slate-900 text-xs font-mono uppercase tracking-wider mb-2">Visual Feature Extractor Engine</h3>
+                <input type="text" disabled value="DINOv2 ViT-S/14 Deep Neural Embedding Engine (384-dim)" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-xs font-mono text-slate-700 font-semibold" />
               </div>
               <div>
-                <h3 className="font-semibold text-black text-sm mb-2">Vector Similarity Database</h3>
-                <input type="text" disabled value="pgvector / SQLite Vector Indexing (Cosine Similarity Threshold: 95.0%)" className="w-full bg-slate-50 border border-zinc-200 rounded-lg p-3 text-sm font-mono text-slate-600 font-medium" />
+                <h3 className="font-bold text-slate-900 text-xs font-mono uppercase tracking-wider mb-2">Vector Similarity Database</h3>
+                <input type="text" disabled value="pgvector / SQLite Vector Indexing (Cosine Similarity Threshold: 95.0%)" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-xs font-mono text-slate-700 font-semibold" />
               </div>
-              <div className="text-xs text-slate-400 leading-relaxed pt-4 border-t border-zinc-150">
-                To switch between SQLite and PostgreSQL, update your `.env` settings at the project root and restart python server.
+              <div className="text-xs text-slate-400 leading-relaxed pt-4 border-t border-slate-100 font-mono">
+                To switch between SQLite and PostgreSQL, update your <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[#155DFC]">.env</code> settings at the project root and restart python server.
               </div>
             </div>
           </div>
