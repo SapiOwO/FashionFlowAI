@@ -319,7 +319,7 @@ def get_top_k_similar_history_records(query_vector: list, limit: int = 3) -> lis
     PostgreSQL path: Uses native pgvector HNSW ORDER BY <=> LIMIT query — O(log n).
     SQLite fallback: Python-loop cosine math for dev/test environments.
 
-    Returns a list of dicts per Industrial MVP spec: id, title, similarity_pct, garment_type,
+    Returns a list of dicts per enterprise MVP spec: id, title, similarity_pct, garment_type,
     sewing_sequence, tooling, smv, learnings.
     """
     if not query_vector:

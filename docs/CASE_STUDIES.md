@@ -213,7 +213,7 @@ status: "Completed"
   4. Added 5 DINOv2 regression tests to `backend/tests/test_backend_contract.py`: output shape `(384,)`, L2 norm == 1.0, cosine similarity for identical images == 1.0, cosine similarity for dissimilar images < 0.92, all elements float type.
 
 ### 2. Who
-* Garment engineers and pattern designers at industrial manufacturing facilities uploading paper sketches or digital artwork requiring rotation/lighting-robust duplicate pattern detection and similar historical project retrieval.
+* Garment engineers and pattern designers at toy apparel manufacturing facilities uploading paper sketches or digital artwork requiring rotation/lighting-robust duplicate pattern detection and similar historical project retrieval.
 
 ### 3. Where
 * FastAPI backend (`backend/app.py`): `extract_visual_feature_vector()`, `_load_static_data()`, `_DINO_MODEL`, `_DINO_PREPROCESS` globals.
@@ -223,7 +223,7 @@ status: "Completed"
 * July 19th, 2026 (Phase 13 — DINOv2 Feature Extractor Upgrade).
 
 ### 5. Why
-* DINOv2 (`dinov2_vits14`) was explicitly designed by Meta AI Research for self-supervised visual representation learning, producing embeddings suitable for retrieval, clustering, and nearest-neighbor search across rotation, scale, and lighting variations — precisely the use case required by FashionFlow's visual similarity pipeline. Pre-loading at startup eliminates redundant model initialization overhead on the critical `/api/predict` hot path. The 2-pipeline architecture separation aligns with Industrial MVP requirements, which explicitly distinguish between Classification (garment recognition) and Similarity Search (historical knowledge retrieval).
+* DINOv2 (`dinov2_vits14`) was explicitly designed by Meta AI Research for self-supervised visual representation learning, producing embeddings suitable for retrieval, clustering, and nearest-neighbor search across rotation, scale, and lighting variations — precisely the use case required by FashionFlow's visual similarity pipeline. Pre-loading at startup eliminates redundant model initialization overhead on the critical `/api/predict` hot path. The 2-pipeline architecture separation aligns with industrial MVP requirements, which explicitly distinguish between Classification (garment recognition) and Similarity Search (historical knowledge retrieval).
 
 ### 6. How
 * Replaced `mobilenet_v3_small` inside `extract_visual_feature_vector()` with the module-level `_DINO_MODEL` cache (`dinov2_vits14`).

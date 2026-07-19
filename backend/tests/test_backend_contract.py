@@ -394,9 +394,8 @@ class TestDINOv2RealRetrievalRobustness(unittest.TestCase):
     """
     Real End-to-End Visual Retrieval Robustness tests for Meta DINOv2 Small.
 
-    As recommended by Industrial MVP verification standards, these tests prove that
-    DINOv2 embeddings maintain high cosine similarity (≥ 0.90) across real-world
-    smartphone image variations (2x upscaling, +20% brightness shift, 10° tilt/rotation)
+    As recommended by enterprise MVP verification standards, these tests prove that
+    DINOv2 embeddings preserve high visual similarity across scale/brightness/rotation variations. (2x upscaling, +20% brightness shift, 10° tilt/rotation)
     while remaining below threshold for completely different pattern images.
     """
 

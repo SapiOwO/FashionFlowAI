@@ -33,7 +33,7 @@ graph TD
 
 ## Industrial Computer Vision & Engineering Retrieval Pipeline
 
-To adapt to real-world factory workflows at industrial manufacturing facilities (where engineers photograph physical paper sketches or finished dolls using smartphone cameras under non-standard lighting and angles), FashionFlow employs a modular, non-destructive image processing pipeline:
+To adapt to real-world factory workflows in apparel manufacturing (where engineers photograph physical paper sketches or finished dolls using smartphone cameras under non-standard lighting and angles), FashionFlow employs a modular, non-destructive image processing pipeline:
 
 ```text
 Smartphone Camera Input (Paper Sketch / Physical Doll Photo)
