@@ -1255,7 +1255,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={handleResetWorkspace}
-                        className="px-7 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-full transition-colors cursor-pointer active:scale-98"
+                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer active:scale-98"
                       >
                         Reset Selection
                       </button>
@@ -1263,7 +1263,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setCurrentStep(2)}
-                        className="px-9 py-3.5 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-sm rounded-full flex items-center gap-2.5 transition-all shadow-md cursor-pointer active:scale-98"
+                        className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
                       >
                         <span>Continue to Step 2</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -1271,6 +1271,7 @@ export default function Home() {
                         </svg>
                       </button>
                     </div>
+
                   </div>
                 )}
 
@@ -1326,8 +1327,10 @@ export default function Home() {
                                   </div>
                                 )}
                               </div>
+                              {/* DINOv2 Grade Card — SecurityHeaders style */}
                               {previewUrl && (
                                 <div className={`border rounded-xl overflow-hidden text-xs transition-all ${grade ? grade.cardBorder : "border-slate-200"} ${grade ? grade.cardBg : "bg-slate-50"}`}>
+                                  {/* Header row with big badge */}
                                   <div className="flex items-stretch">
                                     <div className={`flex items-center justify-center w-16 flex-shrink-0 ${grade ? grade.bg : "bg-[#155DFC]"}`}>
                                       {isLoading ? (
@@ -1354,6 +1357,38 @@ export default function Home() {
                                       </span>
                                     </div>
                                   </div>
+
+                                  {/* Matched projects table */}
+                                  {result?.top_3_saved_projects && result.top_3_saved_projects.filter((p: any) => p.similarity_pct > 0).length > 0 && (
+                                    <div className="border-t border-slate-200/80">
+                                      <div className="px-4 py-2 bg-white/60">
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">MATCHED PROJECTS IN CATALOG</span>
+                                      </div>
+                                      <div className="flex flex-col divide-y divide-slate-100 max-h-[180px] overflow-y-auto">
+                                        {result.top_3_saved_projects
+                                          .filter((p: any) => p.similarity_pct > 0)
+                                          .map((item: any, idx: number) => {
+                                            const ig = getItemGrade(item.similarity_pct);
+                                            return (
+                                              <div key={idx} className="flex items-center gap-3 px-4 py-2.5 bg-white/40 hover:bg-white/80 transition-colors">
+                                                {item.preview_image ? (
+                                                  <img src={item.preview_image} alt={item.title} className="w-8 h-8 object-contain rounded border border-slate-200 bg-white flex-shrink-0" />
+                                                ) : (
+                                                  <div className="w-8 h-8 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-400 text-[9px] font-mono flex-shrink-0">#{item.id}</div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                  <span className="text-[11px] font-semibold text-slate-800 block truncate">ID #{item.id} — {item.title}</span>
+                                                  <span className="text-[10px] text-slate-500">{item.garment_type || "Garment"}</span>
+                                                </div>
+                                                <span className={`font-mono text-[11px] font-bold px-2 py-0.5 rounded flex-shrink-0 ${ig.bg} ${ig.text}`}>
+                                                  {item.similarity_pct.toFixed(1)}%
+                                                </span>
+                                              </div>
+                                            );
+                                          })}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -1420,6 +1455,38 @@ export default function Home() {
                                     <option value="Pants">Celana Panjang (Pants) — 6 Sewing Steps</option>
                                     <option value="Skirt">Rok (Skirt) — 4 Sewing Steps</option>
                                   </optgroup>
+                                  <optgroup label="Full-body">
+                                    <option value="Dress">Gaun / Dress — 5 Sewing Steps</option>
+                                    <option value="Hat">Topi / Hat — 5 Sewing Steps</option>
+                                  </optgroup>
+                                </select>
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Fabric Application / Weight</label>
+                                <select value={quizFabric} onChange={(e) => setQuizFabric(e.target.value)}
+                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                  <optgroup label="Light-weight">
+                                    <option value="Silk (Light-weight)">Sutra / Silk</option>
+                                    <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
+                                    <option value="Organza (Light-weight)">Organza</option>
+                                    <option value="Crepe (Light-weight)">Krep / Crepe</option>
+                                    <option value="Rayon (Light-weight)">Rayon / Viscose</option>
+                                  </optgroup>
+                                  <optgroup label="Medium-weight">
+                                    <option value="Cotton (Medium-weight)">Katun / Cotton</option>
+                                    <option value="Batik (Medium-weight)">Batik Tulis &amp; Cap</option>
+                                    <option value="Linen (Medium-weight)">Linen</option>
+                                    <option value="Satin (Medium-weight)">Satin / Duchess</option>
+                                    <option value="Flannel (Medium-weight)">Flanel / Flannel</option>
+                                    <option value="Polyester (Medium-weight)">Polyester</option>
+                                  </optgroup>
+                                  <optgroup label="Heavy-weight">
+                                    <option value="Denim (Heavy-weight)">Denim / Jeans (14oz)</option>
+                                    <option value="Corduroy (Heavy-weight)">Corduroy</option>
+                                    <option value="Tweed (Heavy-weight)">Tweed / Wool</option>
+                                    <option value="Gabardine (Heavy-weight)">Gabardine</option>
+                                    <option value="Synthetic Fur (Heavy-weight)">Synthetic Furs / Canvas</option>
+                                  </optgroup>
                                 </select>
                               </div>
                             </>
@@ -1434,6 +1501,26 @@ export default function Home() {
                               </select>
                             </div>
                           )}
+                          {/* Workflow Status — SecurityHeaders banner style */}
+                          <div className={`border rounded-xl overflow-hidden mt-auto transition-all ${
+                            grade?.letter === "F" ? "border-red-200" : grade?.letter === "C" ? "border-orange-200" : grade?.letter === "B" ? "border-amber-200" : grade ? "border-emerald-200" : "border-slate-200"
+                          }`}>
+                            <div className={`flex items-center justify-between px-4 py-2.5 text-xs ${wfBg} ${wfTxt}`}>
+                              <span className="font-semibold">Workflow Status</span>
+                              <span className="font-bold">
+                                {grade?.letter === "F" ? "Locked — Duplicate Pattern Detected" : grade ? "Ready for Compilation" : "Awaiting Pattern Scan"}
+                              </span>
+                            </div>
+                            <p className={`text-[11px] px-4 py-2.5 leading-relaxed ${
+                              grade?.letter === "F" ? "bg-red-50 text-red-800" : grade?.letter === "C" ? "bg-orange-50 text-orange-800" : grade?.letter === "B" ? "bg-amber-50 text-amber-800" : grade ? "bg-emerald-50 text-emerald-800" : "bg-slate-50 text-slate-500"
+                            }`}>
+                              {grade?.letter === "F"
+                                ? "Duplicate pattern detected in catalog. Process sheet generation is locked."
+                                : grade
+                                ? "Pattern passed originality check. Fill in the project details and click Generate Process Sheet."
+                                : "Upload a garment sketch to run the DINOv2 originality scan before proceeding."}
+                            </p>
+                          </div>
                         </form>
                       </div>
                     </div>
@@ -1442,7 +1529,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setCurrentStep(1)}
-                        className="px-7 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-full transition-colors cursor-pointer active:scale-98"
+                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                       >
                         ← Back to Mode Choice
                       </button>
@@ -1450,7 +1537,7 @@ export default function Home() {
                         type="submit"
                         form="process-sheet-form"
                         disabled={isLoading || !quizName.trim() || Boolean(isPatternRejected) || (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))}
-                        className="px-10 py-3.5 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-sm rounded-full flex items-center gap-2.5 transition-all shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+                        className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
                       >
                         {isLoading ? (
                           <>
