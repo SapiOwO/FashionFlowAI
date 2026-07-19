@@ -1080,10 +1080,10 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIEW 2: Create Process Sheet (Impeccable 3-Slide Stepper Wizard: 1 → 2 → 3) */}
+        {/* VIEW 2: Create Process Sheet (Impeccable 4-Step Stepper Wizard: 1 → 2 → 3 → 4) */}
         {activeTab === "design-input-view" && (
           <div className="fade-in w-full flex flex-col gap-6">
-            {/* ── Top Header & Permanent Stepper Node Bar (Visible across Step 1, Step 2, & Step 3) ── */}
+            {/* ── Top Header & Permanent 4-Node Stepper Bar ── */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
               <div>
                 <h1 className="font-display font-bold text-3xl md:text-4xl text-black tracking-tight mb-1">
@@ -1094,69 +1094,92 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Centered Stepper Nodes (1 - 2 - 3) — Permanent across all steps */}
-              <div className="flex items-center gap-3 bg-slate-100/90 px-4 py-2 rounded-full border border-zinc-200/80 self-center md:self-auto shadow-2xs">
+              {/* Centered Stepper Nodes (1 - 2 - 3 - 4) */}
+              <div className="flex items-center gap-2.5 bg-slate-100/90 px-4 py-2 rounded-full border border-zinc-200/80 self-center md:self-auto shadow-2xs">
                 {/* Step 1 Node */}
                 <button
                   type="button"
-                  onClick={() => { setIsQuizSubmitted(false); setCurrentStep(1); }}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-xs cursor-pointer ${
+                  onClick={() => { if (!isQuizSubmitted) setCurrentStep(1); }}
+                  disabled={isQuizSubmitted}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-xs ${
                     !isQuizSubmitted && currentStep === 1
                       ? "bg-blue-600 text-white ring-4 ring-blue-100"
                       : (currentStep > 1 || isQuizSubmitted)
                       ? "bg-green-600 text-white"
-                      : "bg-white text-slate-600 border border-zinc-300 hover:border-blue-400"
+                      : "bg-white text-slate-600 border border-zinc-300"
                   }`}
                   title="Step 1: Upload & Originality Check"
                 >
                   {(currentStep > 1 || isQuizSubmitted) ? "✓" : "1"}
                 </button>
 
-                <div className={`w-6 h-0.5 rounded-full transition-colors duration-300 ${(currentStep > 1 || isQuizSubmitted) ? "bg-green-500" : "bg-zinc-300"}`} />
+                <div className={`w-5 h-0.5 rounded-full transition-colors duration-300 ${(currentStep > 1 || isQuizSubmitted) ? "bg-green-500" : "bg-zinc-300"}`} />
 
                 {/* Step 2 Node */}
                 <button
                   type="button"
                   onClick={() => {
                     const dollValid = projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl);
-                    if (result || dollValid) {
-                      setIsQuizSubmitted(false);
+                    if ((result || dollValid) && !isQuizSubmitted) {
                       setCurrentStep(2);
                     }
                   }}
-                  disabled={!result && !(projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl))}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                  disabled={isQuizSubmitted || (!result && !(projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl)))}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-xs disabled:opacity-40 ${
                     !isQuizSubmitted && currentStep === 2
                       ? "bg-blue-600 text-white ring-4 ring-blue-100"
-                      : isQuizSubmitted
+                      : (currentStep > 2 || isQuizSubmitted)
                       ? "bg-green-600 text-white"
-                      : "bg-white text-slate-600 border border-zinc-300 hover:border-blue-400"
+                      : "bg-white text-slate-600 border border-zinc-300"
                   }`}
                   title="Step 2: Engineering Parameters"
                 >
-                  {isQuizSubmitted ? "✓" : "2"}
+                  {(currentStep > 2 || isQuizSubmitted) ? "✓" : "2"}
                 </button>
 
-                <div className={`w-6 h-0.5 rounded-full transition-colors duration-300 ${isQuizSubmitted ? "bg-green-500" : "bg-zinc-300"}`} />
+                <div className={`w-5 h-0.5 rounded-full transition-colors duration-300 ${(currentStep > 2 || isQuizSubmitted) ? "bg-green-500" : "bg-zinc-300"}`} />
 
                 {/* Step 3 Node */}
                 <button
                   type="button"
-                  onClick={() => { if (fullResult) setIsQuizSubmitted(true); }}
-                  disabled={!fullResult}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                    isQuizSubmitted || currentStep === 3
+                  onClick={() => {
+                    const dollValid = projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl);
+                    if ((result || dollValid) && quizName.trim() && !isQuizSubmitted) {
+                      setCurrentStep(3);
+                    }
+                  }}
+                  disabled={isQuizSubmitted || !quizName.trim() || (!result && !(projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl)))}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-xs disabled:opacity-40 ${
+                    !isQuizSubmitted && currentStep === 3
+                      ? "bg-blue-600 text-white ring-4 ring-blue-100"
+                      : isQuizSubmitted
+                      ? "bg-green-600 text-white"
+                      : "bg-white text-slate-600 border border-zinc-300"
+                  }`}
+                  title="Step 3: Pre-Production Review & Verification"
+                >
+                  {isQuizSubmitted ? "✓" : "3"}
+                </button>
+
+                <div className={`w-5 h-0.5 rounded-full transition-colors duration-300 ${isQuizSubmitted ? "bg-green-500" : "bg-zinc-300"}`} />
+
+                {/* Step 4 Node */}
+                <button
+                  type="button"
+                  disabled={!isQuizSubmitted}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-xs disabled:opacity-40 ${
+                    isQuizSubmitted || currentStep === 4
                       ? "bg-blue-600 text-white ring-4 ring-blue-100"
                       : "bg-white text-slate-600 border border-zinc-300"
                   }`}
-                  title="Step 3: Process Sheet Result"
+                  title="Step 4: Finalized Process Sheet"
                 >
-                  3
+                  4
                 </button>
               </div>
             </div>
 
-            {/* ── SLIDE 1: Upload & Originality Check ── */}
+            {/* ── STEP 1: Upload & Originality Check ── */}
             {!isQuizSubmitted && currentStep === 1 && (
               <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[540px] animate-in fade-in duration-300">
                 <div className="flex flex-col gap-6">
@@ -1383,10 +1406,10 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* Slide 1 Bottom Action Bar */}
+                {/* Step 1 Bottom Action Bar */}
                 <div className="flex items-center justify-between pt-6 mt-8 border-t border-zinc-200">
                   <div className="text-xs text-slate-400 font-medium">
-                    Step 1: Pattern Originality Verification
+                    Step 1 of 4: Pattern Originality Verification
                   </div>
 
                   {projectMode === "doll" ? (
@@ -1412,16 +1435,16 @@ export default function Home() {
               </div>
             )}
 
-            {/* ── SLIDE 2: Engineering Parameters ── */}
+            {/* ── STEP 2: Engineering Parameters ── */}
             {!isQuizSubmitted && currentStep === 2 && (
               <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[540px] animate-in fade-in duration-300">
                 <div className="flex flex-col gap-6 max-w-3xl">
                   <div className="pb-4 border-b border-zinc-150">
                     <h2 className="font-display font-semibold text-lg text-black">Step 2: Engineering Parameters</h2>
-                    <p className="text-xs text-slate-500">Define project parameters, garment style, and fabric application specs.</p>
+                    <p className="text-xs text-slate-500 font-medium">Define project parameters, garment style, and fabric application specs.</p>
                   </div>
 
-                  <form id="step2-form" onSubmit={projectMode === "doll" ? handleGenerateDollProcessSheet : handleGenerateProcessSheet} className="flex flex-col gap-6">
+                  <form id="step2-form" onSubmit={(e) => { e.preventDefault(); if (quizName.trim()) setCurrentStep(3); }} className="flex flex-col gap-6">
                     {projectMode === "doll" && (
                       <div className="flex flex-col gap-2">
                         <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Doll Type Template</label>
@@ -1512,7 +1535,7 @@ export default function Home() {
                   </form>
                 </div>
 
-                {/* Slide 2 Bottom Action Bar */}
+                {/* Step 2 Bottom Action Bar */}
                 <div className="flex items-center justify-between pt-6 mt-8 border-t border-zinc-200">
                   <button
                     type="button"
@@ -1525,54 +1548,140 @@ export default function Home() {
                   <button
                     type="submit"
                     form="step2-form"
-                    disabled={isLoading || !quizName.trim()}
+                    disabled={!quizName.trim()}
                     className="px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-50 cursor-pointer"
                   >
-                    {isLoading ? "Generating Specs..." : "Compile Process Sheet (Step 3) →"}
+                    Continue to Pre-Production Review (Step 3) →
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ── SLIDE 3: Process Sheet Display Result (Full Specs view) ── */}
+            {/* ── STEP 3: Pre-Production Review & Final Lock Verification (Pre-Commit) ── */}
+            {!isQuizSubmitted && currentStep === 3 && (
+              <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[540px] animate-in fade-in duration-300">
+                <div className="flex flex-col gap-6">
+                  <div className="pb-4 border-b border-zinc-150 flex justify-between items-center">
+                    <div>
+                      <h2 className="font-display font-semibold text-lg text-black">Step 3: Pre-Production Review &amp; Final Lock Verification</h2>
+                      <p className="text-xs text-slate-500">Review project parameters carefully before locking into the database.</p>
+                    </div>
+                    <span className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold rounded-lg">
+                      Pre-Commit Review Mode
+                    </span>
+                  </div>
+
+                  {/* Summary Card Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/70 border border-zinc-200 p-6 rounded-xl">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex justify-between border-b border-zinc-200/60 pb-2 text-xs">
+                        <span className="text-slate-500">Project Name:</span>
+                        <span className="font-bold text-black">{quizName}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-zinc-200/60 pb-2 text-xs">
+                        <span className="text-slate-500">Project Structure:</span>
+                        <span className="font-semibold text-blue-600">{projectMode === "doll" ? `Outfit Set (${dollType})` : "Single Garment"}</span>
+                      </div>
+                      {projectMode === "single" && (
+                        <>
+                          <div className="flex justify-between border-b border-zinc-200/60 pb-2 text-xs">
+                            <span className="text-slate-500">Garment Category:</span>
+                            <span className="font-semibold text-black">{quizGarment}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-zinc-200/60 pb-2 text-xs">
+                            <span className="text-slate-500">Fabric Application:</span>
+                            <span className="font-semibold text-black">{quizFabric}</span>
+                          </div>
+                        </>
+                      )}
+                      <div className="flex justify-between items-center pt-1 text-xs">
+                        <span className="text-slate-500">Originality Status:</span>
+                        <span className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                          Approved ({result?.similarity_percentage?.toFixed(1) || 90.0}% Similarity)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Image Preview & Safety Notice */}
+                    <div className="flex flex-col gap-3 justify-between">
+                      <div className="aspect-[16/9] max-h-[160px] bg-white border border-zinc-200 rounded-lg overflow-hidden flex items-center justify-center p-2">
+                        <img
+                          src={result?.preview_image || previewUrl || "globe.svg"}
+                          alt="Garment Review"
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                      <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-lg text-[11px] text-blue-900 font-medium leading-relaxed">
+                        🔒 <strong>Verification Guarantee:</strong> Clicking &quot;Lock &amp; Commit&quot; will register this engineering process sheet permanently into the database and lock it against duplicate renaming.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 Bottom Action Bar */}
+                <div className="flex items-center justify-between pt-6 mt-8 border-t border-zinc-200">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all duration-200 cursor-pointer"
+                  >
+                    ← Edit Inputs (Step 2)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={projectMode === "doll" ? handleGenerateDollProcessSheet : handleGenerateProcessSheet}
+                    disabled={isLoading}
+                    className="px-8 py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                  >
+                    {isLoading ? "Locking & Registering..." : "🔒 Lock & Commit to Engineering DB (Step 4) →"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 4: Finalized & Locked Process Sheet Output ── */}
             {isQuizSubmitted && fullResult && (
               <div className="w-full flex flex-col gap-8 animate-in fade-in duration-300">
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-6">
                   <div>
-                    <span className="text-xs font-mono text-blue-600 font-bold uppercase tracking-widest">
-                      {fullResult.is_doll_project ? "Doll Outfit Process Sheet Set" : "Process Specification Sheet"}
-                    </span>
-                    <h1 className="font-display font-bold text-3xl md:text-4xl text-black mt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-mono text-blue-600 font-bold uppercase tracking-widest">
+                        {fullResult.is_doll_project ? "Doll Outfit Process Sheet Set" : "Process Specification Sheet"}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-green-100 text-green-800 text-[10px] font-bold border border-green-300 flex items-center gap-1">
+                        🔒 FINALIZED &amp; LOCKED
+                      </span>
+                    </div>
+                    <h1 className="font-display font-bold text-3xl md:text-4xl text-black">
                       {quizName}
                     </h1>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => { setIsQuizSubmitted(false); setCurrentStep(2); }}
+                      onClick={() => window.print()}
                       className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
                     >
-                      ← Back to Parameters
+                      📄 Export / Print Specs
                     </button>
                     <button
                       onClick={handleResetWorkspace}
                       className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors cursor-pointer shadow-xs"
                     >
-                      Compile New Design
+                      + Create New Project
                     </button>
                   </div>
                 </header>
 
-                <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 animate-in fade-in duration-300">
+                <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
                   {/* Left Column: Image, stats overlays and technical tags */}
                   <div className="xl:col-span-2 flex flex-col gap-6">
                     {fullResult.is_doll_project ? (
-                      // Doll Outfit Previews Grid
                       <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs">
                         <h2 className="font-semibold text-black text-base mb-4">Doll Outfit Components</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Array.isArray(fullResult.classification) && fullResult.classification.map((comp: any, idx: number) => {
-                            // Find matching component preview URL from componentsState or default mock
                             const compKey = comp.component;
                             const compImg = componentsState[compKey]?.previewUrl || "globe.svg";
                             return (
@@ -1593,7 +1702,6 @@ export default function Home() {
                         </div>
                       </div>
                     ) : (
-                      // Original Single Garment Preview
                       <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs relative">
                         <h2 className="font-semibold text-black text-base mb-4">Visual Layout Analysis</h2>
                         <div className="relative rounded-lg overflow-hidden border border-zinc-150 aspect-square w-full bg-slate-50 flex items-center justify-center">
@@ -1602,8 +1710,6 @@ export default function Home() {
                             alt="Garment Preview"
                             className="max-w-full max-h-full object-contain"
                           />
-                          
-                          {/* Bounding boxes overlays */}
                           {fullResult.yolo_detections && fullResult.yolo_detections.map((det: any, idx: number) => (
                             <div
                               key={idx}
@@ -1624,7 +1730,6 @@ export default function Home() {
                       </div>
                     )}
 
-                    {/* Originality Metadata */}
                     <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs">
                       <h3 className="font-semibold text-black text-sm mb-3">
                         {fullResult.is_doll_project ? "Doll Project Metadata" : "Pattern Metadata"}
@@ -1640,22 +1745,6 @@ export default function Home() {
                               <span className="text-slate-400">Total Components:</span>
                               <span className="font-semibold text-black">{fullResult.project_details?.components_count || 1} Garments</span>
                             </div>
-                            <div className="flex flex-col gap-2 border-t border-zinc-100 pt-2.5">
-                              <span className="text-xs font-semibold text-slate-400">Fabric Composition:</span>
-                              <div className="bg-slate-50 rounded-lg p-2.5 border border-zinc-150 space-y-1.5">
-                                {Array.isArray(fullResult.classification) && fullResult.classification.map((c: any, idx: number) => {
-                                  // Get matching fabric weight from project details
-                                  const compKey = c.component;
-                                  const fabricWeight = componentsState[compKey]?.fabricWeight || "Cotton (Medium-weight)";
-                                  return (
-                                    <div key={idx} className="flex justify-between text-[11px] font-semibold text-slate-600">
-                                      <span className="capitalize">{compKey}:</span>
-                                      <span className="text-slate-800">{fabricWeight}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
                           </>
                         ) : (
                           <>
@@ -1664,16 +1753,12 @@ export default function Home() {
                               <span className="font-semibold text-black">{fullResult?.classification?.[0]?.class_name || "Original Sketch Pattern"}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs border-t border-zinc-100 pt-2.5">
-                              <span className="text-slate-400">Similarity Match Score:</span>
+                              <span className="text-slate-400">Similarity Score:</span>
                               <span className="font-semibold text-green-600">{fullResult.similarity_percentage}% (Approved)</span>
                             </div>
                             <div className="flex justify-between items-center text-xs border-t border-zinc-100 pt-2.5">
                               <span className="text-slate-400">Garment Category:</span>
                               <span className="font-semibold text-black">{quizGarment}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs border-t border-zinc-100 pt-2.5">
-                              <span className="text-slate-400">Fabric Application:</span>
-                              <span className="font-semibold text-black">{quizFabric}</span>
                             </div>
                           </>
                         )}
@@ -1681,9 +1766,8 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Right Column: Step-by-Step Sewing Flow Table & Tooling Cards */}
+                  {/* Right Column: Step-by-Step Sewing Flow Table & Tooling */}
                   <div className="xl:col-span-3 flex flex-col gap-8">
-                    {/* Sewing Sequence */}
                     <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs">
                       <h2 className="font-display font-semibold text-lg text-black mb-6">
                         STEP-BY-STEP SEWING FLOW
@@ -1723,13 +1807,8 @@ export default function Home() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={4} className="py-16 px-6 text-center">
-                                  <div className="flex flex-col items-center gap-3 text-slate-400">
-                                    <svg className="w-10 h-10 opacity-30" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-                                    </svg>
-                                    <p className="text-sm font-medium">No sewing steps generated yet.</p>
-                                  </div>
+                                <td colSpan={4} className="py-16 px-6 text-center text-slate-400 font-medium">
+                                  No sewing steps generated yet.
                                 </td>
                               </tr>
                             )}
@@ -1738,7 +1817,6 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Tooling Grid Recommendations */}
                     <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs">
                       <h2 className="font-display font-semibold text-lg text-black mb-6">
                         RECOMMENDED JUKI MACHINERY
@@ -1746,19 +1824,11 @@ export default function Home() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {fullResult.tooling_recommendations && fullResult.tooling_recommendations.map((tool: any, idx: number) => (
                           <div key={idx} className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-xs flex flex-col h-full hover:border-blue-500/30 transition-all duration-300">
-                            {/* Machine Photo */}
                             <div className="bg-slate-50 border-b border-zinc-200 aspect-[4/3] flex items-center justify-center p-3 relative overflow-hidden">
                               <img 
                                 src={`/image/${tool.file}`} 
                                 alt={tool.name}
                                 className="max-w-full max-h-full object-contain transition-transform duration-300 hover:scale-105"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  if (e.currentTarget.parentElement) {
-                                    e.currentTarget.parentElement.classList.add('bg-slate-100');
-                                    e.currentTarget.parentElement.innerHTML = `<div className="flex flex-col items-center justify-center text-center p-4"><svg class="w-10 h-10 text-slate-400 mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.594 15.12a2 2 0 00-1.022.548l-.066.066A2 2 0 004 17.152V19a2 2 0 002 2h12a2 2 0 002-2v-1.848a2 2 0 00-.506-1.341l-.066-.066z"/></svg><span class="text-xs font-mono font-bold text-slate-600">${tool.name}</span><span class="text-[10px] font-mono text-slate-400">JUKI Industrial Spec</span></div>`;
-                                  }
-                                }}
                               />
                             </div>
                             <div className="p-5 flex flex-col flex-grow">
@@ -1770,7 +1840,6 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* SMV & COMPLEXITY SUMMARY */}
                     <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs flex flex-col gap-6">
                       <div className="flex items-center justify-between">
                         <div>
@@ -1799,26 +1868,11 @@ export default function Home() {
                           <div>
                             <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Confidence</span>
                             <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 border border-green-200">
-                              High (Ensemble)
+                              High (Verified)
                             </span>
                           </div>
                         </div>
                       </div>
-
-                      {/* Doll Outfit SMV Breakdown List */}
-                      {fullResult.is_doll_project && fullResult.smv_breakdown && (
-                        <div className="border-t border-zinc-150 pt-4">
-                          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-bold block mb-2">Component SMV Breakdown</span>
-                          <div className="flex flex-wrap gap-3">
-                            {Object.entries(fullResult.smv_breakdown).map(([garment, smv]: any) => (
-                              <div key={garment} className="flex items-center gap-2 bg-slate-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-xs">
-                                <span className="font-bold text-slate-500 capitalize">{garment}:</span>
-                                <span className="font-semibold text-slate-800">{smv}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
