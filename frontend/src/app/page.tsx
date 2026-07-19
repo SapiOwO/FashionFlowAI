@@ -435,7 +435,19 @@ export default function Home() {
       alert("Please enter a project name.");
       return;
     }
-    if (!result) return;
+
+    let activeResult = result;
+    if (!activeResult && imageFile) {
+      await runAnalysisForFile(imageFile);
+    }
+    
+    if (result && ["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase())) {
+      alert("Duplicate pattern match detected. Process sheet creation is locked for duplicate patterns.");
+      return;
+    }
+    
+    const targetResult = result || activeResult;
+    if (!targetResult) return;
 
     setIsLoading(true);
     try {
@@ -443,13 +455,13 @@ export default function Home() {
         project_name: quizName.trim(),
         garment_type: quizGarment,
         fabric_weight: quizFabric,
-        preview_image: result.preview_image,
-        similarity_percentage: result.similarity_percentage,
-        similarity_status: result.status,
-        classification_name: result?.classification?.[0]?.class_name || "Original Pattern",
-        message: result.message,
+        preview_image: targetResult.preview_image,
+        similarity_percentage: targetResult.similarity_percentage,
+        similarity_status: targetResult.status,
+        classification_name: targetResult?.classification?.[0]?.class_name || "Original Pattern",
+        message: targetResult.message,
         // CRITICAL: send visual_vector so backend can persist it for future cosine-similarity duplicate detection
-        visual_vector: result.visual_vector || []
+        visual_vector: targetResult.visual_vector || []
       };
 
       const res = await fetch("http://127.0.0.1:8000/api/generate-sheet", {
