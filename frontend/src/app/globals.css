@@ -22,3 +22,62 @@ h1, h2, h3, .font-display {
 code, pre, .font-mono {
   font-family: var(--font-geist-mono), monospace;
 }
+
+/* ── PRINT MEDIA SPECIFICATIONS (Clean A4 Technical Spec Export) ── */
+@page {
+  margin: 10mm;
+  size: A4 portrait;
+}
+
+@media print {
+  /* Hide non-printable web UI containers */
+  aside,
+  header.no-print,
+  nav,
+  button,
+  .no-print,
+  [class*="print:hidden"] {
+    display: none !important;
+  }
+
+  /* Force exact color reproduction */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Table styling for print spec sheet */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  table th, table td {
+    border: 1px solid #e2e8f0 !important;
+  }
+}
+
+
+
+
+
+
+
