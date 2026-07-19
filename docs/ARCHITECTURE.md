@@ -16,7 +16,9 @@ graph TD
 ```
 
 ### 1. Frontend Web Client (Next.js Node Server)
-* Serves the collapsible Codinglab dashboard UI (Design Input, Sewing Sequence, Tooling Recommendations, Doll Outfit Configurator, etc.).
+* Serves the collapsible dashboard UI across 6 standardized subtabs (`Engineering Dashboard`, `Create Process Sheet`, `Sewing Machinery Catalog`, `Manufacturing Knowledge Base`, `Active Projects & History`, `System Settings`).
+* Implements Penpot-inspired Cobalt design system (`#155DFC`, `border-slate-100`, `rounded-2xl` cards, Geist Mono typography, and soft status badges).
+* Features 1-to-1 matching sidebar navigation labels and viewport titles, invisible search autocomplete popups, category dropdown filters, and cross-browser date parsing (`formatActivityDate`).
 * Collects garment sketch uploads, physical smartphone photos, and doll parameters from the user.
 * Sends API requests to the FastAPI backend and renders structured process sheets dynamically (coordinates overlays, step-by-step tables with matching part icons, multi-fabric breakdowns, and estimated SMVs).
 

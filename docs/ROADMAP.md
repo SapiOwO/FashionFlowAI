@@ -75,11 +75,12 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Preserved SQLite compatibility using Python-loop fallback logic in local development/CI environments.
   * Upgraded regression tests and verified that all 34 tests pass cleanly.
 * **Phase 16: Global Penpot UI Modernization & Machinery/Knowledge Autocomplete Search UX (2026-07-20)**:
-  * Globalized Penpot-inspired `#155DFC` Cobalt design language across all 6 subtabs (`Engineering Dashboard`, `Create Process Sheet`, `Sewing Machinery Catalog`, `Garment Type Catalog`, `Active Projects & History`, `System Settings`).
+  * Globalized Penpot-inspired `#155DFC` Cobalt design language across all 6 subtabs (`Engineering Dashboard`, `Create Process Sheet`, `Sewing Machinery Catalog`, `Manufacturing Knowledge Base`, `Active Projects & History`, `System Settings`).
   * Fixed Activity Feed `Invalid Date` bug by implementing cross-browser ISO timestamp parser `formatActivityDate()`.
   * Clarified database status handling: rejected/duplicate patterns are saved with `REJECTED` / `DUPLICATE_LOCKED` status for audit tracking without contaminating active DINOv2 vector index.
   * Added **Invisible UX Autocomplete Search** and **Category Dropdown Filters** to Sewing Machinery Catalog and Knowledge Base catalogs.
   * Standardized subtab naming 1-to-1 between sidebar navigation and viewport main headers.
+  * Synchronized exact vertical Y-baseline pixel alignment (`px-10 py-6` padding) and normalized header category tags (`Process Sheet Engineering`).
 
 ---
 
