@@ -819,46 +819,44 @@ export default function Home() {
     <div className="flex h-screen w-screen overflow-hidden bg-white text-slate-800">
       {/* Sidebar Navigation */}
       <aside
-        className={`h-full border-r border-zinc-200 bg-slate-50 flex flex-col py-8 px-5 flex-shrink-0 transition-all duration-300 ${
-          isCollapsed ? "w-[78px] px-3.5" : "w-[280px]"
+        className={`h-full flex flex-col py-8 flex-shrink-0 transition-all duration-300 border-r border-slate-100 overflow-hidden ${
+          isCollapsed ? "w-[78px] px-3.5 bg-transparent" : "w-[280px] px-5 bg-[#FFFFFF]"
         }`}
       >
-        <div className="flex items-center gap-4 mb-10 pl-2">
+        <div className="flex items-center mb-10 h-8 pl-2 overflow-hidden">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-slate-800 hover:text-black focus:outline-none"
+            className="text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer p-1 rounded-lg hover:bg-slate-100/50 transition-colors flex items-center justify-center flex-shrink-0"
             aria-label="Toggle Sidebar"
           >
             <svg
               className="w-5 h-5"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth="2.2"
               viewBox="0 0 24 24"
             >
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
-          {!isCollapsed && (
-            <span className="font-display font-bold text-xl text-black select-none flex items-center gap-1.5">
-              FashionFlow <span className="bg-blue-600 text-white text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
-            </span>
-          )}
+          <span className={`font-display font-bold text-xl text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+            isCollapsed ? "max-w-0 opacity-0 ml-0" : "max-w-[200px] opacity-100 ml-3.5"
+          }`}>
+            FashionFlow <span className="bg-[#155DFC] text-white text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
+          </span>
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto pr-1">
+        <nav className="flex flex-col gap-1.5 flex-grow overflow-y-auto pr-1">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center rounded-lg font-medium text-[14px] py-3 px-4 transition-all duration-300 w-full ${
+              className={`flex items-center rounded-xl font-medium text-xs py-3 px-3.5 transition-all duration-300 w-full cursor-pointer overflow-hidden ${
                 activeTab === item.id
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/50"
-              } ${isCollapsed ? "justify-center px-0 gap-0" : "gap-4"}`}
+                  ? "bg-[#155DFC] text-white shadow-xs font-semibold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
             >
               <svg
                 className="w-5 h-5 flex-shrink-0"
@@ -883,7 +881,11 @@ export default function Home() {
                   </>
                 )}
               </svg>
-              {!isCollapsed && <span className="whitespace-nowrap truncate">{item.label}</span>}
+              <span className={`whitespace-nowrap truncate overflow-hidden transition-all duration-300 ${
+                isCollapsed ? "max-w-0 opacity-0 ml-0" : "max-w-[180px] opacity-100 ml-3.5"
+              }`}>
+                {item.label}
+              </span>
             </button>
           ))}
         </nav>
@@ -1173,78 +1175,80 @@ export default function Home() {
               <div className="bg-white flex-1 flex flex-col justify-between">
                 {/* ── STEP 1: Project Mode Selection Slide ── */}
                 {cpStep === 1 && (
-                  <div className="flex-1 flex flex-col justify-between p-10">
-                    <div className="max-w-4xl mx-auto w-full my-auto py-8 flex flex-col gap-8">
-                      <div className="text-center">
-                        <span className="text-xs font-mono font-bold text-[#155DFC] uppercase tracking-widest">Step 1 of 3</span>
-                        <h2 className="text-2xl font-black text-slate-900 mt-1">Select Garment Engineering Mode</h2>
-                        <p className="text-slate-500 text-sm mt-1 max-w-md mx-auto">
-                          Choose your production setup before compiling sewing specifications and machine allocations.
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Option 1: Single Garment */}
-                        <div
-                          onClick={() => setProjectMode("single")}
-                          className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
-                            projectMode === "single"
-                              ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
-                              : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                              projectMode === "single" ? "bg-[#155DFC] text-white" : "bg-slate-100 text-slate-600"
-                            }`}>
-                              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25z" />
-                              </svg>
-                            </div>
-                            <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                              projectMode === "single" ? "border-[#155DFC] bg-[#155DFC]" : "border-slate-300"
-                            }`}>
-                              {projectMode === "single" && <div className="w-2 h-2 rounded-full bg-white" />}
-                            </span>
-                          </div>
-
-                          <div>
-                            <h3 className="font-bold text-slate-900 text-lg">Single Garment Specification</h3>
-                            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                              Compile process sheet for an individual garment (Shirt, T-Shirt, Jacket, Pants, Dress, or Hat). Includes DINOv2 originality check.
-                            </p>
-                          </div>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div className="flex-1 flex flex-col justify-center p-10">
+                      <div className="max-w-4xl mx-auto w-full my-auto flex flex-col gap-8">
+                        <div className="text-center">
+                          <span className="text-xs font-mono font-bold text-[#155DFC] uppercase tracking-widest">Step 1 of 3</span>
+                          <h2 className="text-2xl font-black text-slate-900 mt-1">Select Garment Engineering Mode</h2>
+                          <p className="text-slate-500 text-sm mt-1 max-w-md mx-auto">
+                            Choose your production setup before compiling sewing specifications and machine allocations.
+                          </p>
                         </div>
 
-                        {/* Option 2: Doll Outfit Set */}
-                        <div
-                          onClick={() => setProjectMode("doll")}
-                          className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
-                            projectMode === "doll"
-                              ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
-                              : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                              projectMode === "doll" ? "bg-[#155DFC] text-white" : "bg-slate-100 text-slate-600"
-                            }`}>
-                              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zM12 7.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-                              </svg>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Option 1: Single Garment */}
+                          <div
+                            onClick={() => setProjectMode("single")}
+                            className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
+                              projectMode === "single"
+                                ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
+                                : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                                projectMode === "single" ? "bg-[#155DFC] text-white" : "bg-slate-100 text-slate-600"
+                              }`}>
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25z" />
+                                </svg>
+                              </div>
+                              <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                projectMode === "single" ? "border-[#155DFC] bg-[#155DFC]" : "border-slate-300"
+                              }`}>
+                                {projectMode === "single" && <div className="w-2 h-2 rounded-full bg-white" />}
+                              </span>
                             </div>
-                            <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                              projectMode === "doll" ? "border-[#155DFC] bg-[#155DFC]" : "border-slate-300"
-                            }`}>
-                              {projectMode === "doll" && <div className="w-2 h-2 rounded-full bg-white" />}
-                            </span>
+
+                            <div>
+                              <h3 className="font-bold text-slate-900 text-lg">Single Garment Specification</h3>
+                              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                                Compile process sheet for an individual garment (Shirt, T-Shirt, Jacket, Pants, Dress, or Hat). Includes DINOv2 originality check.
+                              </p>
+                            </div>
                           </div>
 
-                          <div>
-                            <h3 className="font-bold text-slate-900 text-lg">Doll Outfit Set Project</h3>
-                            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                              Multi-component specification set for doll apparel (Teddy Bear, Fashion Doll, Plushie Mascot, or School Academy outfit sets).
-                            </p>
+                          {/* Option 2: Doll Outfit Set */}
+                          <div
+                            onClick={() => setProjectMode("doll")}
+                            className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
+                              projectMode === "doll"
+                                ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
+                                : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                                projectMode === "doll" ? "bg-[#155DFC] text-white" : "bg-slate-100 text-slate-600"
+                              }`}>
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zM12 7.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                                </svg>
+                              </div>
+                              <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                projectMode === "doll" ? "border-[#155DFC] bg-[#155DFC]" : "border-slate-300"
+                              }`}>
+                                {projectMode === "doll" && <div className="w-2 h-2 rounded-full bg-white" />}
+                              </span>
+                            </div>
+
+                            <div>
+                              <h3 className="font-bold text-slate-900 text-lg">Doll Outfit Set Project</h3>
+                              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                                Multi-component specification set for doll apparel (Teddy Bear, Fashion Doll, Plushie Mascot, or School Academy outfit sets).
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
