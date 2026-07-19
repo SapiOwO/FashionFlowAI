@@ -4,9 +4,9 @@ This guide walks you through setting up and running the FashionFlow decoupled ap
 
 ## Prerequisites
 
-* **Node.js** (v18 or higher)
-* **Python** (v3.10 or higher - required for Microsoft MarkItDown and AST parsing)
-* **PostgreSQL** (Optional - with `pgvector` extension if using Postgres mode; otherwise defaults to SQLite)
+* **Python 3.12.6** (Mandatory `.venv` virtual environment for AST parsing, PyTorch, and DINOv2 embeddings)
+* **Node.js 18.x / 20.x** (Required for Next.js 16 frontend)
+* **PostgreSQL** (Optional - with `pgvector` extension for production HNSW search; defaults to SQLite for local dev)
 
 ---
 

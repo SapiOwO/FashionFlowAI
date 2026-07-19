@@ -118,11 +118,12 @@ fashionflowrework/
 
 ### 1. System Requirements
 
-| Requirement | Version |
-|---|---|
-| Python | 3.10 or higher |
-| Node.js | 18.x or higher |
-| PyTorch | 2.x (CPU inference supported) |
+| Environment Requirement | Verified Version | Mandate & Notes |
+|---|---|---|
+| **Python** | `3.12.6` | Mandatory `.venv` virtual environment |
+| **Node.js** | `18.x` / `20.x` | Required for Next.js 16 (Turbopack) |
+| **PyTorch** | `2.x` | CPU / GPU inference for DINOv2 (`dinov2_vits14`) |
+| **Database** | PostgreSQL + `pgvector` / SQLite | HNSW cosine similarity vector search |
 
 ### 2. Clone & Install
 
