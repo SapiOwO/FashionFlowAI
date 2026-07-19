@@ -353,11 +353,19 @@ def get_top_k_similar_history_records(query_vector: list, limit: int = 3) -> lis
                     res = json.loads(result_json) if isinstance(result_json, str) else result_json
                 except Exception:
                     res = {}
+                # garment_type may be at root level OR nested under project_details
+                project_details = res.get("project_details", {})
+                garment_type_val = (
+                    res.get("garment_type")
+                    or project_details.get("garment_type")
+                    or project_details.get("garment_key")
+                    or ""
+                ).strip()
                 candidates.append({
                     "id": rid,
                     "title": rname,
                     "similarity_pct": sim_pct,
-                    "garment_type": res.get("garment_type", "garment"),
+                    "garment_type": garment_type_val if garment_type_val else "Garment",
                     "preview_image": res.get("preview_image", ""),
                     "sewing_sequence": res.get("sewing_sequence", []),
                     "tooling": res.get("tooling_recommendations", []),
@@ -384,11 +392,19 @@ def get_top_k_similar_history_records(query_vector: list, limit: int = 3) -> lis
                 if norm_q > 0 and norm_p > 0:
                     cosine_sim = float(dot_val / (norm_q * norm_p))
                     sim_pct = round(cosine_sim * 100.0, 1)
+                    # garment_type may be at root level OR nested under project_details
+                    project_details_fb = res.get("project_details", {})
+                    garment_type_fb = (
+                        res.get("garment_type")
+                        or project_details_fb.get("garment_type")
+                        or project_details_fb.get("garment_key")
+                        or ""
+                    ).strip()
                     candidates.append({
                         "id": prev_id,
                         "title": prev_name,
                         "similarity_pct": sim_pct,
-                        "garment_type": res.get("garment_type", "garment"),
+                        "garment_type": garment_type_fb if garment_type_fb else "Garment",
                         "preview_image": res.get("preview_image", ""),
                         "sewing_sequence": res.get("sewing_sequence", []),
                         "tooling": res.get("tooling_recommendations", []),
