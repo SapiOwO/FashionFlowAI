@@ -149,6 +149,9 @@ export default function Home() {
   const [isQuizSubmitted, setIsQuizSubmitted] = useState(false);
   const [fullResult, setFullResult] = useState<any | null>(null);
 
+  // Multi-step wizard stepper state (1: Upload & Originality, 2: Engineering Parameters, 3: Process Sheet)
+  const [currentStep, setCurrentStep] = useState(1);
+
   // Upload History log state (Persisted in Postgres/SQLite database)
   const [analysisHistory, setAnalysisHistory] = useState<SavedAnalysis[]>([]);
 
@@ -490,6 +493,7 @@ export default function Home() {
     setQuizGarment("Shirt");
     setQuizFabric("Medium-weight");
     setIsQuizSubmitted(false);
+    setCurrentStep(1);
     setComponentsState({
       jacket: { fabricWeight: "Denim (Heavy-weight)", imageFile: null, previewUrl: null, result: null },
       pants: { fabricWeight: "Katun (Medium-weight)", imageFile: null, previewUrl: null, result: null },
@@ -876,84 +880,296 @@ export default function Home() {
       {/* Main Panel Content (Scrolls independently - Fluid Full Screen Layout) */}
       <main className="flex-grow h-full overflow-y-auto p-12">
         
-        {/* VIEW 1: Dashboard */}
+        {/* VIEW 1: Pre-Production Engineering Dashboard */}
         {activeTab === "dashboard-view" && (
           <div className="fade-in w-full">
-            <header className="mb-10">
-              <h1 className="font-display font-bold text-4xl text-black mb-2">
-                Production Overview
+            <header className="mb-8">
+              <span className="text-xs font-mono text-blue-600 font-bold uppercase tracking-widest">Pre-Production Engineering</span>
+              <h1 className="font-display font-bold text-4xl text-black mt-1 mb-2">
+                Engineering Dashboard
               </h1>
-              <p className="text-slate-500 text-lg">
-                Identify fabric patterns, generate sewing step plannings, and estimate tooling requirements.
+              <p className="text-slate-500 text-base">
+                AI-assisted garment analysis, originality verification, and process sheet generation for pre-production engineering.
               </p>
             </header>
 
-            {/* System Workflow Steps Guide */}
-            <div className="bg-white border border-zinc-200 rounded-xl p-9 shadow-xs mb-8">
-              <h2 className="font-display font-semibold text-2xl mb-6">How FashionFlow AI Works</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-lg hover:border-blue-500/20 hover:shadow-xs transition-all duration-300">
-                  <span className="text-xs font-mono text-blue-600 font-bold uppercase tracking-wider">Step 1</span>
-                  <h3 className="font-semibold text-black text-base">Upload Design</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">Upload a garment pattern sketch or fabric layout image to the system.</p>
+            {/* Engineering KPI Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs hover:border-blue-300/60 transition-all duration-300 group">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Total Analyses</span>
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-lg hover:border-blue-500/20 hover:shadow-xs transition-all duration-300">
-                  <span className="text-xs font-mono text-blue-600 font-bold uppercase tracking-wider">Step 2</span>
-                  <h3 className="font-semibold text-black text-base">Originality Check</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">The ensemble AI model verifies pattern originalities against database records using a 95% similarity threshold.</p>
+                <p className="font-display font-bold text-3xl text-black">{analysisHistory.length}</p>
+                <p className="text-xs text-slate-400 mt-1">Engineering runs logged</p>
+              </div>
+
+              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs hover:border-green-300/60 transition-all duration-300 group">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Unique Designs</span>
+                  <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-lg hover:border-blue-500/20 hover:shadow-xs transition-all duration-300">
-                  <span className="text-xs font-mono text-blue-600 font-bold uppercase tracking-wider">Step 3</span>
-                  <h3 className="font-semibold text-black text-base">Production Quiz</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">If approved, assign a project name and specify fabric weights and options through validation inputs.</p>
+                <p className="font-display font-bold text-3xl text-black">
+                  {analysisHistory.filter(a => {
+                    const s = (a.result?.status || "").toUpperCase();
+                    return s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
+                  }).length}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">Approved original patterns</p>
+              </div>
+
+              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs hover:border-amber-300/60 transition-all duration-300 group">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Historical Matches</span>
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                    <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-lg hover:border-blue-500/20 hover:shadow-xs transition-all duration-300">
-                  <span className="text-xs font-mono text-blue-600 font-bold uppercase tracking-wider">Step 4</span>
-                  <h3 className="font-semibold text-black text-base">Generate Specs</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">The system automatically recommends matching industrial sewing machinery and generates step-by-step sewing sequences.</p>
+                <p className="font-display font-bold text-3xl text-black">
+                  {searchResults.length}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">Vector DB reference records</p>
+              </div>
+
+              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs hover:border-purple-300/60 transition-all duration-300 group">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Avg. Est. SMV</span>
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                 </div>
+                <p className="font-display font-bold text-3xl text-black">
+                  {analysisHistory.length > 0
+                    ? (() => {
+                        const smvValues = analysisHistory
+                          .map(a => parseFloat((a.result?.smv_range || "0").split("-")[0]))
+                          .filter(v => !isNaN(v) && v > 0);
+                        if (smvValues.length === 0) return "N/A";
+                        return (smvValues.reduce((a, b) => a + b, 0) / smvValues.length).toFixed(1);
+                      })()
+                    : "N/A"}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">min/pc average across projects</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white border border-zinc-200 rounded-xl p-9 shadow-xs flex flex-col justify-center">
-                <h2 className="font-display font-semibold text-2xl mb-4">Originality Verification</h2>
-                <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                  Before sending garments to production lines, FashionFlow evaluates textiles against copyright and pattern records. If duplicate matches are found, details are displayed instantly to reduce copyright infringement conflicts.
-                </p>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Navigate to the <strong>Design Input</strong> tab in the sidebar to upload a sketch and run analysis.
-                </p>
+            {/* Main Dashboard Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left: System Workflow Guide */}
+              <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-xl p-7 shadow-xs">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-display font-semibold text-lg text-black">Engineering Workflow</h2>
+                  <button
+                    onClick={() => { setActiveTab("design-input-view"); setCurrentStep(1); }}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    Start New Analysis →
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-xl bg-blue-50/50 border-blue-200/60">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">1</div>
+                    <h3 className="font-semibold text-black text-sm mt-1">Upload & Originality</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">Upload garment sketch. DINOv2 vector engine verifies originality against database records with 95% threshold.</p>
+                  </div>
+                  <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-xl">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">2</div>
+                    <h3 className="font-semibold text-black text-sm mt-1">Engineering Parameters</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">Define project parameters — garment type, fabric weight, component breakdown, and production specifications.</p>
+                  </div>
+                  <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-xl">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">3</div>
+                    <h3 className="font-semibold text-black text-sm mt-1">Process Sheet & SMV</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">AI generates the sewing sequence, machine tooling recommendations, and estimated SMV for production planning.</p>
+                  </div>
+                </div>
+
+                {/* Originality ratio visual bar */}
+                {analysisHistory.length > 0 && (() => {
+                  const total = analysisHistory.length;
+                  const approved = analysisHistory.filter(a => {
+                    const s = (a.result?.status || "").toUpperCase();
+                    return s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
+                  }).length;
+                  const rejected = total - approved;
+                  const approvedPct = Math.round((approved / total) * 100);
+                  return (
+                    <div className="mt-6 pt-6 border-t border-zinc-100">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Originality Ratio</span>
+                        <span className="text-xs font-bold text-green-600">{approvedPct}% Approved</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-700"
+                          style={{ width: `${approvedPct}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between mt-1.5">
+                        <span className="text-[10px] text-slate-400">{approved} unique designs</span>
+                        <span className="text-[10px] text-slate-400">{rejected} historical matches</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
-              {/* Decorative Graphic Block */}
-              <div className="bg-white border border-zinc-200 rounded-xl p-9 flex items-center justify-center shadow-xs">
-                <div className="grid grid-cols-2 gap-4 w-full aspect-square max-h-[300px]">
-                  <div className="rounded-lg border border-zinc-200 opacity-80 hover:opacity-100 hover:scale-102 transition-all duration-300 bg-[radial-gradient(circle,rgba(59,130,246,0.5)_10%,transparent_11%)] bg-[length:15px_15px]"></div>
-                  <div className="rounded-lg border border-zinc-200 opacity-80 hover:opacity-100 hover:scale-102 transition-all duration-300 bg-[linear-gradient(45deg,rgba(0,0,0,0.02)_25%,transparent_25%),linear-gradient(-45deg,rgba(0,0,0,0.02)_25%,transparent_25%)] bg-[length:20px_20px]"></div>
-                  <div className="rounded-lg border border-zinc-200 opacity-80 hover:opacity-100 hover:scale-102 transition-all duration-300 bg-[radial-gradient(circle_at_0_0,transparent_50%,rgba(59,130,246,0.4)_50%,rgba(59,130,246,0.4)_55%,transparent_55%)] bg-[length:20px_20px]"></div>
-                  <div className="rounded-lg border border-zinc-200 opacity-80 hover:opacity-100 hover:scale-102 transition-all duration-300 bg-[linear-gradient(0deg,rgba(0,0,0,0.02)_50%,transparent_50%)] bg-[length:10px_10px]"></div>
+              {/* Right: Activity Feed */}
+              <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="font-display font-semibold text-lg text-black">Activity Feed</h2>
+                  <span className="w-2 h-2 rounded-full bg-green-500 ring-2 ring-green-200 animate-pulse" title="Live"></span>
                 </div>
+                {analysisHistory.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                    <svg className="w-8 h-8 text-slate-300 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-xs text-slate-400">No activity yet. Run your first analysis to see the feed.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-0">
+                    {analysisHistory.slice(0, 8).map((item, idx) => {
+                      const s = (item.result?.status || "").toUpperCase();
+                      const isRejected = s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND";
+                      const timeStr = item.timestamp
+                        ? new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                        : "--:--";
+                      return (
+                        <div key={idx} className="flex gap-3 py-3 border-b border-zinc-100 last:border-0">
+                          <div className="flex flex-col items-center gap-1 pt-0.5">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isRejected ? "bg-amber-400" : "bg-blue-500"}`} />
+                            {idx < analysisHistory.slice(0, 8).length - 1 && (
+                              <div className="w-px flex-1 bg-zinc-150 min-h-[16px]" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-slate-800 truncate">
+                              {isRejected ? "Historical Match Found" : "Analysis Complete"}
+                            </p>
+                            <p className="text-[11px] text-slate-400 truncate">{item.fileName || item.result?.classification?.[0]?.class_name || "Untitled"}</p>
+                          </div>
+                          <span className="text-[10px] font-mono text-slate-400 flex-shrink-0">{timeStr}</span>
+                        </div>
+                      );
+                    })}
+                    {analysisHistory.length > 8 && (
+                      <button
+                        onClick={() => setActiveTab("projects-view")}
+                        className="mt-3 text-xs font-semibold text-blue-600 hover:text-blue-700 text-left"
+                      >
+                        View all {analysisHistory.length} projects →
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* VIEW 2: Create Process Sheet (Garment Sketch Upload, Parameters Quiz, Unified specs) */}
+        {/* VIEW 2: Create Process Sheet (Stepper Wizard: Step 1 → Step 2 → Step 3) */}
         {activeTab === "design-input-view" && (
           <div className="fade-in w-full">
-            {!isQuizSubmitted ? (              // Quiz Form & Input Step
-              <div className="w-full">
-                <header className="mb-8">
-                  <h1 className="font-display font-bold text-4xl text-black mb-2">
+            {/* ── Stepper Wizard Header ── */}
+            {!isQuizSubmitted && (
+              <div className="mb-8">
+                <header className="mb-6">
+                  <h1 className="font-display font-bold text-4xl text-black mb-1">
                     Create Process Sheet
                   </h1>
-                  <p className="text-slate-500 text-lg">
-                    Define your project parameters, upload garment sketches, and compile unified sewing specifications.
+                  <p className="text-slate-500 text-base">
+                    Follow the guided steps to generate a complete engineering process specification.
                   </p>
                 </header>
 
-                {/* Project Mode Toggle Switch */}
+                {/* Step Progress Bar */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
+                  <div className="flex items-center w-full max-w-2xl">
+                    {/* Step 1 */}
+                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 ${
+                        currentStep > 1
+                          ? "bg-green-500 border-green-500 text-white"
+                          : currentStep === 1
+                          ? "bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100"
+                          : "bg-white border-zinc-300 text-zinc-400"
+                      }`}>
+                        {currentStep > 1 ? (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : "1"}
+                      </div>
+                      <span className={`text-[10px] font-bold text-center leading-tight max-w-[72px] ${
+                        currentStep === 1 ? "text-blue-600" : currentStep > 1 ? "text-green-600" : "text-slate-400"
+                      }`}>Upload &amp; Originality</span>
+                    </div>
+
+                    {/* Connector Line 1-2 */}
+                    <div className={`flex-1 h-0.5 mx-3 rounded-full transition-all duration-500 ${
+                      currentStep > 1 ? "bg-green-400" : "bg-zinc-200"
+                    }`} />
+
+                    {/* Step 2 */}
+                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 ${
+                        currentStep > 2
+                          ? "bg-green-500 border-green-500 text-white"
+                          : currentStep === 2
+                          ? "bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100"
+                          : "bg-white border-zinc-300 text-zinc-400"
+                      }`}>
+                        {currentStep > 2 ? (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : "2"}
+                      </div>
+                      <span className={`text-[10px] font-bold text-center leading-tight max-w-[72px] ${
+                        currentStep === 2 ? "text-blue-600" : currentStep > 2 ? "text-green-600" : "text-slate-400"
+                      }`}>Engineering Parameters</span>
+                    </div>
+
+                    {/* Connector Line 2-3 */}
+                    <div className={`flex-1 h-0.5 mx-3 rounded-full transition-all duration-500 ${
+                      currentStep > 2 ? "bg-green-400" : "bg-zinc-200"
+                    }`} />
+
+                    {/* Step 3 */}
+                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all duration-300 ${
+                        currentStep === 3
+                          ? "bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100"
+                          : "bg-white border-zinc-300 text-zinc-400"
+                      }`}>
+                        3
+                      </div>
+                      <span className={`text-[10px] font-bold text-center leading-tight max-w-[72px] ${
+                        currentStep === 3 ? "text-blue-600" : "text-slate-400"
+                      }`}>Process Sheet &amp; SMV</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!isQuizSubmitted ? (              // Quiz Form & Input Step
+              <div className="w-full">
+                {/* Project Mode Toggle Switch — only shown on Step 1 */}
+                {currentStep === 1 && (
                 <div className="flex items-center gap-2 mb-8 bg-slate-100 p-1 rounded-lg w-fit border border-zinc-200">
                   <button
                     onClick={() => setProjectMode("doll")}
@@ -963,7 +1179,7 @@ export default function Home() {
                         : "text-slate-500 hover:text-slate-800"
                     }`}
                   >
-                    🧸 Doll Outfit Project (Multi-Fabric)
+                    🧸 Outfit Project (Multi-Fabric)
                   </button>
                   <button
                     onClick={() => setProjectMode("single")}
@@ -976,6 +1192,7 @@ export default function Home() {
                     👕 Single Garment Project
                   </button>
                 </div>
+                )}
 
                 {projectMode === "doll" ? (
                   // --- Doll Outfit Project Setup Layout ---
@@ -1124,18 +1341,25 @@ export default function Home() {
                     </div>
 
                     {/* Compile Action Button */}
-                    <div className="flex justify-end mt-4">
+                    <div className="flex justify-between items-center mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(1)}
+                        className="px-5 py-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all duration-300 cursor-pointer"
+                      >
+                        ← Back to Upload
+                      </button>
                       <button
                         onClick={handleGenerateDollProcessSheet}
                         disabled={isLoading || !quizName.trim()}
                         className="px-8 py-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all duration-300 disabled:opacity-50 flex items-center gap-2 shadow-md text-sm cursor-pointer"
                       >
-                        {isLoading ? "Generating Doll Specs..." : "Compile Doll Project Sheet 🧸"}
+                        {isLoading ? "Generating Specs..." : "Compile Process Sheet →"}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  // --- Original Single Garment Project Setup Layout ---
+                  // --- Single Garment Project — Step 1: Upload & Originality Check ---
                   <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 animate-in fade-in duration-300">
                     {/* Left Column: Model Config & Sketch Upload */}
                     <div className="xl:col-span-3 flex flex-col gap-6">
@@ -1342,103 +1566,37 @@ export default function Home() {
                             {isLoading ? "Checking design originality..." : "Verify Pattern Originality"}
                           </button>
                         )}
+
+                        {/* Step 1 → Step 2 advance button (only when result is approved) */}
+                        {result && (() => {
+                          const s = (result.status || "").toUpperCase();
+                          const isApproved = s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
+                          return isApproved ? (
+                            <button
+                              onClick={() => setCurrentStep(2)}
+                              className="mt-4 w-full py-3.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                            >
+                              Continue to Engineering Parameters →
+                            </button>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
 
-                    {/* Right Column: Quiz parameters form */}
+                    {/* Right Column: Step 1 sidebar — rejected banner or originality hint */}
                     <div className="xl:col-span-1">
                       {result && (() => {
                         const _s = (result.status || "").toUpperCase();
                         const isRejected = _s === "REJECTED" || _s === "HISTORICAL_MATCH_FOUND";
-                        return !isRejected;
+                        return isRejected;
                       })() ? (
-                        <form onSubmit={handleGenerateProcessSheet} className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs flex flex-col gap-5">
-                          <h3 className="font-display font-bold text-lg text-black">Production Parameters</h3>
-                          
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Project Name</label>
-                            <input
-                              type="text"
-                              value={quizName}
-                              onChange={(e) => setQuizName(e.target.value)}
-                              placeholder="e.g. Summer Skirt Motif Dayak"
-                              required
-                              className="bg-slate-50 border border-zinc-200 rounded-md py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
-                            />
-                          </div>
-
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Garment Type</label>
-                            <select
-                              value={quizGarment}
-                              onChange={(e) => setQuizGarment(e.target.value)}
-                              className="bg-slate-50 border border-zinc-200 rounded-md py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
-                            >
-                              <optgroup label="Tops">
-                                <option value="Shirt">Kemeja (Shirt) — 8 Steps</option>
-                                <option value="T-Shirt">Kaos (T-Shirt) — 4 Steps</option>
-                                <option value="Jacket">Jaket / Outerwear — 6 Steps</option>
-                              </optgroup>
-                              <optgroup label="Bottoms">
-                                <option value="Pants">Celana Panjang (Pants) — 6 Steps</option>
-                                <option value="Skirt">Rok (Skirt) — 4 Steps</option>
-                              </optgroup>
-                              <optgroup label="Full-body">
-                                <option value="Dress">Gaun / Dress — 5 Steps</option>
-                                <option value="Hat">Topi / Hat — 5 Steps</option>
-                              </optgroup>
-                            </select>
-                          </div>
-
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Fabric Type / Weight</label>
-                            <select
-                              value={quizFabric}
-                              onChange={(e) => setQuizFabric(e.target.value)}
-                              className="bg-slate-50 border border-zinc-200 rounded-md py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
-                            >
-                              <optgroup label="Light-weight">
-                                <option value="Silk (Light-weight)">Sutra / Silk</option>
-                                <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
-                                <option value="Organza (Light-weight)">Organza</option>
-                                <option value="Crepe (Light-weight)">Krep / Crepe</option>
-                                <option value="Rayon (Light-weight)">Rayon / Viscose</option>
-                              </optgroup>
-                              <optgroup label="Medium-weight">
-                                <option value="Katun (Katun/Cotton)">Katun / Cotton</option>
-                                <option value="Katun (Katun/Cotton)">Katun / Cotton</option>
-                                <option value="Batik (Medium-weight)">Batik Tulis & Cap</option>
-                                <option value="Linen (Medium-weight)">Linen</option>
-                                <option value="Satin (Medium-weight)">Satin / Duchess</option>
-                                <option value="Flannel (Medium-weight)">Flanel / Flannel</option>
-                                <option value="Polyester (Medium-weight)">Polyester</option>
-                              </optgroup>
-                              <optgroup label="Heavy-weight">
-                                <option value="Denim (Heavy-weight)">Denim / Jeans (14oz)</option>
-                                <option value="Corduroy (Heavy-weight)">Corduroy</option>
-                                <option value="Tweed (Heavy-weight)">Tweed / Wool</option>
-                                <option value="Gabardine (Heavy-weight)">Gabardine</option>
-                                <option value="Synthetic Fur (Heavy-weight)">Synthetic Furs / Canvas</option>
-                              </optgroup>
-                            </select>
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-                          >
-                            {isLoading ? "Generating Specs..." : "Compile Process Sheet"}
-                          </button>
-                        </form>
-                      ) : result && (["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase())) ? (
                         <div className="bg-red-50 border border-red-200 rounded-xl p-6 shadow-xs flex flex-col gap-4 text-center">
                           <svg className="w-10 h-10 text-red-500 mx-auto" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                           </svg>
                           <h3 className="font-semibold text-red-800">Production Blocked</h3>
                           <p className="text-xs text-red-700 leading-relaxed">
-                            This pattern is highly similar to copyrighted records. Please adjust details or upload a new design motif.
+                            This pattern is highly similar to existing records. Please upload a new original design motif.
                           </p>
                           <button
                             onClick={handleResetWorkspace}
@@ -1447,17 +1605,137 @@ export default function Home() {
                             Clear & Upload New
                           </button>
                         </div>
+                      ) : result ? (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-6 shadow-xs flex flex-col gap-3">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-sm font-bold text-green-800">Step 1 Complete</span>
+                          </div>
+                          <p className="text-xs text-green-700 leading-relaxed">
+                            Originality verified. Continue to Step 2 to define engineering parameters.
+                          </p>
+                          <button
+                            onClick={() => setCurrentStep(2)}
+                            className="py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-xs cursor-pointer mt-1"
+                          >
+                            Go to Step 2 →
+                          </button>
+                        </div>
                       ) : (
-                        <div className="bg-slate-50 border border-dashed border-zinc-200 rounded-xl p-8 text-center text-xs text-slate-400 py-16">
-                          Upload sketch and click check originality to unlock production options.
+                        <div className="bg-slate-50 border border-dashed border-zinc-200 rounded-xl p-8 text-center flex flex-col gap-3">
+                          <svg className="w-8 h-8 text-slate-300 mx-auto" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-xs text-slate-400 font-medium">Upload a garment sketch and run the originality check to proceed to Step 2.</p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
+
+                {/* ── STEP 2: Engineering Parameters (single garment mode) ── */}
+                {currentStep === 2 && projectMode === "single" && result && (() => {
+                  const _s = (result.status || "").toUpperCase();
+                  return _s !== "REJECTED" && _s !== "HISTORICAL_MATCH_FOUND";
+                })() && (
+                  <div className="animate-in fade-in duration-300">
+                    <form onSubmit={handleGenerateProcessSheet} className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs flex flex-col gap-6 max-w-2xl">
+                      <div>
+                        <h2 className="font-display font-bold text-xl text-black mb-1">Engineering Parameters</h2>
+                        <p className="text-sm text-slate-500">Define the garment type, project name, and fabric specifications for process sheet generation.</p>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Project Name</label>
+                        <input
+                          type="text"
+                          value={quizName}
+                          onChange={(e) => setQuizName(e.target.value)}
+                          placeholder="e.g. Summer Skirt Motif Dayak"
+                          required
+                          className="bg-slate-50 border border-zinc-200 rounded-md py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Garment Type</label>
+                        <select
+                          value={quizGarment}
+                          onChange={(e) => setQuizGarment(e.target.value)}
+                          className="bg-slate-50 border border-zinc-200 rounded-md py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
+                        >
+                          <optgroup label="Tops">
+                            <option value="Shirt">Kemeja (Shirt) — 8 Steps</option>
+                            <option value="T-Shirt">Kaos (T-Shirt) — 4 Steps</option>
+                            <option value="Jacket">Jaket / Outerwear — 6 Steps</option>
+                          </optgroup>
+                          <optgroup label="Bottoms">
+                            <option value="Pants">Celana Panjang (Pants) — 6 Steps</option>
+                            <option value="Skirt">Rok (Skirt) — 4 Steps</option>
+                          </optgroup>
+                          <optgroup label="Full-body">
+                            <option value="Dress">Gaun / Dress — 5 Steps</option>
+                            <option value="Hat">Topi / Hat — 5 Steps</option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Fabric Type / Weight</label>
+                        <select
+                          value={quizFabric}
+                          onChange={(e) => setQuizFabric(e.target.value)}
+                          className="bg-slate-50 border border-zinc-200 rounded-md py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
+                        >
+                          <optgroup label="Light-weight">
+                            <option value="Silk (Light-weight)">Sutra / Silk</option>
+                            <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
+                            <option value="Organza (Light-weight)">Organza</option>
+                            <option value="Crepe (Light-weight)">Krep / Crepe</option>
+                            <option value="Rayon (Light-weight)">Rayon / Viscose</option>
+                          </optgroup>
+                          <optgroup label="Medium-weight">
+                            <option value="Cotton (Medium-weight)">Katun / Cotton</option>
+                            <option value="Batik (Medium-weight)">Batik Tulis &amp; Cap</option>
+                            <option value="Linen (Medium-weight)">Linen</option>
+                            <option value="Satin (Medium-weight)">Satin / Duchess</option>
+                            <option value="Flannel (Medium-weight)">Flanel / Flannel</option>
+                            <option value="Polyester (Medium-weight)">Polyester</option>
+                          </optgroup>
+                          <optgroup label="Heavy-weight">
+                            <option value="Denim (Heavy-weight)">Denim / Jeans (14oz)</option>
+                            <option value="Corduroy (Heavy-weight)">Corduroy</option>
+                            <option value="Tweed (Heavy-weight)">Tweed / Wool</option>
+                            <option value="Gabardine (Heavy-weight)">Gabardine</option>
+                            <option value="Synthetic Fur (Heavy-weight)">Synthetic Furs / Canvas</option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      <div className="flex gap-3 justify-between">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(1)}
+                          className="px-5 py-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all cursor-pointer"
+                        >
+                          ← Back
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isLoading || !quizName.trim()}
+                          className="flex-1 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {isLoading ? "Generating Process Sheet..." : "Generate Process Sheet →"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
             ) : (
-              // Unified Process Sheet Display
+              // Step 3: Unified Process Sheet Display
               <div className="w-full">
                 <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-6">
                   <div>
