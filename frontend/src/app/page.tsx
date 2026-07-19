@@ -910,7 +910,7 @@ export default function Home() {
                 <div className="flex flex-col gap-2 p-5 border border-zinc-150 rounded-lg hover:border-blue-500/20 hover:shadow-xs transition-all duration-300">
                   <span className="text-xs font-mono text-blue-600 font-bold uppercase tracking-wider">Step 4</span>
                   <h3 className="font-semibold text-black text-base">Generate Specs</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">The system automatically recommends matching Juki machinery and generates step-by-step sewing sequences.</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">The system automatically recommends matching industrial sewing machinery and generates step-by-step sewing sequences.</p>
                 </div>
               </div>
             </div>

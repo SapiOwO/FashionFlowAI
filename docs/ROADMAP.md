@@ -40,9 +40,9 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Added `rehydrateProjectPayload` migration helper to ensure legacy database projects load with the current normalized schema.
   * Added `/api/validate-catalog` diagnostic endpoint for verifying all template machine types resolve to real catalog entries.
   * Created `backend/tests/test_backend_contract.py` with 19 automated regression tests (all passing).
-* **Phase 8: QOL Navigation & Modern E-commerce E-commerce Layout**
+* **Phase 8: QOL Navigation & E-commerce Catalog Layout**
   * Renamed sidebar navigation items: `"All Sewing Tools"` ➔ `"Machine Catalog"` and `"Knowledge Base"` ➔ `"Garment Type Catalog"`.
-  * Restructured the Machine Catalog view into a modern e-commerce 2-column layout containing a Left Accordion Filter Drawer and a Right Product Catalog Grid.
+  * Restructured the Machine Catalog view into a modern 2-column layout containing a Left Accordion Filter Drawer and a Right Product Catalog Grid.
   * Added dropdown accordion filter options for needle size, presser foot type, fabric weight, and machine category, with collapsible chevron toggle headers.
   * Added dual-range slider bounds filtering max speed RPM (1,500 to 6,000) and max stitch length (1.0 to 10.0 mm).
   * Added top header "Kategori" Mega-Menu dropdown next to the brand logo to route across tops, bottoms, and machinery families.
