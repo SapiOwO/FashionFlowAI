@@ -657,34 +657,10 @@ export default function Home() {
     }
   };
 
-  const processFile = (file: File) => {
-    setImageFile(file);
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    setResult(null); // Clear previous results for new uploads
-  };
-
-  const handleReset = () => {
-    setImageFile(null);
-    setPreviewUrl(null);
-    setResult(null);
-  };
-
-  // Load a historical analysis into active view
-  // Load a historical analysis into active view
-  const loadSavedAnalysis = (saved: SavedAnalysis) => {
-    handleLoadProject(saved);
-  };
-
-  // Run Inference / Prediction
-  const handleAnalyze = async () => {
-    if (!imageFile) return;
-
+  const runAnalysisForFile = async (fileToUpload: File) => {
     setIsLoading(true);
-    
-    // Create Form Data to send to API
     const formData = new FormData();
-    formData.append("image", imageFile);
+    formData.append("image", fileToUpload);
     formData.append("model_name", selectedModel);
     formData.append("use_ensemble", isEnsembleMode ? "true" : "false");
 
@@ -698,7 +674,6 @@ export default function Home() {
         const data = await res.json();
         setResult(data);
         
-        // Refresh persistent history list from the database
         try {
           const historyRes = await fetch("http://127.0.0.1:8000/api/history");
           if (historyRes.ok) {
@@ -708,17 +683,40 @@ export default function Home() {
         } catch (historyErr) {
           console.warn("Failed to refresh history after analysis:", historyErr);
         }
-
-        // Stay on Create Process Sheet view to answer quiz options (no redirects)
       } else {
         throw new Error("Failed to run prediction");
       }
     } catch (err) {
       console.error("FastAPI server prediction failed.", err);
-      alert("Analysis failed: Unable to connect to FastAPI backend server (http://127.0.0.1:8000). Please ensure your python server is running.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const processFile = (file: File) => {
+    setImageFile(file);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setResult(null); // Clear previous results for new uploads
+    runAnalysisForFile(file); // Immediately trigger live DINOv2 analysis
+  };
+
+  const handleReset = () => {
+    setImageFile(null);
+    setPreviewUrl(null);
+    setResult(null);
+  };
+
+  // Load a historical analysis into active view
+  const loadSavedAnalysis = (saved: SavedAnalysis) => {
+    handleLoadProject(saved);
+  };
+
+  // Run Inference / Prediction
+  const handleAnalyze = async (fileOverride?: File) => {
+    const targetFile = fileOverride || imageFile;
+    if (!targetFile) return;
+    await runAnalysisForFile(targetFile);
   };
 
   // Historical search using pgvector
@@ -1133,310 +1131,332 @@ export default function Home() {
                 </div>
 
                 {/* Main 2-Column Grid Workspace */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                  {/* Left Column: Sketch Upload & Originality Scan */}
-                  <div className="lg:col-span-6 xl:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between gap-6">
-                    <div className="flex flex-col gap-4">
-                      <div className="flex items-center justify-between">
-                        <h2 className="font-semibold text-sm text-slate-900 uppercase font-mono tracking-wider">
-                          1. Pattern Sketch &amp; Originality
-                        </h2>
-                        {result && (
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                            ["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase())
-                              ? "bg-amber-50 text-amber-700 border-amber-200"
-                              : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          }`}>
-                            {["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase())
-                              ? "Historical Match Detected"
-                              : "Pattern Approved"}
-                          </span>
-                        )}
-                      </div>
+                {(() => {
+                  const isSingleRejected = result && ["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase());
+                  const isDollRejected = projectMode === "doll" && Object.values(componentsState).some(c => c.result && ["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((c.result.status || "").toUpperCase()));
+                  const isPatternRejected = projectMode === "single" ? isSingleRejected : isDollRejected;
 
-                      {projectMode === "single" ? (
-                        /* Single Garment Upload Dropzone */
-                        <div className="w-full flex flex-col gap-4">
-                          <div
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                            onClick={triggerFileSelect}
-                            className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center min-h-[260px] text-center cursor-pointer transition-all ${
-                              isDragOver
-                                ? "border-[#005CEA] bg-blue-50/50"
-                                : previewUrl
-                                ? "border-slate-200 bg-slate-50/50 hover:border-slate-300"
-                                : "border-slate-200 hover:border-[#005CEA] bg-slate-50/30"
-                            }`}
-                          >
-                            <input
-                              type="file"
-                              ref={fileInputRef}
-                              onChange={(e) => {
-                                if (e.target.files?.[0]) {
-                                  processFile(e.target.files[0]);
-                                }
-                              }}
-                              accept="image/*"
-                              className="hidden"
-                            />
-
-                            {!previewUrl ? (
-                              <div className="flex flex-col items-center gap-3">
-                                <div className="w-12 h-12 rounded-full bg-blue-50 text-[#005CEA] flex items-center justify-center">
-                                  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                                  </svg>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-slate-800">
-                                    Click or drag garment sketch here
-                                  </p>
-                                  <p className="text-xs text-slate-400 mt-1">
-                                    PNG, JPG or WEBP (Pattern scan runs automatically)
-                                  </p>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="relative w-full flex items-center justify-center p-2">
-                                <img
-                                  src={result ? result.preview_image : previewUrl}
-                                  alt="Garment Sketch"
-                                  className="max-h-[240px] object-contain rounded-lg"
-                                />
-                              </div>
+                  return (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                      {/* Left Column: Sketch Upload & Originality Scan */}
+                      <div className="lg:col-span-6 xl:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between gap-6">
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-center justify-between">
+                            <h2 className="font-semibold text-sm text-slate-900 uppercase font-mono tracking-wider">
+                              1. Pattern Sketch &amp; Originality
+                            </h2>
+                            {result && (
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                isSingleRejected
+                                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                                  : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              }`}>
+                                {isSingleRejected
+                                  ? "Historical Match (Rejected)"
+                                  : "Pattern Approved"}
+                              </span>
                             )}
                           </div>
 
-                          {/* Instant DINOv2 Originality Analysis Result Box */}
-                          {previewUrl && (
-                            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-2 text-xs">
-                              <div className="flex items-center justify-between text-slate-700">
-                                <span className="font-semibold">DINOv2 Originality Score:</span>
-                                <span className="font-mono font-bold text-slate-900">
-                                  {result ? `${(result.similarity_percentage || 0).toFixed(2)}%` : "Scanning..."}
-                                </span>
-                              </div>
-                              <p className="text-slate-500 leading-relaxed">
-                                {result
-                                  ? (["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase())
-                                      ? "Duplicate match detected in database. Review design parameters before proceeding."
-                                      : "Pattern uniqueness verified. Ready for process sheet compilation.")
-                                  : "Scanning pattern visual embeddings against catalog database..."}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        /* Doll Mode Multi-Component Grid Upload */
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          {(DOLL_TYPES[dollType] || []).map((g) => {
-                            const compState = componentsState[g] || { fabricWeight: "Cotton (Medium-weight)", imageFile: null, previewUrl: null, result: null };
-                            return (
-                              <div key={g} className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col justify-between gap-3">
-                                <span className="text-xs font-bold text-slate-800 uppercase font-mono tracking-wide">
-                                  {g}
-                                </span>
+                          {projectMode === "single" ? (
+                            /* Single Garment Upload Dropzone */
+                            <div className="w-full flex flex-col gap-4">
+                              <div
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                onClick={triggerFileSelect}
+                                className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center min-h-[260px] text-center cursor-pointer transition-all ${
+                                  isDragOver
+                                    ? "border-[#005CEA] bg-blue-50/50"
+                                    : previewUrl
+                                    ? "border-slate-200 bg-slate-50/50 hover:border-slate-300"
+                                    : "border-slate-200 hover:border-[#005CEA] bg-slate-50/30"
+                                }`}
+                              >
+                                <input
+                                  type="file"
+                                  ref={fileInputRef}
+                                  onChange={(e) => {
+                                    if (e.target.files?.[0]) {
+                                      processFile(e.target.files[0]);
+                                    }
+                                  }}
+                                  accept="image/*"
+                                  className="hidden"
+                                />
 
-                                {!compState.previewUrl ? (
-                                  <label className="border border-dashed border-slate-300 hover:border-[#005CEA] rounded-lg flex flex-col items-center justify-center p-4 aspect-square text-center cursor-pointer bg-white transition-colors">
-                                    <input
-                                      type="file"
-                                      onChange={(e) => { if (e.target.files?.[0]) handleComponentFileChange(g, e.target.files[0]); }}
-                                      accept="image/*"
-                                      className="hidden"
-                                    />
-                                    <svg className="w-5 h-5 text-slate-400 mb-1" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                    </svg>
-                                    <span className="text-[10px] text-slate-500 font-medium">Upload {g}</span>
-                                  </label>
+                                {!previewUrl ? (
+                                  <div className="flex flex-col items-center gap-3">
+                                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#005CEA] flex items-center justify-center">
+                                      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                      </svg>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium text-slate-800">
+                                        Click or drag garment sketch here
+                                      </p>
+                                      <p className="text-xs text-slate-400 mt-1">
+                                        PNG, JPG or WEBP (DINOv2 similarity scan runs live)
+                                      </p>
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <div className="relative rounded-lg overflow-hidden aspect-square bg-white border border-slate-200 flex items-center justify-center p-1">
-                                    <img src={compState.previewUrl} alt={`${g} preview`} className="max-w-full max-h-full object-contain" />
-                                    <button
-                                      type="button"
-                                      onClick={() => setComponentsState(prev => ({
-                                        ...prev,
-                                        [g]: { ...prev[g], imageFile: null, previewUrl: null, result: null }
-                                      }))}
-                                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-800/80 text-white flex items-center justify-center hover:bg-black transition-colors text-[10px]"
-                                    >
-                                      ✕
-                                    </button>
+                                  <div className="relative w-full flex items-center justify-center p-2">
+                                    <img
+                                      src={result ? result.preview_image : previewUrl}
+                                      alt="Garment Sketch"
+                                      className="max-h-[240px] object-contain rounded-lg"
+                                    />
                                   </div>
                                 )}
                               </div>
-                            );
-                          })}
+
+                              {/* Instant DINOv2 Originality Analysis Result Box */}
+                              {previewUrl && (
+                                <div className={`border rounded-xl p-4 flex flex-col gap-2 text-xs transition-colors ${
+                                  isSingleRejected
+                                    ? "bg-amber-50/70 border-amber-200"
+                                    : "bg-slate-50 border-slate-200/80"
+                                }`}>
+                                  <div className="flex items-center justify-between text-slate-700">
+                                    <span className="font-semibold">DINOv2 Originality Score:</span>
+                                    <span className={`font-mono font-bold ${isSingleRejected ? "text-amber-700" : "text-[#005CEA]"}`}>
+                                      {isLoading ? (
+                                        <span className="flex items-center gap-1 text-[#005CEA]">
+                                          <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                          </svg>
+                                          Scanning...
+                                        </span>
+                                      ) : result ? (
+                                        `${(result.similarity_percentage || 0).toFixed(2)}%`
+                                      ) : (
+                                        "Scanning..."
+                                      )}
+                                    </span>
+                                  </div>
+                                  <p className="text-slate-500 leading-relaxed">
+                                    {isLoading
+                                      ? "Extracting DINOv2 visual embeddings & checking vector database..."
+                                      : result
+                                      ? (isSingleRejected
+                                          ? `Duplicate pattern match detected (${(result.similarity_percentage || 0).toFixed(1)}% similarity). Process sheet creation is locked for duplicate patterns.`
+                                          : "Pattern uniqueness verified. Ready for process sheet compilation.")
+                                      : "Analyzing sketch originality..."}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            /* Doll Mode Multi-Component Grid Upload */
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              {(DOLL_TYPES[dollType] || []).map((g) => {
+                                const compState = componentsState[g] || { fabricWeight: "Cotton (Medium-weight)", imageFile: null, previewUrl: null, result: null };
+                                return (
+                                  <div key={g} className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col justify-between gap-3">
+                                    <span className="text-xs font-bold text-slate-800 uppercase font-mono tracking-wide">
+                                      {g}
+                                    </span>
+
+                                    {!compState.previewUrl ? (
+                                      <label className="border border-dashed border-slate-300 hover:border-[#005CEA] rounded-lg flex flex-col items-center justify-center p-4 aspect-square text-center cursor-pointer bg-white transition-colors">
+                                        <input
+                                          type="file"
+                                          onChange={(e) => { if (e.target.files?.[0]) handleComponentFileChange(g, e.target.files[0]); }}
+                                          accept="image/*"
+                                          className="hidden"
+                                        />
+                                        <svg className="w-5 h-5 text-slate-400 mb-1" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                        </svg>
+                                        <span className="text-[10px] text-slate-500 font-medium">Upload {g}</span>
+                                      </label>
+                                    ) : (
+                                      <div className="relative rounded-lg overflow-hidden aspect-square bg-white border border-slate-200 flex items-center justify-center p-1">
+                                        <img src={compState.previewUrl} alt={`${g} preview`} className="max-w-full max-h-full object-contain" />
+                                        <button
+                                          type="button"
+                                          onClick={() => setComponentsState(prev => ({
+                                            ...prev,
+                                            [g]: { ...prev[g], imageFile: null, previewUrl: null, result: null }
+                                          }))}
+                                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-800/80 text-white flex items-center justify-center hover:bg-black transition-colors text-[10px]"
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right Column: Form & Engineering Parameters */}
-                  <div className="lg:col-span-6 xl:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between gap-6">
-                    <form
-                      id="process-sheet-form"
-                      onSubmit={projectMode === "doll" ? handleGenerateDollProcessSheet : async (e) => {
-                        e.preventDefault();
-                        if (!quizName.trim()) {
-                          alert("Please enter a project name.");
-                          return;
-                        }
-                        if (!result && previewUrl && imageFile) {
-                          await handleAnalyze();
-                        }
-                        handleGenerateProcessSheet(e);
-                      }}
-                      className="flex flex-col gap-5"
-                    >
-                      <h2 className="font-semibold text-sm text-slate-900 uppercase font-mono tracking-wider">
-                        2. Engineering Specifications
-                      </h2>
-
-                      {/* Project Name */}
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-slate-700">Project / Batch Name *</label>
-                        <input
-                          type="text"
-                          value={quizName}
-                          onChange={(e) => setQuizName(e.target.value)}
-                          placeholder="e.g. Autumn Casual Jacket Batch #01"
-                          required
-                          className="bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#005CEA] focus:ring-1 focus:ring-[#005CEA] focus:outline-none transition-colors w-full"
-                        />
                       </div>
 
-                      {projectMode === "single" ? (
-                        <>
-                          {/* Garment Category */}
+                      {/* Right Column: Form & Engineering Parameters */}
+                      <div className="lg:col-span-6 xl:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between gap-6">
+                        <form
+                          id="process-sheet-form"
+                          onSubmit={projectMode === "doll" ? handleGenerateDollProcessSheet : handleGenerateProcessSheet}
+                          className="flex flex-col gap-5"
+                        >
+                          <h2 className="font-semibold text-sm text-slate-900 uppercase font-mono tracking-wider">
+                            2. Engineering Specifications
+                          </h2>
+
+                          {/* Project Name */}
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Garment Category</label>
-                            <select
-                              value={quizGarment}
-                              onChange={(e) => setQuizGarment(e.target.value)}
+                            <label className="text-xs font-semibold text-slate-700">Project / Batch Name *</label>
+                            <input
+                              type="text"
+                              value={quizName}
+                              onChange={(e) => setQuizName(e.target.value)}
+                              placeholder="e.g. Autumn Casual Jacket Batch #01"
+                              required
                               className="bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#005CEA] focus:ring-1 focus:ring-[#005CEA] focus:outline-none transition-colors w-full"
-                            >
-                              <optgroup label="Tops">
-                                <option value="Shirt">Kemeja (Shirt) — 8 Sewing Steps</option>
-                                <option value="T-Shirt">Kaos (T-Shirt) — 4 Sewing Steps</option>
-                                <option value="Jacket">Jaket / Outerwear — 6 Sewing Steps</option>
-                              </optgroup>
-                              <optgroup label="Bottoms">
-                                <option value="Pants">Celana Panjang (Pants) — 6 Sewing Steps</option>
-                                <option value="Skirt">Rok (Skirt) — 4 Sewing Steps</option>
-                              </optgroup>
-                              <optgroup label="Full-body">
-                                <option value="Dress">Gaun / Dress — 5 Sewing Steps</option>
-                                <option value="Hat">Topi / Hat — 5 Sewing Steps</option>
-                              </optgroup>
-                            </select>
+                            />
                           </div>
 
-                          {/* Fabric Application */}
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Fabric Application / Weight</label>
-                            <select
-                              value={quizFabric}
-                              onChange={(e) => setQuizFabric(e.target.value)}
-                              className="bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#005CEA] focus:ring-1 focus:ring-[#005CEA] focus:outline-none transition-colors w-full"
-                            >
-                              <optgroup label="Light-weight">
-                                <option value="Silk (Light-weight)">Sutra / Silk</option>
-                                <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
-                                <option value="Organza (Light-weight)">Organza</option>
-                                <option value="Crepe (Light-weight)">Krep / Crepe</option>
-                                <option value="Rayon (Light-weight)">Rayon / Viscose</option>
-                              </optgroup>
-                              <optgroup label="Medium-weight">
-                                <option value="Cotton (Medium-weight)">Katun / Cotton</option>
-                                <option value="Batik (Medium-weight)">Batik Tulis &amp; Cap</option>
-                                <option value="Linen (Medium-weight)">Linen</option>
-                                <option value="Satin (Medium-weight)">Satin / Duchess</option>
-                                <option value="Flannel (Medium-weight)">Flanel / Flannel</option>
-                                <option value="Polyester (Medium-weight)">Polyester</option>
-                              </optgroup>
-                              <optgroup label="Heavy-weight">
-                                <option value="Denim (Heavy-weight)">Denim / Jeans (14oz)</option>
-                                <option value="Corduroy (Heavy-weight)">Corduroy</option>
-                                <option value="Tweed (Heavy-weight)">Tweed / Wool</option>
-                                <option value="Gabardine (Heavy-weight)">Gabardine</option>
-                                <option value="Synthetic Fur (Heavy-weight)">Synthetic Furs / Canvas</option>
-                              </optgroup>
-                            </select>
+                          {projectMode === "single" ? (
+                            <>
+                              {/* Garment Category */}
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Garment Category</label>
+                                <select
+                                  value={quizGarment}
+                                  onChange={(e) => setQuizGarment(e.target.value)}
+                                  className="bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#005CEA] focus:ring-1 focus:ring-[#005CEA] focus:outline-none transition-colors w-full"
+                                >
+                                  <optgroup label="Tops">
+                                    <option value="Shirt">Kemeja (Shirt) — 8 Sewing Steps</option>
+                                    <option value="T-Shirt">Kaos (T-Shirt) — 4 Sewing Steps</option>
+                                    <option value="Jacket">Jaket / Outerwear — 6 Sewing Steps</option>
+                                  </optgroup>
+                                  <optgroup label="Bottoms">
+                                    <option value="Pants">Celana Panjang (Pants) — 6 Sewing Steps</option>
+                                    <option value="Skirt">Rok (Skirt) — 4 Sewing Steps</option>
+                                  </optgroup>
+                                  <optgroup label="Full-body">
+                                    <option value="Dress">Gaun / Dress — 5 Sewing Steps</option>
+                                    <option value="Hat">Topi / Hat — 5 Sewing Steps</option>
+                                  </optgroup>
+                                </select>
+                              </div>
+
+                              {/* Fabric Application */}
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Fabric Application / Weight</label>
+                                <select
+                                  value={quizFabric}
+                                  onChange={(e) => setQuizFabric(e.target.value)}
+                                  className="bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#005CEA] focus:ring-1 focus:ring-[#005CEA] focus:outline-none transition-colors w-full"
+                                >
+                                  <optgroup label="Light-weight">
+                                    <option value="Silk (Light-weight)">Sutra / Silk</option>
+                                    <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
+                                    <option value="Organza (Light-weight)">Organza</option>
+                                    <option value="Crepe (Light-weight)">Krep / Crepe</option>
+                                    <option value="Rayon (Light-weight)">Rayon / Viscose</option>
+                                  </optgroup>
+                                  <optgroup label="Medium-weight">
+                                    <option value="Cotton (Medium-weight)">Katun / Cotton</option>
+                                    <option value="Batik (Medium-weight)">Batik Tulis &amp; Cap</option>
+                                    <option value="Linen (Medium-weight)">Linen</option>
+                                    <option value="Satin (Medium-weight)">Satin / Duchess</option>
+                                    <option value="Flannel (Medium-weight)">Flanel / Flannel</option>
+                                    <option value="Polyester (Medium-weight)">Polyester</option>
+                                  </optgroup>
+                                  <optgroup label="Heavy-weight">
+                                    <option value="Denim (Heavy-weight)">Denim / Jeans (14oz)</option>
+                                    <option value="Corduroy (Heavy-weight)">Corduroy</option>
+                                    <option value="Tweed (Heavy-weight)">Tweed / Wool</option>
+                                    <option value="Gabardine (Heavy-weight)">Gabardine</option>
+                                    <option value="Synthetic Fur (Heavy-weight)">Synthetic Furs / Canvas</option>
+                                  </optgroup>
+                                </select>
+                              </div>
+                            </>
+                          ) : (
+                            /* Doll Mode Template Selector */
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-xs font-semibold text-slate-700">Doll Type Template</label>
+                              <select
+                                value={dollType}
+                                onChange={(e) => setDollType(e.target.value)}
+                                className="bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#005CEA] focus:ring-1 focus:ring-[#005CEA] focus:outline-none transition-colors w-full"
+                              >
+                                {Object.keys(DOLL_TYPES).map(t => (
+                                  <option key={t} value={t}>
+                                    {t} — ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          {/* Summary Readiness Box */}
+                          <div className={`border rounded-xl p-4 flex flex-col gap-2 mt-2 transition-colors ${
+                            isPatternRejected ? "bg-amber-50/70 border-amber-200 text-amber-900" : "bg-slate-50 border-slate-200/80"
+                          }`}>
+                            <div className="flex items-center justify-between text-xs text-slate-700">
+                              <span className="font-semibold">Workflow Status:</span>
+                              <span className={`font-semibold ${isPatternRejected ? "text-amber-700 font-bold" : "text-[#005CEA]"}`}>
+                                {isPatternRejected ? "Locked (Duplicate Pattern Detected)" : "Ready for Compilation"}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                              {isPatternRejected
+                                ? "Duplicate pattern match detected in database. Process sheet generation is locked for duplicate patterns."
+                                : "Clicking Generate Process Sheet will compile the sewing sequence, machine allocation table, and standard minute value (SMV) breakdown."}
+                            </p>
                           </div>
-                        </>
-                      ) : (
-                        /* Doll Mode Template Selector */
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-semibold text-slate-700">Doll Type Template</label>
-                          <select
-                            value={dollType}
-                            onChange={(e) => setDollType(e.target.value)}
-                            className="bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#005CEA] focus:ring-1 focus:ring-[#005CEA] focus:outline-none transition-colors w-full"
+                        </form>
+
+                        {/* Anchored Clean Bottom Action Bar */}
+                        <div className="border-t border-slate-100 pt-4 flex items-center justify-between gap-4 mt-auto">
+                          <button
+                            type="button"
+                            onClick={handleResetWorkspace}
+                            className="px-4 py-2.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
                           >
-                            {Object.keys(DOLL_TYPES).map(t => (
-                              <option key={t} value={t}>
-                                {t} — ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
+                            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            Reset Form
+                          </button>
 
-                      {/* Summary Readiness Box */}
-                      <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-2 mt-2">
-                        <div className="flex items-center justify-between text-xs text-slate-700">
-                          <span className="font-semibold">Workflow Status:</span>
-                          <span className="text-[#005CEA] font-medium">Ready for Compilation</span>
+                          <button
+                            type="submit"
+                            form="process-sheet-form"
+                            disabled={isLoading || !quizName.trim() || Boolean(isPatternRejected) || (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))}
+                            className="px-8 py-3 bg-[#005CEA] hover:bg-[#004CBD] text-white font-medium text-sm rounded-xl flex items-center gap-2 transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {isLoading ? (
+                              <>
+                                <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                Compiling Sheet...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                </svg>
+                                Generate Process Sheet
+                              </>
+                            )}
+                          </button>
                         </div>
-                        <p className="text-[11px] text-slate-500 leading-relaxed">
-                          Clicking Generate Process Sheet will compile the sewing sequence, machine allocation table, and standard minute value (SMV) breakdown.
-                        </p>
                       </div>
-                    </form>
-
-                    {/* Anchored Clean Bottom Action Bar */}
-                    <div className="border-t border-slate-100 pt-4 flex items-center justify-between gap-4 mt-auto">
-                      <button
-                        type="button"
-                        onClick={handleResetWorkspace}
-                        className="px-4 py-2.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
-                      >
-                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                        </svg>
-                        Reset Form
-                      </button>
-
-                      <button
-                        type="submit"
-                        form="process-sheet-form"
-                        disabled={isLoading || !quizName.trim() || (projectMode === "single" ? !previewUrl : !Object.values(componentsState).some(c => c.previewUrl))}
-                        className="px-8 py-3 bg-[#005CEA] hover:bg-[#004CBD] text-white font-medium text-sm rounded-xl flex items-center gap-2 transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        {isLoading ? (
-                          <>
-                            <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                            </svg>
-                            Compiling Sheet...
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                            </svg>
-                            Generate Process Sheet
-                          </>
-                        )}
-                      </button>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
             )}
 
