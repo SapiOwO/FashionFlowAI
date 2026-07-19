@@ -1080,10 +1080,10 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIEW 2: Create Process Sheet (Impeccable 4-Step Stepper Wizard: 1 → 2 → 3 → 4) */}
+        {/* VIEW 2: Create Process Sheet (Impeccable 5-Step Penpot-Compliant Stepper Wizard: 1 → 2 → 3 → 4 → 5) */}
         {activeTab === "design-input-view" && (
           <div className="fade-in w-full flex flex-col gap-6">
-            {/* ── Top Header & Permanent 4-Node Stepper Bar ── */}
+            {/* ── Top Header & Permanent 5-Node Stepper Bar (1-2-3-4-5) ── */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
               <div>
                 <h1 className="font-display font-bold text-3xl md:text-4xl text-black tracking-tight mb-1">
@@ -1094,7 +1094,7 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Centered Stepper Nodes (1 - 2 - 3 - 4) */}
+              {/* Centered Stepper Nodes (1 - 2 - 3 - 4 - 5) */}
               <div className="flex items-center gap-2.5 bg-slate-100/90 px-4 py-2 rounded-full border border-zinc-200/80 self-center md:self-auto shadow-2xs">
                 {/* Step 1 Node */}
                 <button
@@ -1108,23 +1108,18 @@ export default function Home() {
                       ? "bg-green-600 text-white"
                       : "bg-white text-slate-600 border border-zinc-300"
                   }`}
-                  title="Step 1: Upload & Originality Check"
+                  title="Step 1: Project Mode Selection"
                 >
                   {(currentStep > 1 || isQuizSubmitted) ? "✓" : "1"}
                 </button>
 
-                <div className={`w-5 h-0.5 rounded-full transition-colors duration-300 ${(currentStep > 1 || isQuizSubmitted) ? "bg-green-500" : "bg-zinc-300"}`} />
+                <div className={`w-4 h-0.5 rounded-full transition-colors duration-300 ${(currentStep > 1 || isQuizSubmitted) ? "bg-green-500" : "bg-zinc-300"}`} />
 
                 {/* Step 2 Node */}
                 <button
                   type="button"
-                  onClick={() => {
-                    const dollValid = projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl);
-                    if ((result || dollValid) && !isQuizSubmitted) {
-                      setCurrentStep(2);
-                    }
-                  }}
-                  disabled={isQuizSubmitted || (!result && !(projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl)))}
+                  onClick={() => { if (!isQuizSubmitted) setCurrentStep(2); }}
+                  disabled={isQuizSubmitted}
                   className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-xs disabled:opacity-40 ${
                     !isQuizSubmitted && currentStep === 2
                       ? "bg-blue-600 text-white ring-4 ring-blue-100"
@@ -1132,92 +1127,177 @@ export default function Home() {
                       ? "bg-green-600 text-white"
                       : "bg-white text-slate-600 border border-zinc-300"
                   }`}
-                  title="Step 2: Engineering Parameters"
+                  title="Step 2: Sketch Upload & Originality Check"
                 >
                   {(currentStep > 2 || isQuizSubmitted) ? "✓" : "2"}
                 </button>
 
-                <div className={`w-5 h-0.5 rounded-full transition-colors duration-300 ${(currentStep > 2 || isQuizSubmitted) ? "bg-green-500" : "bg-zinc-300"}`} />
+                <div className={`w-4 h-0.5 rounded-full transition-colors duration-300 ${(currentStep > 2 || isQuizSubmitted) ? "bg-green-500" : "bg-zinc-300"}`} />
 
                 {/* Step 3 Node */}
                 <button
                   type="button"
                   onClick={() => {
                     const dollValid = projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl);
-                    if ((result || dollValid) && quizName.trim() && !isQuizSubmitted) {
+                    if ((result || dollValid) && !isQuizSubmitted) {
                       setCurrentStep(3);
+                    }
+                  }}
+                  disabled={isQuizSubmitted || (!result && !(projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl)))}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-xs disabled:opacity-40 ${
+                    !isQuizSubmitted && currentStep === 3
+                      ? "bg-blue-600 text-white ring-4 ring-blue-100"
+                      : (currentStep > 3 || isQuizSubmitted)
+                      ? "bg-green-600 text-white"
+                      : "bg-white text-slate-600 border border-zinc-300"
+                  }`}
+                  title="Step 3: Engineering Parameters"
+                >
+                  {(currentStep > 3 || isQuizSubmitted) ? "✓" : "3"}
+                </button>
+
+                <div className={`w-4 h-0.5 rounded-full transition-colors duration-300 ${(currentStep > 3 || isQuizSubmitted) ? "bg-green-500" : "bg-zinc-300"}`} />
+
+                {/* Step 4 Node */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dollValid = projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl);
+                    if ((result || dollValid) && quizName.trim() && !isQuizSubmitted) {
+                      setCurrentStep(4);
                     }
                   }}
                   disabled={isQuizSubmitted || !quizName.trim() || (!result && !(projectMode === "doll" && Object.values(componentsState).some(c => c.previewUrl)))}
                   className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-xs disabled:opacity-40 ${
-                    !isQuizSubmitted && currentStep === 3
+                    !isQuizSubmitted && currentStep === 4
                       ? "bg-blue-600 text-white ring-4 ring-blue-100"
                       : isQuizSubmitted
                       ? "bg-green-600 text-white"
                       : "bg-white text-slate-600 border border-zinc-300"
                   }`}
-                  title="Step 3: Pre-Production Review & Verification"
+                  title="Step 4: Pre-Production Review & Verification"
                 >
-                  {isQuizSubmitted ? "✓" : "3"}
+                  {isQuizSubmitted ? "✓" : "4"}
                 </button>
 
-                <div className={`w-5 h-0.5 rounded-full transition-colors duration-300 ${isQuizSubmitted ? "bg-green-500" : "bg-zinc-300"}`} />
+                <div className={`w-4 h-0.5 rounded-full transition-colors duration-300 ${isQuizSubmitted ? "bg-green-500" : "bg-zinc-300"}`} />
 
-                {/* Step 4 Node */}
+                {/* Step 5 Node */}
                 <button
                   type="button"
                   disabled={!isQuizSubmitted}
                   className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-xs disabled:opacity-40 ${
-                    isQuizSubmitted || currentStep === 4
+                    isQuizSubmitted || currentStep === 5
                       ? "bg-blue-600 text-white ring-4 ring-blue-100"
                       : "bg-white text-slate-600 border border-zinc-300"
                   }`}
-                  title="Step 4: Finalized Process Sheet"
+                  title="Step 5: Finalized Process Sheet"
                 >
-                  4
+                  5
                 </button>
               </div>
             </div>
 
-            {/* ── STEP 1: Upload & Originality Check ── */}
+            {/* ── STEP 1: Project Mode Selection (Process 1 Penpot Design) ── */}
             {!isQuizSubmitted && currentStep === 1 && (
-              <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[540px] animate-in fade-in duration-300">
-                <div className="flex flex-col gap-6">
-                  {/* Mode Selector Card */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-150">
-                    <div>
-                      <h2 className="font-display font-semibold text-lg text-black">Step 1: Sketch &amp; Originality Check</h2>
-                      <p className="text-xs text-slate-500">Select project structure and upload garment sketch for DINOv2 AI vector scan.</p>
+              <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[500px] animate-in fade-in duration-300">
+                <div className="flex flex-col gap-6 max-w-4xl">
+                  <div className="pb-4 border-b border-zinc-150">
+                    <h2 className="font-display font-semibold text-lg text-black">Step 1: Select Project Mode</h2>
+                    <p className="text-xs text-slate-500 font-medium">Choose your workspace setup for garment analysis and process sheet creation.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4">
+                    {/* Option 1: Single Project based on doll type */}
+                    <div
+                      onClick={() => setProjectMode("doll")}
+                      className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[220px] ${
+                        projectMode === "doll"
+                          ? "border-blue-600 bg-blue-50/40 shadow-sm"
+                          : "border-zinc-200 hover:border-blue-400 bg-white"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl">
+                          🧸
+                        </div>
+                        <h3 className="font-display font-bold text-base text-black">Single Project based on doll type</h3>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          Multi-fabric outfit project (Jacket + Pants + Hat) engineered specifically for doll clothing specifications.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-zinc-150/60">
+                        <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] ${
+                          projectMode === "doll" ? "border-blue-600 bg-blue-600 text-white" : "border-zinc-300"
+                        }`}>
+                          {projectMode === "doll" ? "✓" : ""}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-700">Selected Template</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-zinc-200/80 self-start sm:self-auto">
-                      <button
-                        onClick={() => setProjectMode("doll")}
-                        className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
-                          projectMode === "doll"
-                            ? "bg-white text-blue-600 shadow-2xs border border-zinc-200/50 font-bold"
-                            : "text-slate-600 hover:text-black"
-                        }`}
-                      >
-                        🧸 Outfit Project (Multi-Fabric)
-                      </button>
-                      <button
-                        onClick={() => setProjectMode("single")}
-                        className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
-                          projectMode === "single"
-                            ? "bg-white text-blue-600 shadow-2xs border border-zinc-200/50 font-bold"
-                            : "text-slate-600 hover:text-black"
-                        }`}
-                      >
-                        👕 Single Garment Project
-                      </button>
+                    {/* Option 2: Multi Garment for batch processing */}
+                    <div
+                      onClick={() => setProjectMode("single")}
+                      className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[220px] ${
+                        projectMode === "single"
+                          ? "border-blue-600 bg-blue-50/40 shadow-sm"
+                          : "border-zinc-200 hover:border-blue-400 bg-white"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl">
+                          👕
+                        </div>
+                        <h3 className="font-display font-bold text-base text-black">Multi Garment for batch processing</h3>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          Single garment project (Shirt, T-Shirt, Jacket, Pants, Skirt, Dress) for industrial manufacturing &amp; process sheet compilation.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-zinc-150/60">
+                        <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] ${
+                          projectMode === "single" ? "border-blue-600 bg-blue-600 text-white" : "border-zinc-300"
+                        }`}>
+                          {projectMode === "single" ? "✓" : ""}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-700">Selected Template</span>
+                      </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Step 1 Bottom Action Bar */}
+                <div className="flex items-center justify-between pt-6 mt-8 border-t border-zinc-200">
+                  <div className="text-xs text-slate-400 font-medium">
+                    Step 1 of 5: Project Setup
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all duration-300 cursor-pointer"
+                  >
+                    Continue →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 2: Sketch Upload & Originality Check (Process 2 Penpot Design) ── */}
+            {!isQuizSubmitted && currentStep === 2 && (
+              <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[520px] animate-in fade-in duration-300">
+                <div className="flex flex-col gap-6">
+                  <div className="pb-4 border-b border-zinc-150">
+                    <h2 className="font-display font-semibold text-lg text-black">Step 2: Upload Sketch &amp; DINOv2 Originality Check</h2>
+                    <p className="text-xs text-slate-500 font-medium">Upload your garment sketch for DINOv2 AI visual embedding originality scan.</p>
                   </div>
 
                   {projectMode === "doll" ? (
-                    /* Doll / Outfit Multi-Fabric Upload Grid */
+                    /* Multi-Fabric Outfit Grid Upload */
                     <div className="flex flex-col gap-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         {(DOLL_TYPES[dollType] || []).map((g) => {
                           const compState = componentsState[g] || { fabricWeight: "Cotton (Medium-weight)", imageFile: null, previewUrl: null, result: null };
                           return (
@@ -1276,7 +1356,7 @@ export default function Home() {
                                        }`}>{isRejected ? "REJECTED" : "APPROVED"}</span>
                                      </div>
                                      <div className="truncate font-semibold">{compRes?.classification?.[0]?.class_name || "Original Pattern"}</div>
-                                     <div>Similarity: {dbScore.toFixed(1)}%</div>
+                                     <div>Similarity: {dbScore.toFixed(2)}%</div>
                                    </div>
                                  );
                                })() : compState.previewUrl ? (
@@ -1294,22 +1374,11 @@ export default function Home() {
                       </div>
                     </div>
                   ) : (
-                    /* Single Garment Upload & Originality Check */
-                    <div className="flex flex-col gap-6">
-
-                      {/* Image Upload Box */}
-                      <div className="bg-slate-50/50 border border-zinc-200 rounded-xl p-8">
-                        <div className="flex justify-between items-center mb-4">
-                          <h3 className="font-display font-semibold text-md text-black">Garment Sketch Image</h3>
-                          {previewUrl && (
-                            <button
-                              onClick={handleResetWorkspace}
-                              className="text-xs font-semibold text-blue-600 hover:text-blue-700 underline focus:outline-none"
-                            >
-                              Upload New Sketch
-                            </button>
-                          )}
-                        </div>
+                    /* Single Garment Upload & Penpot Design Description */
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                      {/* Left: Upload box */}
+                      <div className="bg-slate-50/60 border border-zinc-200 rounded-2xl p-6 flex flex-col gap-4">
+                        <h3 className="font-semibold text-sm text-black">Garment Sketch Input</h3>
 
                         {!previewUrl ? (
                           <div
@@ -1317,7 +1386,7 @@ export default function Home() {
                             onDragLeave={handleDragLeave}
                             onDrop={handleDrop}
                             onClick={triggerFileSelect}
-                            className={`border-2 border-dashed rounded-xl flex flex-col items-center justify-center p-12 aspect-[16/9] max-h-[360px] text-center cursor-pointer transition-all duration-300 bg-white ${
+                            className={`border-2 border-dashed rounded-xl flex flex-col items-center justify-center p-10 aspect-[4/3] max-h-[300px] text-center cursor-pointer transition-all duration-300 bg-white ${
                               isDragOver ? "border-blue-600 bg-blue-50/50" : "border-zinc-250 hover:border-blue-500"
                             }`}
                           >
@@ -1328,23 +1397,17 @@ export default function Home() {
                               accept="image/*"
                               className="hidden"
                             />
-                            <svg
-                              className="w-12 h-12 text-slate-400 mb-4 transition-transform duration-300 hover:scale-105"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              viewBox="0 0 24 24"
-                            >
+                            <svg className="w-10 h-10 text-slate-400 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                               <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                               <circle cx="8.5" cy="8.5" r="1.5" />
                               <polyline points="21 15 16 10 5 21" />
                             </svg>
-                            <p className="text-sm text-slate-600">
-                              Drag &amp; drop garment sketch or <span className="text-blue-600 underline font-semibold">browse files</span>
+                            <p className="text-xs text-slate-600 font-medium">
+                              Upload your image and your image will be displayed here
                             </p>
                           </div>
                         ) : (
-                          <div className="relative rounded-xl overflow-hidden border border-zinc-200 aspect-[16/9] max-h-[360px] w-full bg-white flex items-center justify-center">
+                          <div className="relative rounded-xl overflow-hidden border border-zinc-200 aspect-[4/3] max-h-[300px] w-full bg-white flex items-center justify-center">
                             <img
                               src={result ? result.preview_image : previewUrl}
                               alt="Garment Preview"
@@ -1353,217 +1416,227 @@ export default function Home() {
                           </div>
                         )}
 
-                        {result ? (
-                          <div className="mt-6 flex flex-col gap-3">
-                            {result && (() => {
-                              const _s = (result.status || "").toUpperCase();
-                              const isRejected = _s === "REJECTED" || _s === "HISTORICAL_MATCH_FOUND";
-                              const dbScore = result.similarity_percentage || 0;
-
-                              return (
-                                <div className="flex flex-col gap-3">
-                                  {/* Clean Verdict Card (No duplicate buttons) */}
-                                  <div className={`p-5 rounded-xl border flex flex-col gap-2 transition-all duration-300 ${
-                                    isRejected ? "bg-red-50 border-red-200 text-red-900" : "bg-green-50 border-green-200 text-green-900"
-                                  }`}>
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-[11px] font-mono uppercase tracking-widest font-bold opacity-75">Originality Check Verdict</span>
-                                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                        isRejected ? "bg-red-200 text-red-955" : "bg-green-200 text-green-955"
-                                      }`}>{isRejected ? "REJECTED" : "APPROVED"}</span>
-                                    </div>
-
-                                    <div className="flex items-baseline gap-2 mt-1">
-                                      <span className={`font-display font-bold text-3xl ${
-                                        isRejected ? "text-red-700" : "text-green-700"
-                                      }`}>{dbScore.toFixed(2)}%</span>
-                                      <span className="text-xs font-semibold opacity-75">
-                                        database similarity score
-                                      </span>
-                                    </div>
-
-                                    <p className="text-xs leading-relaxed opacity-90 font-medium mt-1">
-                                      {result.message || (isRejected 
-                                        ? `Critical Warning: ${dbScore.toFixed(2)}% duplicate image match detected in database.` 
-                                        : `Clear: ${dbScore.toFixed(2)}% database similarity detected. Safe for production.`)}
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        ) : previewUrl ? (
+                        {previewUrl && !result && (
                           <button
                             onClick={handleAnalyze}
                             disabled={isLoading}
-                            className="mt-6 w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all duration-300 disabled:opacity-50 shadow-md cursor-pointer"
+                            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-50 cursor-pointer"
                           >
-                            {isLoading ? "Checking design originality..." : "Verify Pattern Originality"}
+                            {isLoading ? "Scanning Originality..." : "Verify Pattern Originality"}
                           </button>
-                        ) : null}
+                        )}
+                      </div>
+
+                      {/* Right: Design description card (Matching Penpot process2 exact text format) */}
+                      <div className="bg-slate-50/60 border border-zinc-200 rounded-2xl p-6 flex flex-col gap-4 min-h-[320px]">
+                        <h3 className="font-semibold text-sm text-black">Design description:</h3>
+
+                        {result ? (() => {
+                          const _s = (result.status || "").toUpperCase();
+                          const isRejected = _s === "REJECTED" || _s === "HISTORICAL_MATCH_FOUND";
+                          const dbScore = result.similarity_percentage || 0;
+
+                          return (
+                            <div className={`p-5 rounded-xl border flex flex-col gap-2 ${
+                              isRejected ? "bg-red-50 border-red-200 text-red-900" : "bg-green-50 border-green-200 text-green-900"
+                            }`}>
+                              <p className="text-xs font-mono font-bold">
+                                - {dbScore.toFixed(2)}% similarity, {isRejected ? "duplicate match detected" : "good"}
+                              </p>
+                              <p className="text-xs font-medium opacity-90">
+                                - {isRejected ? "warning: high similarity with database entry, review before proceeding" : "no reason to be rejected, you can continue"}
+                              </p>
+                            </div>
+                          );
+                        })() : (
+                          <div className="p-5 rounded-xl border border-dashed border-zinc-250 bg-white text-xs text-slate-400 font-medium leading-relaxed">
+                            - Upload a sketch to run automatic DINOv2 visual similarity scan against the engineering database.
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Step 1 Bottom Action Bar */}
-                <div className="flex items-center justify-between pt-6 mt-8 border-t border-zinc-200">
-                  <div className="text-xs text-slate-400 font-medium">
-                    Step 1 of 4: Pattern Originality Verification
-                  </div>
-
-                  {projectMode === "doll" ? (
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(2)}
-                      disabled={!Object.values(componentsState).some(c => c.previewUrl)}
-                      className="px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      Continue to Engineering Parameters (Step 2) →
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(2)}
-                      disabled={!result || ["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase())}
-                      className="px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      Continue to Engineering Parameters (Step 2) →
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 2: Engineering Parameters ── */}
-            {!isQuizSubmitted && currentStep === 2 && (
-              <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[540px] animate-in fade-in duration-300">
-                <div className="flex flex-col gap-6 max-w-3xl">
-                  <div className="pb-4 border-b border-zinc-150">
-                    <h2 className="font-display font-semibold text-lg text-black">Step 2: Engineering Parameters</h2>
-                    <p className="text-xs text-slate-500 font-medium">Define project parameters, garment style, and fabric application specs.</p>
-                  </div>
-
-                  <form id="step2-form" onSubmit={(e) => { e.preventDefault(); if (quizName.trim()) setCurrentStep(3); }} className="flex flex-col gap-6">
-                    {projectMode === "doll" && (
-                      <div className="flex flex-col gap-2">
-                        <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Doll Type Template</label>
-                        <select
-                          value={dollType}
-                          onChange={(e) => setDollType(e.target.value)}
-                          className="bg-slate-50 border border-zinc-200 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-semibold"
-                        >
-                          {Object.keys(DOLL_TYPES).map(t => (
-                            <option key={t} value={t}>
-                              {t} — ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Project Name</label>
-                      <input
-                        type="text"
-                        value={quizName}
-                        onChange={(e) => setQuizName(e.target.value)}
-                        placeholder="e.g. Summer Garment Production Batch #1"
-                        required
-                        className="bg-slate-50 border border-zinc-200 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
-                      />
-                    </div>
-
-                    {projectMode === "single" && (
-                      <>
-                        <div className="flex flex-col gap-2">
-                          <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Garment Type Category</label>
-                          <select
-                            value={quizGarment}
-                            onChange={(e) => setQuizGarment(e.target.value)}
-                            className="bg-slate-50 border border-zinc-200 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
-                          >
-                            <optgroup label="Tops">
-                              <option value="Shirt">Kemeja (Shirt) — 8 Steps</option>
-                              <option value="T-Shirt">Kaos (T-Shirt) — 4 Steps</option>
-                              <option value="Jacket">Jaket / Outerwear — 6 Steps</option>
-                            </optgroup>
-                            <optgroup label="Bottoms">
-                              <option value="Pants">Celana Panjang (Pants) — 6 Steps</option>
-                              <option value="Skirt">Rok (Skirt) — 4 Steps</option>
-                            </optgroup>
-                            <optgroup label="Full-body">
-                              <option value="Dress">Gaun / Dress — 5 Steps</option>
-                              <option value="Hat">Topi / Hat — 5 Steps</option>
-                            </optgroup>
-                          </select>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                          <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Fabric Application / Weight</label>
-                          <select
-                            value={quizFabric}
-                            onChange={(e) => setQuizFabric(e.target.value)}
-                            className="bg-slate-50 border border-zinc-200 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
-                          >
-                            <optgroup label="Light-weight">
-                              <option value="Silk (Light-weight)">Sutra / Silk</option>
-                              <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
-                              <option value="Organza (Light-weight)">Organza</option>
-                              <option value="Crepe (Light-weight)">Krep / Crepe</option>
-                              <option value="Rayon (Light-weight)">Rayon / Viscose</option>
-                            </optgroup>
-                            <optgroup label="Medium-weight">
-                              <option value="Cotton (Medium-weight)">Katun / Cotton</option>
-                              <option value="Batik (Medium-weight)">Batik Tulis &amp; Cap</option>
-                              <option value="Linen (Medium-weight)">Linen</option>
-                              <option value="Satin (Medium-weight)">Satin / Duchess</option>
-                              <option value="Flannel (Medium-weight)">Flanel / Flannel</option>
-                              <option value="Polyester (Medium-weight)">Polyester</option>
-                            </optgroup>
-                            <optgroup label="Heavy-weight">
-                              <option value="Denim (Heavy-weight)">Denim / Jeans (14oz)</option>
-                              <option value="Corduroy (Heavy-weight)">Corduroy</option>
-                              <option value="Tweed (Heavy-weight)">Tweed / Wool</option>
-                              <option value="Gabardine (Heavy-weight)">Gabardine</option>
-                              <option value="Synthetic Fur (Heavy-weight)">Synthetic Furs / Canvas</option>
-                            </optgroup>
-                          </select>
-                        </div>
-                      </>
-                    )}
-                  </form>
-                </div>
-
-                {/* Step 2 Bottom Action Bar */}
+                {/* Step 2 Bottom Action Bar (Back / Continue matching Penpot buttons) */}
                 <div className="flex items-center justify-between pt-6 mt-8 border-t border-zinc-200">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
                     className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all duration-200 cursor-pointer"
                   >
-                    ← Back to Step 1
+                    Back
+                  </button>
+
+                  {projectMode === "doll" ? (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(3)}
+                      disabled={!Object.values(componentsState).some(c => c.previewUrl)}
+                      className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Continue
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(3)}
+                      disabled={!result || ["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase())}
+                      className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Continue
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 3: Image Display & Engineering Parameters (Process 3 Penpot Design) ── */}
+            {!isQuizSubmitted && currentStep === 3 && (
+              <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[520px] animate-in fade-in duration-300">
+                <div className="flex flex-col gap-6">
+                  <div className="pb-4 border-b border-zinc-150">
+                    <h2 className="font-display font-semibold text-lg text-black">Step 3: Engineering Parameters</h2>
+                    <p className="text-xs text-slate-500 font-medium">Define project name, garment category, and fabric specs using the verified sketch.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    {/* Left: Your Image display from previous steps */}
+                    <div className="bg-slate-50/60 border border-zinc-200 rounded-2xl p-6 flex flex-col gap-3">
+                      <span className="text-xs font-semibold text-slate-700">Your Image display from previous steps</span>
+                      <div className="aspect-[4/3] max-h-[300px] bg-white border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center p-3">
+                        <img
+                          src={result?.preview_image || previewUrl || "globe.svg"}
+                          alt="Sketch from Step 2"
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Right: Engineering Parameters Form */}
+                    <div className="bg-slate-50/60 border border-zinc-200 rounded-2xl p-6 flex flex-col gap-6">
+                      <form id="step3-form" onSubmit={(e) => { e.preventDefault(); if (quizName.trim()) setCurrentStep(4); }} className="flex flex-col gap-5">
+                        {projectMode === "doll" && (
+                          <div className="flex flex-col gap-2">
+                            <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Doll Type Template</label>
+                            <select
+                              value={dollType}
+                              onChange={(e) => setDollType(e.target.value)}
+                              className="bg-white border border-zinc-200 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-semibold"
+                            >
+                              {Object.keys(DOLL_TYPES).map(t => (
+                                <option key={t} value={t}>
+                                  {t} — ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col gap-2">
+                          <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Project Name</label>
+                          <input
+                            type="text"
+                            value={quizName}
+                            onChange={(e) => setQuizName(e.target.value)}
+                            placeholder="e.g. Summer Garment Production Batch #1"
+                            required
+                            className="bg-white border border-zinc-200 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
+                          />
+                        </div>
+
+                        {projectMode === "single" && (
+                          <>
+                            <div className="flex flex-col gap-2">
+                              <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Garment Type Category</label>
+                              <select
+                                value={quizGarment}
+                                onChange={(e) => setQuizGarment(e.target.value)}
+                                className="bg-white border border-zinc-200 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
+                              >
+                                <optgroup label="Tops">
+                                  <option value="Shirt">Kemeja (Shirt) — 8 Steps</option>
+                                  <option value="T-Shirt">Kaos (T-Shirt) — 4 Steps</option>
+                                  <option value="Jacket">Jaket / Outerwear — 6 Steps</option>
+                                </optgroup>
+                                <optgroup label="Bottoms">
+                                  <option value="Pants">Celana Panjang (Pants) — 6 Steps</option>
+                                  <option value="Skirt">Rok (Skirt) — 4 Steps</option>
+                                </optgroup>
+                                <optgroup label="Full-body">
+                                  <option value="Dress">Gaun / Dress — 5 Steps</option>
+                                  <option value="Hat">Topi / Hat — 5 Steps</option>
+                                </optgroup>
+                              </select>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                              <label className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Fabric Application / Weight</label>
+                              <select
+                                value={quizFabric}
+                                onChange={(e) => setQuizFabric(e.target.value)}
+                                className="bg-white border border-zinc-200 rounded-lg py-2.5 px-4 text-sm focus:outline-none focus:border-blue-500 w-full text-black font-medium"
+                              >
+                                <optgroup label="Light-weight">
+                                  <option value="Silk (Light-weight)">Sutra / Silk</option>
+                                  <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
+                                  <option value="Organza (Light-weight)">Organza</option>
+                                  <option value="Crepe (Light-weight)">Krep / Crepe</option>
+                                  <option value="Rayon (Light-weight)">Rayon / Viscose</option>
+                                </optgroup>
+                                <optgroup label="Medium-weight">
+                                  <option value="Cotton (Medium-weight)">Katun / Cotton</option>
+                                  <option value="Batik (Medium-weight)">Batik Tulis &amp; Cap</option>
+                                  <option value="Linen (Medium-weight)">Linen</option>
+                                  <option value="Satin (Medium-weight)">Satin / Duchess</option>
+                                  <option value="Flannel (Medium-weight)">Flanel / Flannel</option>
+                                  <option value="Polyester (Medium-weight)">Polyester</option>
+                                </optgroup>
+                                <optgroup label="Heavy-weight">
+                                  <option value="Denim (Heavy-weight)">Denim / Jeans (14oz)</option>
+                                  <option value="Corduroy (Heavy-weight)">Corduroy</option>
+                                  <option value="Tweed (Heavy-weight)">Tweed / Wool</option>
+                                  <option value="Gabardine (Heavy-weight)">Gabardine</option>
+                                  <option value="Synthetic Fur (Heavy-weight)">Synthetic Furs / Canvas</option>
+                                </optgroup>
+                              </select>
+                            </div>
+                          </>
+                        )}
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 Bottom Action Bar (Back / Continue matching Penpot buttons) */}
+                <div className="flex items-center justify-between pt-6 mt-8 border-t border-zinc-200">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all duration-200 cursor-pointer"
+                  >
+                    Back
                   </button>
 
                   <button
                     type="submit"
-                    form="step2-form"
+                    form="step3-form"
                     disabled={!quizName.trim()}
-                    className="px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                    className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-50 cursor-pointer"
                   >
-                    Continue to Pre-Production Review (Step 3) →
+                    Continue
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ── STEP 3: Pre-Production Review & Final Lock Verification (Pre-Commit) ── */}
-            {!isQuizSubmitted && currentStep === 3 && (
-              <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[540px] animate-in fade-in duration-300">
+            {/* ── STEP 4: Pre-Production Review & Final Lock Verification (Pre-Commit) ── */}
+            {!isQuizSubmitted && currentStep === 4 && (
+              <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-xs flex flex-col justify-between min-h-[520px] animate-in fade-in duration-300">
                 <div className="flex flex-col gap-6">
                   <div className="pb-4 border-b border-zinc-150 flex justify-between items-center">
                     <div>
-                      <h2 className="font-display font-semibold text-lg text-black">Step 3: Pre-Production Review &amp; Final Lock Verification</h2>
+                      <h2 className="font-display font-semibold text-lg text-black">Step 4: Pre-Production Review &amp; Final Lock Verification</h2>
                       <p className="text-xs text-slate-500">Review project parameters carefully before locking into the database.</p>
                     </div>
                     <span className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold rounded-lg">
@@ -1597,7 +1670,7 @@ export default function Home() {
                       <div className="flex justify-between items-center pt-1 text-xs">
                         <span className="text-slate-500">Originality Status:</span>
                         <span className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                          Approved ({result?.similarity_percentage?.toFixed(1) || 90.0}% Similarity)
+                          Approved ({result?.similarity_percentage?.toFixed(2) || 90.0}% Similarity)
                         </span>
                       </div>
                     </div>
@@ -1618,14 +1691,14 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Step 3 Bottom Action Bar */}
+                {/* Step 4 Bottom Action Bar */}
                 <div className="flex items-center justify-between pt-6 mt-8 border-t border-zinc-200">
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(2)}
+                    onClick={() => setCurrentStep(3)}
                     className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all duration-200 cursor-pointer"
                   >
-                    ← Edit Inputs (Step 2)
+                    Back
                   </button>
 
                   <button
@@ -1634,13 +1707,13 @@ export default function Home() {
                     disabled={isLoading}
                     className="px-8 py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-xs shadow-md transition-all duration-300 disabled:opacity-50 cursor-pointer flex items-center gap-2"
                   >
-                    {isLoading ? "Locking & Registering..." : "🔒 Lock & Commit to Engineering DB (Step 4) →"}
+                    {isLoading ? "Locking & Registering..." : "🔒 Lock & Commit to Engineering DB (Step 5) →"}
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ── STEP 4: Finalized & Locked Process Sheet Output ── */}
+            {/* ── STEP 5: Finalized & Locked Process Sheet Output ── */}
             {isQuizSubmitted && fullResult && (
               <div className="w-full flex flex-col gap-8 animate-in fade-in duration-300">
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-6">
@@ -1760,6 +1833,10 @@ export default function Home() {
                               <span className="text-slate-400">Garment Category:</span>
                               <span className="font-semibold text-black">{quizGarment}</span>
                             </div>
+                            <div className="flex justify-between items-center text-xs border-t border-zinc-100 pt-2.5">
+                              <span className="text-slate-400">Fabric Application:</span>
+                              <span className="font-semibold text-black">{quizFabric}</span>
+                            </div>
                           </>
                         )}
                       </div>
@@ -1817,6 +1894,7 @@ export default function Home() {
                       </div>
                     </div>
 
+                    {/* Tooling Grid Recommendations */}
                     <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs">
                       <h2 className="font-display font-semibold text-lg text-black mb-6">
                         RECOMMENDED JUKI MACHINERY
@@ -1840,6 +1918,7 @@ export default function Home() {
                       </div>
                     </div>
 
+                    {/* SMV & COMPLEXITY SUMMARY */}
                     <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs flex flex-col gap-6">
                       <div className="flex items-center justify-between">
                         <div>
