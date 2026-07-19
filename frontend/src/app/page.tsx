@@ -862,12 +862,13 @@ export default function Home() {
     );
   };
 
-  const sidebarItems = [    { id: "dashboard-view", label: "Dashboard", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" },
+  const sidebarItems = [
+    { id: "dashboard-view", label: "Engineering Dashboard", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" },
     { id: "design-input-view", label: "Create Process Sheet", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
-    { id: "tooling-view", label: "Machine Catalog", icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.594 15.12a2 2 0 00-1.022.547l-1.4 1.4A2 2 0 004.596 20.5l.896-.896a2 2 0 011.414-.586h.88a2 2 0 001.414-.586l1.242-1.243a4 4 0 012.829-1.172h.434a4 4 0 012.829 1.172l1.242 1.243a2 2 0 001.414.586h.88a2 2 0 011.414.586l.896.896a2 2 0 001.414-2.828l-1.4-1.4z" },
-    { id: "knowledge-view", label: "Garment Type Catalog", icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
-    { id: "projects-view", label: "Projects Database", icon: "M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1a2 2 0 002 2h2a2 2 0 012 2v3a2 2 0 01-2 2H5z" },
-    { id: "settings-view", label: "Settings", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" },
+    { id: "tooling-view", label: "Sewing Machinery Catalog", icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.594 15.12a2 2 0 00-1.022.547l-1.4 1.4A2 2 0 004.596 20.5l.896-.896a2 2 0 011.414-.586h.88a2 2 0 001.414-.586l1.242-1.243a4 4 0 012.829-1.172h.434a4 4 0 012.829 1.172l1.242 1.243a2 2 0 001.414.586h.88a2 2 0 011.414.586l.896.896a2 2 0 001.414-2.828l-1.4-1.4z" },
+    { id: "knowledge-view", label: "Manufacturing Knowledge Base", icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
+    { id: "projects-view", label: "Active Projects & History", icon: "M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1a2 2 0 002 2h2a2 2 0 012 2v3a2 2 0 01-2 2H5z" },
+    { id: "settings-view", label: "System Settings", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" },
   ];
 
   return (
@@ -1183,19 +1184,20 @@ export default function Home() {
           return (
             <div className="fade-in w-full flex flex-col min-h-screen bg-white">
               {/* ── BANNER — Flush full-width header matching Penpot ── */}
-              <div className="bg-[#155DFC] px-10 py-6 flex items-center justify-between no-print print:hidden">
+              <div className="bg-[#155DFC] px-12 pt-12 pb-6 flex items-center justify-between no-print print:hidden">
                 <div>
-                  <h1 className="text-white font-black text-2xl tracking-wide uppercase leading-none">
-                    CREATE PROCESS
+                  <span className="text-xs font-mono text-blue-200/90 font-bold uppercase tracking-widest">Interactive Engineering Studio</span>
+                  <h1 className="font-display font-bold text-3xl md:text-4xl text-white mt-1 mb-2 tracking-tight">
+                    Create Process Sheet
                   </h1>
-                  <p className="text-blue-100 text-xs mt-1 font-medium">
-                    Compile industrial sewing specifications, machine allocations, and SMV timing
+                  <p className="text-blue-100/90 text-sm font-normal max-w-2xl leading-relaxed">
+                    Compile industrial sewing specifications, machine allocations, and SMV timing for production planning.
                   </p>
                 </div>
               </div>
 
               {/* ── STEPPER TABS — Wide, balanced equal-width tabs matching Penpot ── */}
-              <div className="bg-[#155DFC] flex items-end px-10 no-print print:hidden">
+              <div className="bg-[#155DFC] flex items-end px-12 no-print print:hidden">
                 {[
                   { n: 1, label: "STEP 1" },
                   { n: 2, label: "STEP 2" },
