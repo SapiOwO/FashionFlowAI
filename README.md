@@ -186,29 +186,5 @@ This single command starts both servers:
 .venv\Scripts\python.exe -m pytest backend/tests/ -v
 ```
 
----
 
-## 🐳 Production Deployment via Docker
-
-```bash
-# Build and run containers for frontend + backend:
-docker compose up --build
-```
-
----
-
-## 📋 Industrial MVP Acceptance Criteria
-
-| Criterion | Status |
-|---|---|
-| Upload a garment image or sketch | ✅ |
-| Classify garment type and construction features | ✅ Pipeline A: Ensemble + YOLO |
-| Generate a draft sewing sequence | ✅ Template-driven per garment type |
-| Recommend tooling and machine requirements | ✅ Matched via multi-tier resolver |
-| Estimate complexity and SMV range | ✅ |
-| Retrieve at least three similar historical examples | ✅ Pipeline B: DINOv2 + Top-3 pgvector HNSW search |
-| Save and manage past project records | ✅ Persistent DB with rename/delete/clear endpoints |
-| Professional manufacturing status wording | ✅ `HISTORICAL_MATCH_FOUND` with matched ID # |
-| Latency benchmarking metrics | ✅ `timings_ms` returned in API response |
-| Regression test coverage for data contracts | ✅ 34 automated unit tests (100% passing) |
 
