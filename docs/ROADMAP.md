@@ -63,12 +63,12 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Added 20% minimum contour area ratio and 150×150px output size guards to `correct_image_perspective()` to prevent catastrophic warping on non-sketch/digital images.
   * Decoupled frontend UI verdict banners and right panel form visibility to strictly rely on backend `status` (`REJECTED` / `APPROVED`), eliminating Batik classification score false positives.
   * Enhanced `check_saved_history_similarity()` in `db.py` with verbose diagnostic logging for vector search counts, per-record cosine scores, and verdict thresholds.
-* **Phase 13: DINOv2 Feature Extractor Upgrade & 2-Pipeline Architecture (v1.7.0)**:
+* **Phase 13: DINOv2 Feature Extractor Upgrade & 2-Pipeline Architecture (2026-07-19)**:
   * Replaced `MobileNetV3 Small` feature extractor with Meta **DINOv2 Small (`dinov2_vits14`)** for Pipeline B (Visual Embedding & Retrieval).
   * Pre-loaded `dinov2_vits14` once at startup into `_DINO_MODEL` module-level cache — zero per-request model re-instantiation.
   * Documented explicit **2-Pipeline Architecture**: Pipeline A (Classification: YOLO + MobileNetV3-L/ResNet50/EfficientNet-B0) decoupled from Pipeline B (Visual Retrieval: DINOv2 → pgvector HNSW → Top-3 Historical Records).
   * Added 5 DINOv2 regression tests to `backend/tests/test_backend_contract.py` — all 26 tests passing.
-* **Phase 14: Native pgvector HNSW Migration (v1.8.0)**:
+* **Phase 14: Native pgvector HNSW Migration (2026-07-19)**:
   * Added dedicated native `visual_vector vector(384)` and `image_md5 TEXT` columns to the `analysis_history` table.
   * Built an HNSW index (`idx_hnsw_analysis_cosine`) for fast cosine similarity visual searches.
   * Replaced Python loop-based linear scans with native SQL `ORDER BY <=> LIMIT 1` (duplication check) and `ORDER BY <=> LIMIT 3` (Top-K retrieval), scaling searches to O(log n) efficiency.

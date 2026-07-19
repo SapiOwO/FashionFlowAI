@@ -32,11 +32,15 @@ from db import (
     get_analysis_history_from_db
 )
 
-# Resolve example directory dynamically from environment or home folder to avoid hardcoded absolute paths
+# Resolve example directory dynamically from environment, project repository, or home folder
 EXAMPLE_DIR = os.getenv("TEST_EXAMPLE_DIR")
 if not EXAMPLE_DIR:
-    home_dir = os.path.expanduser("~")
-    EXAMPLE_DIR = os.path.join(home_dir, "Downloads", "example")
+    local_use_example = os.path.abspath(os.path.join(PROJECT_ROOT, "use_this_example"))
+    if os.path.exists(local_use_example):
+        EXAMPLE_DIR = local_use_example
+    else:
+        home_dir = os.path.expanduser("~")
+        EXAMPLE_DIR = os.path.join(home_dir, "Downloads", "example")
 
 
 class TestExampleFolderScenarios(unittest.TestCase):

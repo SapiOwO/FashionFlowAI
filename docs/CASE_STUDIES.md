@@ -7,23 +7,23 @@ status: "Completed"
 
 # Document Index & Changelog Timeline
 
-| Version | Date | Changes | Author |
-| :--- | :--- | :--- | :--- |
-| v1.0.0 | 2026-07-12 | Initial Next.js + FastAPI decoupled architecture implementation | AI Coding Agent |
-| v1.1.0 | 2026-07-12 | Refactored UI to JUKI monitor mockup, integrated persistent database history, cleaned Juki PDFs using MarkItDown, and resolved Windows Ctrl+C batch prompt bug | AI Coding Agent |
-| v1.2.0 | 2026-07-13 | Moved WSL model weights, added state-dict loaders, created DB history CRUD (rename/delete), and replaced dashboard mockups with system workflow guides | AI Coding Agent |
-| v1.3.0 | 2026-07-13 | Consolidated separate Sewing Flow, Tooling, and SMV panels into a single unified Process Sheet dashboard, added Production Parameters Quiz (garment type, fabric weights), and wired Projects List details load actions | AI Coding Agent |
-| v1.3.1 | 2026-07-13 | Removed premature database insertion on pattern check, and fixed handleAnalyze activeTab routing white screen bug | AI Coding Agent |
-| v1.4.0 | 2026-07-14 | Data contract refactor: multi-tier machine resolver, machine_aliases.json canonical map, strict tooling derivation, frontend skeleton empty state, legacy re-hydration helper, garment key normalization fix, 19 automated regression tests | AI Coding Agent |
-| v1.5.0 | 2026-07-14 | Consolidation of Juki CSV catalogs, unified sewing flow UI sync, added Next.js Skeleton UI & loaded items count progress bar, fixed slash-handling image URLs, database wipe and seeding | AI Coding Agent |
-| v1.5.1 | 2026-07-18 | Synced Production Parameter dropdowns with exact fabric/garment database values, fixed DDL-9000C blank dark image fallback, and reset PostgreSQL auto-increment sequence IDs to 1 | AI Coding Agent |
-| v1.6.0 | 2026-07-19 | Visual Vector Persistence & CV Pipeline Area Guards: persisted 384-dim visual vectors on process sheet creation, added 20% area ratio & 150x150px output size guards to perspective correction, decoupled frontend UI verdict from Batik model scores, added diagnostic similarity logging | AI Coding Agent |
-| v1.7.0 | 2026-07-19 | DINOv2 2-Pipeline Upgrade: replaced MobileNetV3 Small feature extractor with Meta DINOv2 Small (dinov2_vits14) for Pipeline B (Visual Retrieval), pre-load model at startup, added 5 DINOv2 regression tests (26/26 total passing), documented decoupled Classification vs Embedding pipelines | AI Coding Agent |
-| v1.8.0 | 2026-07-19 | Native pgvector Migration: added dedicated `visual_vector vector(384)` and `image_md5 TEXT` native columns to `analysis_history`, created HNSW index `idx_hnsw_analysis_cosine`, replaced Python-loop cosine scan with native SQL `ORDER BY visual_vector <=> query LIMIT k`, SQLite fallback preserved. 34/34 tests passing. | AI Coding Agent |
+| Release Date | Changes | Author |
+| :--- | :--- | :--- |
+| 2026-07-12 | Initial Next.js + FastAPI decoupled architecture implementation | AI Coding Agent |
+| 2026-07-12 | Refactored UI to JUKI monitor mockup, integrated persistent database history, cleaned Juki PDFs using MarkItDown, and resolved Windows Ctrl+C batch prompt bug | AI Coding Agent |
+| 2026-07-13 | Moved WSL model weights, added state-dict loaders, created DB history CRUD (rename/delete), and replaced dashboard mockups with system workflow guides | AI Coding Agent |
+| 2026-07-13 | Consolidated separate Sewing Flow, Tooling, and SMV panels into a single unified Process Sheet dashboard, added Production Parameters Quiz (garment type, fabric weights), and wired Projects List details load actions | AI Coding Agent |
+| 2026-07-13 | Removed premature database insertion on pattern check, and fixed handleAnalyze activeTab routing white screen bug | AI Coding Agent |
+| 2026-07-14 | Data contract refactor: multi-tier machine resolver, machine_aliases.json canonical map, strict tooling derivation, frontend skeleton empty state, legacy re-hydration helper, garment key normalization fix, 19 automated regression tests | AI Coding Agent |
+| 2026-07-14 | Consolidation of Juki CSV catalogs, unified sewing flow UI sync, added Next.js Skeleton UI & loaded items count progress bar, fixed slash-handling image URLs, database wipe and seeding | AI Coding Agent |
+| 2026-07-18 | Synced Production Parameter dropdowns with exact fabric/garment database values, fixed DDL-9000C blank dark image fallback, and reset PostgreSQL auto-increment sequence IDs to 1 | AI Coding Agent |
+| 2026-07-19 | Visual Vector Persistence & CV Pipeline Area Guards: persisted 384-dim visual vectors on process sheet creation, added 20% area ratio & 150x150px output size guards to perspective correction, decoupled frontend UI verdict from Batik model scores, added diagnostic similarity logging | AI Coding Agent |
+| 2026-07-19 | DINOv2 2-Pipeline Upgrade: replaced MobileNetV3 Small feature extractor with Meta DINOv2 Small (dinov2_vits14) for Pipeline B (Visual Retrieval), pre-load model at startup, added 5 DINOv2 regression tests (26/26 total passing), documented decoupled Classification vs Embedding pipelines | AI Coding Agent |
+| 2026-07-19 | Native pgvector Migration: added dedicated `visual_vector vector(384)` and `image_md5 TEXT` native columns to `analysis_history`, created HNSW index `idx_hnsw_analysis_cosine`, replaced Python-loop cosine scan with native SQL `ORDER BY visual_vector <=> query LIMIT k`, SQLite fallback preserved. 34/34 tests passing. | AI Coding Agent |
 
 ---
 
-# Case Study #5: FashionFlow MVP Refactoring (v1.0.0 – v1.3.1)
+# Case Study #5: FashionFlow MVP Refactoring (2026-07-12 – 2026-07-13)
 
 ## 5W+1H Diagnostic Matrix
 
@@ -48,7 +48,7 @@ status: "Completed"
 
 ---
 
-# Case Study #6: Data Contract Refactor & Machine Resolver (v1.4.0)
+# Case Study #6: Data Contract Refactor & Machine Resolver (2026-07-14)
 
 ## 5W+1H Diagnostic Matrix
 
@@ -74,7 +74,7 @@ status: "Completed"
 * Clothing production operators whose machine recommendations and garment sewing sequences were incorrect, undermining trust in the AI system's outputs.
 
 ### 3. Where
-* Next.js frontend (port 3000), FastAPI backend (port 8000). Root data contracts: `data/sewing_templates.json`, `data/juki_master_catalog.csv`, `data/machine_aliases.json` (new in v1.4.0).
+* Next.js frontend (port 3000), FastAPI backend (port 8000). Root data contracts: `data/sewing_templates.json`, `data/juki_master_catalog.csv`, `data/machine_aliases.json`.
 
 ### 4. When
 * Identified and resolved during Phase 7 refactor session, 2026-07-14.
@@ -96,7 +96,7 @@ status: "Completed"
 
 ---
 
-# Case Study #7: Dataset Consolidation, UI Sync & Skeleton UI (v1.5.0)
+# Case Study #7: Dataset Consolidation, UI Sync & Skeleton UI (2026-07-14)
 
 ## 5W+1H Diagnostic Matrix
 
@@ -130,7 +130,7 @@ status: "Completed"
 
 ---
 
-# Case Study #8: Parameter Alignment & Database ID Reset (v1.5.1)
+# Case Study #8: Parameter Alignment & Database ID Reset (2026-07-18)
 
 ## 5W+1H Diagnostic Matrix
 
@@ -161,7 +161,7 @@ status: "Completed"
 
 ---
 
-# Case Study #9: Visual Vector Persistence, Perspective Guards & Verdict Decoupling (v1.6.0)
+# Case Study #9: Visual Vector Persistence, Perspective Guards & Verdict Decoupling (2026-07-19)
 
 ## 5W+1H Diagnostic Matrix
 
@@ -195,7 +195,7 @@ status: "Completed"
 
 ---
 
-# Case Study #10: DINOv2 2-Pipeline Visual Retrieval Upgrade (v1.7.0)
+# Case Study #10: DINOv2 2-Pipeline Visual Retrieval Upgrade (2026-07-19)
 
 ## 5W+1H Diagnostic Matrix
 
@@ -237,7 +237,7 @@ status: "Completed"
 
 ---
 
-# Case Study #11: Native pgvector HNSW Migration (v1.8.0)
+# Case Study #11: Native pgvector HNSW Migration (2026-07-19)
 
 ## 5W+1H Diagnostic Matrix
 
