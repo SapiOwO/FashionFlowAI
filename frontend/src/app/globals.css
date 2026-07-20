@@ -23,6 +23,75 @@ code, pre, .font-mono {
   font-family: var(--font-geist-mono), monospace;
 }
 
+/* ── FIBONACCI / GOLDEN RATIO TYPOGRAPHY SYSTEM ── */
+.text-display-bold {
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 42px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.text-display-regular {
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 42px;
+  line-height: 1.15;
+  font-weight: 400;
+}
+
+.text-heading-bold {
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.text-heading-regular {
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 400;
+}
+
+.text-subheading-bold {
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.text-subheading-regular {
+  font-family: var(--font-outfit), sans-serif;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.text-body-bold {
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.text-body-regular {
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.text-caption-bold {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.text-caption-regular {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
 /* ── PRINT MEDIA SPECIFICATIONS (Clean A4 Technical Spec Export) ── */
 @page {
   margin: 10mm;
