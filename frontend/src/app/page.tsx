@@ -885,7 +885,7 @@ export default function Home() {
         <div className="flex items-center mb-10 h-8 pl-2 overflow-hidden">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer p-1 rounded-lg hover:bg-slate-100/50 transition-colors flex items-center justify-center flex-shrink-0"
+            className="text-slate-700 hover:text-brand-blue focus:outline-none cursor-pointer p-1 rounded-lg hover:bg-slate-100/50 transition-colors flex items-center justify-center flex-shrink-0"
             aria-label="Toggle Sidebar"
           >
             <svg
@@ -898,10 +898,10 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
-          <span className={`font-display font-bold text-xl text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+          <span className={`font-display font-bold text-heading-bold text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
             isCollapsed ? "max-w-0 opacity-0 ml-0" : "max-w-[200px] opacity-100 ml-3.5"
           }`}>
-            FashionFlow <span className="bg-[#155DFC] text-white text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
+            FashionFlow <span className="bg-[#155DFC] text-white text-caption-bold uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
           </span>
         </div>
 
@@ -911,7 +911,7 @@ export default function Home() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center rounded-xl text-body-regular py-3 px-3.5 transition-all duration-300 w-full cursor-pointer overflow-hidden ${
+              className={`flex items-center rounded-lg text-body-regular py-3 px-3.5 transition-all duration-300 w-full cursor-pointer overflow-hidden ${
                 activeTab === item.id
                   ? "bg-[#155DFC] text-white shadow-xs font-semibold"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -956,7 +956,7 @@ export default function Home() {
         {activeTab === "dashboard-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Pre-Production Engineering</span>
+              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Pre-Production Engineering</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Engineering Dashboard
               </h1>
@@ -967,11 +967,11 @@ export default function Home() {
 
             {/* Engineering KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-brand-blue/30 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-caption-bold font-mono text-slate-400 uppercase tracking-widest font-bold">Total Analyses</span>
                   <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                    <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-brand-blue" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
@@ -1048,14 +1048,14 @@ export default function Home() {
                   <h2 className="font-display font-bold text-subheading-bold text-slate-900">Engineering Workflow</h2>
                   <button
                     onClick={() => { setActiveTab("design-input-view"); setCurrentStep(1); }}
-                    className="text-body-bold font-semibold text-[#155DFC] hover:text-[#1249cc] bg-blue-50 hover:bg-blue-100 px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                    className="text-body-bold font-semibold text-brand-blue hover:text-brand-blue-hover bg-blue-50 hover:bg-blue-100 px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
                   >
                     Start New Analysis →
                   </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="flex flex-col gap-2.5 p-5 border border-blue-100 rounded-xl bg-blue-50/40">
-                    <div className="w-8 h-8 rounded-full bg-[#155DFC] text-white flex items-center justify-center font-bold text-sm">1</div>
+                    <div className="w-8 h-8 rounded-full bg-brand-blue text-white flex items-center justify-center font-bold text-sm">1</div>
                     <h3 className="font-bold text-slate-900 text-body-bold font-display">Upload &amp; Originality</h3>
                     <p className="text-body-regular text-slate-600 leading-relaxed">Upload garment sketch. DINOv2 vector engine verifies originality against database records with 95% threshold.</p>
                   </div>
@@ -1123,7 +1123,7 @@ export default function Home() {
                       return (
                         <div key={idx} className="flex gap-3 py-3 border-b border-slate-100 last:border-0 items-start">
                           <div className="flex flex-col items-center gap-1 pt-1">
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isRejected ? "bg-amber-400" : "bg-[#155DFC]"}`} />
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isRejected ? "bg-amber-400" : "bg-brand-blue"}`} />
                             {idx < analysisHistory.slice(0, 8).length - 1 && (
                               <div className="w-px flex-1 bg-slate-100 min-h-[16px]" />
                             )}
@@ -1141,7 +1141,7 @@ export default function Home() {
                     {analysisHistory.length > 8 && (
                       <button
                         onClick={() => setActiveTab("projects-view")}
-                        className="mt-3 text-body-bold font-semibold text-[#155DFC] hover:text-[#1249cc] text-left cursor-pointer"
+                        className="mt-3 text-body-bold font-semibold text-brand-blue hover:text-brand-blue-hover text-left cursor-pointer"
                       >
                         View all {analysisHistory.length} projects →
                       </button>
@@ -1252,10 +1252,10 @@ export default function Home() {
                           {/* Option 1: Single Garment */}
                           <div
                             onClick={() => setProjectMode("single")}
-                            className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
+                            className={`p-7 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-6 ${
                               projectMode === "single"
-                                ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
-                                : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
+                                ? "border-[#155DFC] bg-blue-50/40 shadow-xs ring-1 ring-[#155DFC]/20"
+                                : "border-slate-200 hover:border-[#155DFC]/50 bg-white hover:bg-slate-50/50"
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -1274,8 +1274,8 @@ export default function Home() {
                             </div>
 
                             <div>
-                              <h3 className="font-display font-bold text-slate-900 text-base">Single Garment Specification</h3>
-                              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                              <h3 className="font-display font-bold text-subheading-bold text-slate-900">Single Garment Specification</h3>
+                              <p className="text-body-regular text-slate-500 mt-1.5 leading-relaxed">
                                 Compile process sheet for an individual garment (Shirt, T-Shirt, Jacket, Pants, Dress, or Hat). Includes DINOv2 originality check.
                               </p>
                             </div>
@@ -1284,10 +1284,10 @@ export default function Home() {
                           {/* Option 2: Doll Outfit Set */}
                           <div
                             onClick={() => setProjectMode("doll")}
-                            className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
+                            className={`p-7 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-6 ${
                               projectMode === "doll"
-                                ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
-                                : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
+                                ? "border-[#155DFC] bg-blue-50/40 shadow-xs ring-1 ring-[#155DFC]/20"
+                                : "border-slate-200 hover:border-[#155DFC]/50 bg-white hover:bg-slate-50/50"
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -1306,8 +1306,8 @@ export default function Home() {
                             </div>
 
                             <div>
-                              <h3 className="font-display font-bold text-slate-900 text-base">Doll Outfit Set Project</h3>
-                              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                              <h3 className="font-display font-bold text-subheading-bold text-slate-900">Doll Outfit Set Project</h3>
+                              <p className="text-body-regular text-slate-500 mt-1.5 leading-relaxed">
                                 Multi-component specification set for doll apparel (Teddy Bear, Fashion Doll, Plushie Mascot, or School Academy outfit sets).
                               </p>
                             </div>
@@ -1329,7 +1329,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setCurrentStep(2)}
-                        className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
+                        className="px-8 py-3 bg-brand-blue hover:bg-brand-blue-hover text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
                       >
                         <span>Continue to Step 2</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -1358,10 +1358,10 @@ export default function Home() {
                                 onClick={triggerFileSelect}
                                 className={`border-2 border-dashed rounded-xl flex flex-col items-center justify-center min-h-[280px] text-center cursor-pointer transition-all ${
                                   isDragOver
-                                    ? "border-[#155DFC] bg-blue-50/50"
+                                    ? "border-brand-blue bg-blue-50/50"
                                     : previewUrl
                                     ? "border-slate-200 bg-slate-50/50"
-                                    : "border-slate-200 hover:border-[#155DFC] bg-slate-50/30"
+                                    : "border-slate-200 hover:border-brand-blue bg-slate-50/30"
                                 }`}
                               >
                                 <input
@@ -1373,7 +1373,7 @@ export default function Home() {
                                 />
                                 {!previewUrl ? (
                                   <div className="flex flex-col items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#155DFC] flex items-center justify-center">
+                                    <div className="w-12 h-12 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center">
                                       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                                       </svg>
@@ -1398,7 +1398,7 @@ export default function Home() {
                                 <div className={`border rounded-xl overflow-hidden text-xs transition-all ${grade ? grade.cardBorder : "border-slate-200"} ${grade ? grade.cardBg : "bg-slate-50"}`}>
                                   {/* Header row with big badge */}
                                   <div className="flex items-stretch">
-                                    <div className={`flex items-center justify-center w-16 flex-shrink-0 ${grade ? grade.bg : "bg-[#155DFC]"}`}>
+                                    <div className={`flex items-center justify-center w-16 flex-shrink-0 ${grade ? grade.bg : "bg-brand-blue"}`}>
                                       {isLoading ? (
                                         <svg className="w-7 h-7 animate-spin text-white" fill="none" viewBox="0 0 24 24">
                                           <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
@@ -1466,7 +1466,7 @@ export default function Home() {
                                   <div key={g} className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col justify-between gap-3">
                                     <span className="text-body-bold font-bold text-slate-800 uppercase font-mono tracking-wide">{g}</span>
                                     {!compState.previewUrl ? (
-                                      <label className="border border-dashed border-slate-300 hover:border-[#155DFC] rounded-lg flex flex-col items-center justify-center p-4 aspect-square text-center cursor-pointer bg-white transition-colors">
+                                      <label className="border border-dashed border-slate-300 hover:border-brand-blue rounded-lg flex flex-col items-center justify-center p-4 aspect-square text-center cursor-pointer bg-white transition-colors">
                                         <input type="file" onChange={(e) => { if (e.target.files?.[0]) handleComponentFileChange(g, e.target.files[0]); }} accept="image/*" className="hidden" />
                                         <svg className="w-5 h-5 text-slate-400 mb-1" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -1503,7 +1503,7 @@ export default function Home() {
                               onChange={(e) => setQuizName(e.target.value)}
                               placeholder="e.g. Autumn Casual Jacket Batch #01"
                               required
-                              className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                              className="bg-slate-50/80 border border-slate-200/90 rounded-lg py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
                             />
                           </div>
                           {projectMode === "single" ? (
@@ -1511,7 +1511,7 @@ export default function Home() {
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-body-bold font-bold text-slate-800">Garment Category</label>
                                 <select value={quizGarment} onChange={(e) => setQuizGarment(e.target.value)}
-                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                  className="bg-slate-50/80 border border-slate-200/90 rounded-lg py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Tops">
                                     <option value="Shirt">Kemeja (Shirt) — 8 Sewing Steps</option>
                                     <option value="T-Shirt">Kaos (T-Shirt) — 4 Sewing Steps</option>
@@ -1530,7 +1530,7 @@ export default function Home() {
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-body-bold font-bold text-slate-800">Fabric Application / Weight</label>
                                 <select value={quizFabric} onChange={(e) => setQuizFabric(e.target.value)}
-                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                  className="bg-slate-50/80 border border-slate-200/90 rounded-lg py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Light-weight">
                                     <option value="Silk (Light-weight)">Sutra / Silk</option>
                                     <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
@@ -1560,7 +1560,7 @@ export default function Home() {
                             <div className="flex flex-col gap-1.5">
                               <label className="text-body-bold font-bold text-slate-800">Doll Type Template</label>
                               <select value={dollType} onChange={(e) => setDollType(e.target.value)}
-                                className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                className="bg-slate-50/80 border border-slate-200/90 rounded-lg py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                 {Object.keys(DOLL_TYPES).map(t => (
                                   <option key={t} value={t}>{t} — ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})</option>
                                 ))}
@@ -1576,7 +1576,7 @@ export default function Home() {
                                   key={qty}
                                   type="button"
                                   onClick={() => setBatchQuantity(qty)}
-                                  className={`flex-1 py-2.5 px-2 rounded-xl text-body-bold font-mono font-bold transition-all cursor-pointer border ${
+                                  className={`flex-1 py-2.5 px-2 rounded-lg text-body-bold font-mono font-bold transition-all cursor-pointer border ${
                                     batchQuantity === qty
                                       ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
                                       : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
@@ -1590,7 +1590,7 @@ export default function Home() {
                                 min={1}
                                 value={batchQuantity}
                                 onChange={(e) => setBatchQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="w-24 bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 px-2 text-body-bold font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
+                                className="w-24 bg-slate-50/80 border border-slate-200/90 rounded-lg py-2.5 px-2 text-body-bold font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
                                 placeholder="Qty"
                               />
                             </div>
@@ -1623,7 +1623,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={handleResetStep2}
-                        className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 font-semibold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+                        className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 text-body-bold font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                       >
                         <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -1635,7 +1635,7 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={handleSafeBackToStep1}
-                          className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+                          className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-body-bold font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                         >
                           ← Back to Mode Choice
                         </button>
@@ -1644,7 +1644,7 @@ export default function Home() {
                           type="submit"
                           form="process-sheet-form"
                           disabled={isLoading || !quizName.trim() || Boolean(isPatternRejected) || (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))}
-                          className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+                          className="px-8 py-3 bg-brand-blue hover:bg-brand-blue-hover text-white text-body-bold font-bold rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
                         >
                           {isLoading ? (
                             <>
@@ -1676,12 +1676,12 @@ export default function Home() {
                       {/* Print Document Header */}
                       <div className="flex justify-between items-end pb-3 border-b-2 border-slate-900">
                         <div>
-                          <span className="text-[10px] font-mono font-bold text-[#155DFC] uppercase tracking-wider">FASHIONFLOW AI — GARMENT TECHNICAL SPECIFICATION SHEET</span>
-                          <h1 className="text-xl font-bold text-slate-900 mt-0.5">{quizName}</h1>
+                          <span className="text-[10px] font-mono font-bold text-brand-blue uppercase tracking-wider">FASHIONFLOW AI — GARMENT TECHNICAL SPECIFICATION SHEET</span>
+                          <h1 className="font-bold text-heading-bold text-slate-900 mt-0.5">{quizName}</h1>
                         </div>
                         <div className="text-right text-[10px] font-mono text-slate-600 space-y-0.5">
                           <div><strong>SPEC ID:</strong> FF-SPEC-#{Math.floor(100000 + Math.random() * 900000)}</div>
-                          <div><strong>DATE:</strong> {new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}</div>
+                          <div><strong>CATEGORY:</strong> {quizGarment} ({quizFabric})</div>
                           <div><strong>STATUS:</strong> APPROVED &amp; LOCKED</div>
                         </div>
                       </div>
@@ -1710,10 +1710,10 @@ export default function Home() {
 
                       {/* Bento Card 3: Industrial Sewing Sequence Table */}
                       <div className="border border-slate-300 rounded-lg p-3 bg-white">
-                        <span className="text-[10px] font-bold font-mono text-slate-500 uppercase mb-2 block">Industrial Sewing Sequence &amp; Machine Allocation Table</span>
-                        <table className="w-full text-left text-xs border-collapse">
+                        <span className="text-caption-bold font-mono text-slate-500 uppercase mb-2 block">Industrial Sewing Sequence &amp; Machine Allocation Table</span>
+                        <table className="w-full text-left text-dense-regular border-collapse">
                           <thead>
-                            <tr className="bg-slate-100 font-bold font-mono text-[10px] text-slate-700">
+                            <tr className="bg-slate-100 font-mono text-caption-bold text-slate-700">
                               <th className="p-1.5 border border-slate-300 w-12 text-center">Step</th>
                               <th className="p-1.5 border border-slate-300">Operation / Step Name</th>
                               <th className="p-1.5 border border-slate-300 w-16 text-center">Component</th>
@@ -1723,12 +1723,12 @@ export default function Home() {
                           </thead>
                           <tbody>
                             {fullResult.sewing_steps && fullResult.sewing_steps.map((step: any, i: number) => (
-                              <tr key={i} className="text-[11px] hover:bg-slate-50">
-                                <td className="p-1.5 border border-slate-200 text-center font-mono font-bold">{step.step}</td>
+                              <tr key={i} className="text-dense-regular hover:bg-slate-50">
+                                <td className="p-1.5 border border-slate-200 text-center font-mono text-dense-bold">{step.step}</td>
                                 <td className="p-1.5 border border-slate-200 font-medium text-slate-900">{step.action}</td>
-                                <td className="p-1.5 border border-slate-200 text-center font-mono text-[10px]">{step.part || "Main"}</td>
-                                <td className="p-1.5 border border-slate-200 font-mono text-[10px] text-blue-800">{step.recommended_model || "Juki Lockstitch DDL-9000C"}</td>
-                                <td className="p-1.5 border border-slate-200 text-right font-mono font-semibold">{(0.45 + (i % 3) * 0.15).toFixed(2)}</td>
+                                <td className="p-1.5 border border-slate-200 text-center font-mono text-caption-bold">{step.part || "Main"}</td>
+                                <td className="p-1.5 border border-slate-200 font-mono text-caption-bold text-blue-800">{step.recommended_model || "Juki Lockstitch DDL-9000C"}</td>
+                                <td className="p-1.5 border border-slate-200 text-right font-mono text-dense-bold">{(0.45 + (i % 3) * 0.15).toFixed(2)}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -1743,7 +1743,7 @@ export default function Home() {
                         </div>
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
                           <div className="text-[9px] font-mono text-slate-500 uppercase">Estimated Total SMV</div>
-                          <div className="text-sm font-bold text-[#155DFC]">3.45 Minutes</div>
+                          <div className="text-sm font-bold text-brand-blue">3.45 Minutes</div>
                         </div>
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
                           <div className="text-[9px] font-mono text-slate-500 uppercase">Target Line Output</div>
@@ -1762,10 +1762,10 @@ export default function Home() {
                     <div className="hidden print:block mb-6 pb-4 border-b-2 border-slate-900">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-[10px] font-mono font-bold text-[#155DFC] uppercase tracking-widest">FASHIONFLOW AI — GARMENT INDUSTRIAL SPECIFICATION</div>
-                          <h1 className="font-bold text-2xl text-slate-900 mt-0.5">{quizName}</h1>
+                          <div className="text-caption-bold font-mono font-bold text-brand-blue uppercase tracking-widest">FASHIONFLOW AI — GARMENT INDUSTRIAL SPECIFICATION</div>
+                          <h1 className="font-bold text-heading-bold text-slate-900 mt-0.5">{quizName}</h1>
                         </div>
-                        <div className="text-right font-mono text-[10px] text-slate-600 space-y-0.5">
+                        <div className="text-right font-mono text-caption-bold text-slate-600 space-y-0.5">
                           <div><span className="font-bold">STATUS:</span> FINALIZED &amp; LOCKED</div>
                           <div><span className="font-bold">CATEGORY:</span> {quizGarment} ({quizFabric})</div>
                           <div><span className="font-bold">SPEC ID:</span> FF-SPEC-#{Math.floor(100000 + Math.random() * 900000)}</div>
@@ -1776,26 +1776,26 @@ export default function Home() {
                     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-6 no-print">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">
+                          <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest">
                             {fullResult.is_doll_project ? "Doll Outfit Process Sheet Set" : "Process Specification Sheet"}
                           </span>
-                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200 flex items-center gap-1.5">
+                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-caption-bold font-bold border border-emerald-200 flex items-center gap-1.5">
                             <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                             </svg>
                             FINALIZED &amp; LOCKED
                           </span>
                         </div>
-                        <h1 className="font-sans font-bold text-2xl md:text-3xl text-slate-900">{quizName}</h1>
+                        <h1 className="font-display font-bold text-display-bold text-slate-900">{quizName}</h1>
                       </div>
                       <div className="flex items-center gap-3 no-print">
-                        <button onClick={() => window.print()} className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                        <button onClick={() => window.print()} className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-body-bold font-semibold transition-colors cursor-pointer flex items-center gap-1.5">
                           <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                           </svg>
                           Export Specs
                         </button>
-                        <button onClick={handleResetWorkspace} className="px-5 py-2.5 rounded-xl bg-[#155DFC] hover:bg-[#1249cc] text-white font-medium text-xs transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5">
+                        <button onClick={handleResetWorkspace} className="px-5 py-2.5 rounded-xl bg-brand-blue hover:bg-brand-blue-hover text-white text-body-bold font-bold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5">
                           <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                           </svg>
@@ -1818,7 +1818,7 @@ export default function Home() {
                             return (
                               <div key={idx} className="border border-slate-100 rounded-xl overflow-hidden p-3 bg-slate-50/60 flex flex-col gap-2">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-[10px] font-bold text-[#155DFC] uppercase font-mono">{compKey}</span>
+                                  <span className="text-[10px] font-bold text-brand-blue uppercase font-mono">{compKey}</span>
                                   <span className="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">Approved</span>
                                 </div>
                                 <div className="aspect-video bg-white border border-slate-100 rounded-lg flex items-center justify-center overflow-hidden">
@@ -1852,7 +1852,7 @@ export default function Home() {
                                 height: `${det.box[3] - det.box[1]}%`,
                               }}
                             >
-                              <span className="absolute -top-5 -left-0.5 bg-[#155DFC] text-white font-mono text-[9px] py-0.5 px-1.5 rounded-xs whitespace-nowrap shadow-xs">
+                              <span className="absolute -top-5 -left-0.5 bg-brand-blue text-white font-mono text-[9px] py-0.5 px-1.5 rounded-xs whitespace-nowrap shadow-xs">
                                 {det.label} ({(det.confidence * 100).toFixed(0)}%)
                               </span>
                             </div>
@@ -1925,7 +1925,7 @@ export default function Home() {
                                   <td className="py-4 px-6 font-semibold text-slate-900 font-mono">{step.step_num}</td>
                                   <td className="py-4 px-4 font-medium text-slate-700">
                                     {step.component && (
-                                      <span className="inline-flex items-center text-[9px] uppercase font-mono font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 text-[#155DFC] rounded-md mr-2 align-middle">
+                                      <span className="inline-flex items-center text-[9px] uppercase font-mono font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 text-brand-blue rounded-md mr-2 align-middle">
                                         {step.component}
                                       </span>
                                     )}
@@ -1937,7 +1937,7 @@ export default function Home() {
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-semibold text-slate-900 text-xs">{step.recommended_model}</span>
                                         {step.needle && step.needle !== "N/A" && (
-                                          <span className="text-[10px] font-mono text-[#155DFC] bg-blue-50 border border-blue-200/80 px-1.5 py-0.5 rounded font-medium">
+                                          <span className="text-[10px] font-mono text-brand-blue bg-blue-50 border border-blue-200/80 px-1.5 py-0.5 rounded font-medium">
                                             Needle: {step.needle}
                                           </span>
                                         )}
@@ -1987,7 +1987,7 @@ export default function Home() {
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {fullResult.tooling_recommendations && fullResult.tooling_recommendations.map((tool: any, idx: number) => (
-                          <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
+                          <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-brand-blue/40 transition-all duration-300">
                             <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-4 relative overflow-hidden">
                               <img 
                                 src={`/image/${tool.file}`} 
@@ -2043,7 +2043,7 @@ export default function Home() {
                         <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
+                              <span className="text-[10px] font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
                                 Batch Production Scaling
                               </span>
                               <span className="text-xs font-semibold text-slate-700">
@@ -2058,19 +2058,19 @@ export default function Home() {
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                             <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
                               <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Total Run SMV</span>
-                              <span className="font-display font-bold text-xl text-slate-900 font-mono">
+                              <span className="font-display font-bold text-heading-bold text-slate-900 font-mono">
                                 {fullResult.batch_production.batch_total_smv_mins.toLocaleString()} <span className="text-xs font-normal text-slate-400">mins</span>
                               </span>
                             </div>
                             <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
                               <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Est. Production Duration</span>
-                              <span className="font-display font-bold text-xl text-[#155DFC] font-mono">
+                              <span className="font-display font-bold text-heading-bold text-brand-blue font-mono">
                                 {fullResult.batch_production.batch_total_hours} <span className="text-xs font-normal text-slate-400">hrs</span>
                               </span>
                             </div>
                             <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
                               <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Daily Capacity / Operator</span>
-                              <span className="font-display font-bold text-xl text-emerald-600 font-mono">
+                              <span className="font-display font-bold text-heading-bold text-emerald-600 font-mono">
                                 {fullResult.batch_production.operator_daily_capacity_pcs} <span className="text-xs font-normal text-slate-400">pcs/day</span>
                               </span>
                             </div>
@@ -2090,7 +2090,7 @@ export default function Home() {
                           <span>•</span>
                           <span>{fullResult.tooling_recommendations?.length || 0} Juki Models Mapped</span>
                           <span>•</span>
-                          <span className="text-[#155DFC] font-semibold">DINOv2 Verified</span>
+                          <span className="text-brand-blue font-semibold">DINOv2 Verified</span>
                         </div>
                       </div>
                     </div>
@@ -2164,7 +2164,7 @@ export default function Home() {
                   {/* Right Column: Step-by-Step Sewing Flow Table */}
                   <div className="lg:col-span-3 flex flex-col gap-8">
                     <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs">
-                      <h2 className="font-display font-semibold text-xl text-black mb-6">
+                      <h2 className="font-display font-semibold text-heading-bold text-black mb-6">
                         STEP-BY-STEP SEWING FLOW
                       </h2>
                       
@@ -2251,7 +2251,7 @@ export default function Home() {
         {activeTab === "tooling-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Industrial Tooling Library</span>
+              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Industrial Tooling Library</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Sewing Machinery Catalog
               </h1>
@@ -2265,7 +2265,7 @@ export default function Home() {
                 <select
                   value={selectedMachineCategory}
                   onChange={(e) => setSelectedMachineCategory(e.target.value)}
-                  className="bg-white border border-slate-200/80 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
+                  className="bg-white border border-slate-200/80 rounded-lg px-4 py-2.5 text-body-bold font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
                 >
                   <option value="All Categories">All Categories</option>
                   <option value="Lockstitch">Lockstitch (DDL / DLN / DLU)</option>
@@ -2287,7 +2287,7 @@ export default function Home() {
                     }}
                     onFocus={() => setShowMachineryAutocomplete(true)}
                     onBlur={() => setTimeout(() => setShowMachineryAutocomplete(false), 200)}
-                    className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 pl-10 pr-4 text-xs font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
+                    className="w-full bg-white border border-slate-200/80 rounded-lg py-2.5 pl-10 pr-4 text-body-regular font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
                   />
                   <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -2295,7 +2295,7 @@ export default function Home() {
 
                   {/* Autocomplete Popup Suggestions (Good UX) */}
                   {showMachineryAutocomplete && machinerySearch.trim().length > 0 && defaultMachines && (
-                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
                       {defaultMachines
                         .filter(tool => 
                           tool.name.toLowerCase().includes(machinerySearch.toLowerCase()) || 
@@ -2331,7 +2331,7 @@ export default function Home() {
                     return matchesSearch && (tool.name.toLowerCase().includes(selectedMachineCategory.toLowerCase()) || (tool.desc || "").toLowerCase().includes(selectedMachineCategory.toLowerCase()));
                   })
                   .map((tool, idx) => (
-                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
+                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-brand-blue/40 transition-all duration-300">
                       {/* Machine Photo Rendering */}
                       <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-3 relative overflow-hidden">
                         <img 
@@ -2357,14 +2357,14 @@ export default function Home() {
                       <span className="flex items-center gap-2">
                         <span className="relative flex h-2.5 w-2.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#155DFC]"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-blue"></span>
                         </span>
                         Loading Juki Machinery Catalog...
                       </span>
-                      <span className="font-mono text-[#155DFC] font-bold">120 / 310</span>
+                      <span className="font-mono text-brand-blue font-bold">120 / 310</span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div className="bg-[#155DFC] h-full rounded-full animate-pulse transition-all duration-500 w-[40%]"></div>
+                      <div className="bg-brand-blue h-full rounded-full animate-pulse transition-all duration-500 w-[40%]"></div>
                     </div>
                     <p className="text-[11px] text-slate-400 mt-2">Streaming specialized Juki tooling specifications asynchronously...</p>
                   </div>
@@ -2402,7 +2402,7 @@ export default function Home() {
             </header>
 
             <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs max-w-4xl">
-              <h2 className="font-display font-semibold text-xl mb-6">Standard Allowed Minutes Formula</h2>
+              <h2 className="font-display font-semibold text-heading-bold mb-6">Standard Allowed Minutes Formula</h2>
               <div className="bg-slate-50 rounded-lg p-6 font-mono text-sm text-slate-700 mb-8 border border-zinc-150 leading-relaxed">
                 SMV = (Basic Time) + (Bundle Allowance) + (Machine Allowance) + (Personal Allowance)<br />
                 Basic Time = (Observed Time * Rating) / 100
@@ -2412,15 +2412,15 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="border border-zinc-200 rounded-lg p-5 bg-white">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">Standard Allowance</span>
-                  <span className="font-display font-bold text-xl text-black">15% - 20%</span>
+                  <span className="font-display font-bold text-heading-bold text-black">15% - 20%</span>
                 </div>
                 <div className="border border-zinc-200 rounded-lg p-5 bg-white">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">Machine RPM</span>
-                  <span className="font-display font-bold text-xl text-black">4,500 - 5,500</span>
+                  <span className="font-display font-bold text-heading-bold text-black">4,500 - 5,500</span>
                 </div>
                 <div className="border border-zinc-200 rounded-lg p-5 bg-white">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">Estimated Efficiency</span>
-                  <span className="font-display font-bold text-xl text-blue-600">85% (Target)</span>
+                  <span className="font-display font-bold text-heading-bold text-blue-600">85% (Target)</span>
                 </div>
               </div>
 
@@ -2503,7 +2503,7 @@ export default function Home() {
         {activeTab === "knowledge-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Engineering SOP &amp; Technical Specs</span>
+              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Engineering SOP &amp; Technical Specs</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Manufacturing Knowledge Base
               </h1>
@@ -2516,7 +2516,7 @@ export default function Home() {
                 <select
                   value={selectedKnowledgeCategory}
                   onChange={(e) => setSelectedKnowledgeCategory(e.target.value)}
-                  className="bg-white border border-slate-200/80 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
+                  className="bg-white border border-slate-200/80 rounded-lg px-4 py-2.5 text-body-bold font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
                 >
                   <option value="All Categories">All Categories</option>
                   <option value="Shirt">Formal &amp; Casual Shirts</option>
@@ -2536,7 +2536,7 @@ export default function Home() {
                     }}
                     onFocus={() => setShowKnowledgeAutocomplete(true)}
                     onBlur={() => setTimeout(() => setShowKnowledgeAutocomplete(false), 200)}
-                    className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 pl-10 pr-4 text-xs font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
+                    className="w-full bg-white border border-slate-200/80 rounded-lg py-2.5 pl-10 pr-4 text-body-regular font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
                   />
                   <svg
                     className="absolute left-3.5 top-3 h-4 w-4 text-slate-400"
@@ -2550,7 +2550,7 @@ export default function Home() {
 
                   {/* Autocomplete Popup */}
                   {showKnowledgeAutocomplete && knowledgeSearch.trim().length > 0 && knowledgeBase && (
-                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
                       {knowledgeBase
                         .filter((k: any) => 
                           k.title.toLowerCase().includes(knowledgeSearch.toLowerCase()) || 
@@ -2602,14 +2602,14 @@ export default function Home() {
                   }
 
                   return filtered.map((k: any, idx: number) => (
-                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300">
+                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs hover:border-brand-blue/40 transition-all duration-300">
                       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
                         <div>
                           <h2 className="font-display font-bold text-subheading-bold text-slate-900">{k.title}</h2>
                           <p className="text-body-bold text-slate-500 font-mono mt-0.5">{k.ref}</p>
                         </div>
                         {k.smv && k.smv !== "N/A" && (
-                          <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-body-bold font-mono font-bold text-[#155DFC]">
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-body-bold font-mono font-bold text-brand-blue">
                             SMV: <span>{k.smv}</span>
                           </div>
                         )}
@@ -2648,7 +2648,7 @@ export default function Home() {
         {activeTab === "projects-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Database Management</span>
+              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Database Management</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Active Projects &amp; History
               </h1>
@@ -2660,8 +2660,8 @@ export default function Home() {
             <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs">
               <h2 className="font-display font-bold text-heading-bold text-slate-900 mb-6">Saved Projects Database</h2>
               <div className="border border-slate-100 rounded-xl">
-                 <table className="w-full text-left text-xs text-slate-600 border-collapse">
-                  <thead className="bg-slate-50/70 font-mono text-[11px] text-slate-400 uppercase border-b border-slate-100">
+                 <table className="w-full text-left text-dense-regular text-slate-600 border-collapse">
+                  <thead className="bg-slate-50/70 font-mono text-caption-bold text-slate-400 uppercase border-b border-slate-100">
                     <tr>
                       <th className="py-4 px-6 font-bold w-16">ID</th>
                       <th className="py-4 px-6 font-bold">Project Name</th>
@@ -2673,7 +2673,7 @@ export default function Home() {
                   <tbody className="divide-y divide-slate-100 bg-white">
                     {analysisHistory.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">No active projects found. Upload sketches in Create Process Sheet to populate database.</td>
+                        <td colSpan={5} className="py-12 text-center text-slate-400 font-medium text-body-regular">No active projects found. Upload sketches in Create Process Sheet to populate database.</td>
                       </tr>
                     ) : (
                       analysisHistory.map((item, idx) => {
@@ -2682,16 +2682,16 @@ export default function Home() {
                         const formattedDate = formatActivityDate(item);
                         return (
                           <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="py-4 px-6 font-semibold font-mono text-slate-900">{item.id}</td>
-                            <td className="py-4 px-6 font-semibold text-slate-900">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</td>
-                            <td className="py-4 px-6 font-mono text-slate-500">{formattedDate}</td>
+                            <td className="py-4 px-6 font-semibold font-mono text-slate-900 text-dense-bold">{item.id}</td>
+                            <td className="py-4 px-6 font-semibold text-slate-900 text-body-bold">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</td>
+                            <td className="py-4 px-6 font-mono text-slate-500 text-dense-regular">{formattedDate}</td>
                             <td className="py-4 px-6">
                               {isRejected ? (
-                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
+                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-caption-bold text-amber-700 border border-amber-200">
                                   Duplicate Locked
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-caption-bold text-emerald-700 border border-emerald-200">
                                   Approved
                                 </span>
                               )}
@@ -2726,7 +2726,7 @@ export default function Home() {
                                         handleLoadProject(item);
                                         setActiveMenuId(null);
                                       }}
-                                      className="w-full text-left px-4 py-2 text-xs hover:bg-blue-50 text-[#155DFC] font-semibold flex items-center gap-2 border-b border-slate-100 cursor-pointer"
+                                      className="w-full text-left px-4 py-2 text-xs hover:bg-blue-50 text-brand-blue font-semibold flex items-center gap-2 border-b border-slate-100 cursor-pointer"
                                     >
                                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2779,7 +2779,7 @@ export default function Home() {
         {activeTab === "settings-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">System Preferences</span>
+              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">System Preferences</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 System Settings
               </h1>
@@ -2802,7 +2802,7 @@ export default function Home() {
                 <input type="text" disabled value="pgvector / SQLite Vector Indexing (Cosine Similarity Threshold: 95.0%)" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-xs font-mono text-slate-700 font-semibold" />
               </div>
               <div className="text-xs text-slate-400 leading-relaxed pt-4 border-t border-slate-100 font-mono">
-                To switch between SQLite and PostgreSQL, update your <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[#155DFC]">.env</code> settings at the project root and restart python server.
+                To switch between SQLite and PostgreSQL, update your <code className="bg-slate-100 px-1.5 py-0.5 rounded text-brand-blue">.env</code> settings at the project root and restart python server.
               </div>
             </div>
           </div>

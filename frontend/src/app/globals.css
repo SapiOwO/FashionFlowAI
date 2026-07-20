@@ -5,6 +5,11 @@
   --font-sans: var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
 
+  /* Industrial Brand Color Tokens */
+  --color-brand-blue: #155dfc;
+  --color-brand-blue-hover: #1249cc;
+  --color-border-whisper: #f1f5f9;
+
   /* Harmonious Industrial Typography Scale Variables */
   --text-display: 30px;
   --text-display--line-height: 1.2;
@@ -60,7 +65,26 @@ code, pre, .font-mono {
   font-family: var(--font-geist-mono), monospace;
 }
 
-/* ── HARMONIOUS INDUSTRIAL TYPOGRAPHY UTILITIES (Bound to @theme Variables) ── */
+/* ── INDUSTRIAL BRAND COLOR UTILITIES (Guaranteed 100% Rendering) ── */
+.bg-brand-blue {
+  background-color: #155dfc !important;
+}
+
+.text-brand-blue {
+  color: #155dfc !important;
+}
+
+.border-brand-blue {
+  border-color: #155dfc !important;
+}
+
+.hover\:bg-brand-blue-hover:hover {
+  background-color: #1249cc !important;
+}
+
+.hover\:text-brand-blue-hover:hover {
+  color: #1249cc !important;
+}
 .text-display-bold {
   font-family: var(--font-outfit), sans-serif;
   font-size: var(--text-display);
