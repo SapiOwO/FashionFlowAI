@@ -88,7 +88,7 @@ const renderSpecsDescription = (desc: string) => {
   
   return (
     <div className="mt-4 border-t border-slate-100 pt-4 w-full">
-      <h4 className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-2.5">Technical Specifications</h4>
+      <h4 className="text-caption-bold font-mono font-bold text-slate-400 uppercase tracking-widest mb-2.5">Technical Specifications</h4>
       <div className="bg-slate-50/60 rounded-xl p-3.5 border border-slate-100 space-y-2">
         {rawItems.map((item, i) => {
           const cleanItem = item.replace(/\*\*/g, "").trim();
@@ -99,14 +99,14 @@ const renderSpecsDescription = (desc: string) => {
             const key = parts[0].trim();
             const val = parts.slice(1).join(":").trim();
             return (
-              <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-100/60 pb-1.5 last:border-0 last:pb-0 gap-2">
-                <span className="font-semibold text-slate-500 flex-shrink-0">{key}</span>
-                <span className="font-semibold text-slate-800 text-right truncate">{val}</span>
+              <div key={i} className="flex justify-between items-center text-dense-regular border-b border-slate-100/60 pb-1.5 last:border-0 last:pb-0 gap-2">
+                <span className="font-normal text-dense-regular text-slate-500 flex-shrink-0">{key}</span>
+                <span className="font-semibold text-dense-bold text-slate-900 text-right truncate">{val}</span>
               </div>
             );
           }
           return (
-            <div key={i} className="text-[11px] text-slate-600 font-medium">
+            <div key={i} className="text-dense-regular text-slate-700 font-medium">
               {cleanItem}
             </div>
           );
@@ -911,7 +911,7 @@ export default function Home() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center rounded-xl font-medium text-xs py-3 px-3.5 transition-all duration-300 w-full cursor-pointer overflow-hidden ${
+              className={`flex items-center rounded-xl text-body-regular py-3 px-3.5 transition-all duration-300 w-full cursor-pointer overflow-hidden ${
                 activeTab === item.id
                   ? "bg-[#155DFC] text-white shadow-xs font-semibold"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -956,11 +956,11 @@ export default function Home() {
         {activeTab === "dashboard-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Pre-Production Engineering</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Pre-Production Engineering</span>
+              <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Engineering Dashboard
               </h1>
-              <p className="text-slate-500 text-xs max-w-2xl leading-relaxed">
+              <p className="text-body-regular text-slate-600 max-w-2xl leading-relaxed">
                 AI-assisted garment analysis, originality verification, and process sheet generation for pre-production engineering.
               </p>
             </header>
@@ -969,63 +969,63 @@ export default function Home() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Total Analyses</span>
+                  <span className="text-caption-bold font-mono text-slate-400 uppercase tracking-widest font-bold">Total Analyses</span>
                   <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                     <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
                 </div>
-                <p className="font-display font-bold text-3xl text-slate-900">{analysisHistory.length}</p>
-                <p className="text-xs text-slate-400 mt-1">Engineering runs logged</p>
+                <p className="font-display font-bold text-display-bold text-slate-900">{analysisHistory.length}</p>
+                <p className="text-body-regular text-slate-500 mt-1">Engineering runs logged</p>
               </div>
 
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Unique Designs</span>
+                  <span className="text-caption-bold font-mono text-slate-400 uppercase tracking-widest font-bold">Unique Designs</span>
                   <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
                     <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                     </svg>
                   </div>
                 </div>
-                <p className="font-display font-bold text-3xl text-slate-900">
+                <p className="font-display font-bold text-display-bold text-slate-900">
                   {analysisHistory.filter(a => {
                     const s = (a.result?.status || "").toUpperCase();
                     return s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
                   }).length}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">Approved original patterns</p>
+                <p className="text-body-regular text-slate-500 mt-1">Approved original patterns</p>
               </div>
 
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Historical Matches</span>
+                  <span className="text-caption-bold font-mono text-slate-400 uppercase tracking-widest font-bold">Historical Matches</span>
                   <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
                     <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                     </svg>
                   </div>
                 </div>
-                <p className="font-display font-bold text-3xl text-slate-900">
+                <p className="font-display font-bold text-display-bold text-slate-900">
                   {analysisHistory.filter(a => {
                     const s = (a.result?.status || "").toUpperCase();
                     return s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND" || (a.result?.similarity_percentage || 0) >= 90;
                   }).length}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">Vector DB reference records</p>
+                <p className="text-body-regular text-slate-500 mt-1">Vector DB reference records</p>
               </div>
 
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Avg. Est. SMV</span>
+                  <span className="text-caption-bold font-mono text-slate-400 uppercase tracking-widest font-bold">Avg. Est. SMV</span>
                   <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                     <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
-                <p className="font-display font-bold text-3xl text-slate-900 font-mono">
+                <p className="font-display font-bold text-display-bold text-slate-900 font-mono">
                   {analysisHistory.length > 0
                     ? (() => {
                         const smvValues = analysisHistory
@@ -1036,7 +1036,7 @@ export default function Home() {
                       })()
                     : "N/A"}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">min/pc average across projects</p>
+                <p className="text-body-regular text-slate-500 mt-1">min/pc average across projects</p>
               </div>
             </div>
 
@@ -1104,7 +1104,7 @@ export default function Home() {
               {/* Right: Activity Feed */}
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex flex-col">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-display font-bold text-lg text-slate-900">Activity Feed</h2>
+                  <h2 className="font-display font-bold text-subheading-bold text-slate-900">Activity Feed</h2>
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 animate-pulse" title="Live"></span>
                 </div>
                 {analysisHistory.length === 0 ? (
@@ -1112,7 +1112,7 @@ export default function Home() {
                     <svg className="w-8 h-8 text-slate-300 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-xs text-slate-400">No activity yet. Run your first analysis to see the feed.</p>
+                    <p className="text-body-regular text-slate-500">No activity yet. Run your first analysis to see the feed.</p>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-0">
@@ -1129,19 +1129,19 @@ export default function Home() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-slate-800 truncate">
+                            <p className="text-body-bold font-semibold text-slate-800 truncate">
                               {isRejected ? "Historical Match Found" : "Analysis Complete"}
                             </p>
-                            <p className="text-[11px] text-slate-400 truncate">{item.fileName || item.result?.classification?.[0]?.class_name || "Untitled"}</p>
+                            <p className="text-body-regular text-slate-500 truncate">{item.fileName || item.result?.classification?.[0]?.class_name || "Untitled"}</p>
                           </div>
-                          <span className="text-[10px] font-mono text-slate-400 flex-shrink-0">{formattedTime}</span>
+                          <span className="text-caption-bold font-mono text-slate-400 flex-shrink-0">{formattedTime}</span>
                         </div>
                       );
                     })}
                     {analysisHistory.length > 8 && (
                       <button
                         onClick={() => setActiveTab("projects-view")}
-                        className="mt-3 text-xs font-semibold text-[#155DFC] hover:text-[#1249cc] text-left cursor-pointer"
+                        className="mt-3 text-body-bold font-semibold text-[#155DFC] hover:text-[#1249cc] text-left cursor-pointer"
                       >
                         View all {analysisHistory.length} projects →
                       </button>
@@ -1189,11 +1189,11 @@ export default function Home() {
               {/* ── BANNER — Sleek compact header matching exact Y baseline ── */}
               <div className="bg-[#155DFC] px-10 py-6 flex items-center justify-between no-print print:hidden">
                 <div>
-                  <span className="text-[10px] font-mono text-blue-200/90 font-bold uppercase tracking-widest bg-blue-600/50 px-2 py-0.5 rounded-md inline-block">Process Sheet Engineering</span>
-                  <h1 className="font-display font-bold text-2xl md:text-3xl text-white tracking-tight mt-1 mb-1.5">
+                  <span className="text-caption-bold font-mono text-blue-200/90 font-bold uppercase tracking-widest bg-blue-600/50 px-2 py-0.5 rounded-md inline-block">Process Sheet Engineering</span>
+                  <h1 className="font-display font-bold text-display-bold text-white tracking-tight mt-1 mb-1.5">
                     Create Process Sheet
                   </h1>
-                  <p className="text-blue-100/90 text-xs max-w-xl leading-relaxed">
+                  <p className="text-blue-100/90 text-body-regular max-w-xl leading-relaxed">
                     Compile industrial sewing specifications, machine allocations, and SMV timing.
                   </p>
                 </div>
@@ -1219,7 +1219,7 @@ export default function Home() {
                           setCurrentStep(n);
                         }
                       }}
-                      className={`flex-1 py-3.5 text-xs font-bold rounded-t-xl select-none text-center font-mono transition-all cursor-pointer ${
+                      className={`flex-1 py-3.5 text-body-bold font-bold rounded-t-xl select-none text-center font-mono transition-all cursor-pointer ${
                         active
                           ? "bg-white text-[#155DFC] relative z-10"
                           : done
@@ -1241,9 +1241,9 @@ export default function Home() {
                     <div className="flex-1 flex flex-col justify-center p-10">
                       <div className="max-w-4xl mx-auto w-full my-auto flex flex-col gap-8">
                         <div className="text-center">
-                          <span className="text-xs font-mono font-bold text-[#155DFC] uppercase tracking-widest">Step 1 of 3</span>
-                          <h2 className="font-display font-bold text-2xl md:text-3xl text-slate-900 mt-1">Select Garment Engineering Mode</h2>
-                          <p className="text-slate-500 text-sm mt-1 max-w-md mx-auto leading-relaxed">
+                          <span className="text-caption-bold font-mono font-bold text-[#155DFC] uppercase tracking-widest">Step 1 of 3</span>
+                          <h2 className="font-display font-bold text-heading-bold text-slate-900 mt-1">Select Garment Engineering Mode</h2>
+                          <p className="text-slate-600 text-body-regular mt-1 max-w-md mx-auto leading-relaxed">
                             Choose your production setup before compiling sewing specifications and machine allocations.
                           </p>
                         </div>
@@ -1348,7 +1348,7 @@ export default function Home() {
                       {/* Left Column — Upload & DINOv2 Scan */}
                       <div className="xl:col-span-2 bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs relative flex flex-col justify-between gap-6">
                         <div>
-                          <h2 className="font-bold text-base text-slate-900 mb-6 font-display leading-tight">GARMENT SKETCH</h2>
+                          <h2 className="font-bold text-heading-bold text-slate-900 mb-6 font-display leading-tight">GARMENT SKETCH</h2>
                           {projectMode === "single" ? (
                             <div className="flex flex-col gap-5">
                               <div
@@ -1379,8 +1379,8 @@ export default function Home() {
                                       </svg>
                                     </div>
                                     <div>
-                                      <p className="text-sm font-semibold text-slate-700">Click or drag garment sketch here</p>
-                                      <p className="text-xs text-slate-400 mt-1">PNG, JPG or WEBP — DINOv2 scan runs automatically</p>
+                                      <p className="text-body-bold font-semibold text-slate-800">Click or drag garment sketch here</p>
+                                      <p className="text-body-regular text-slate-500 mt-1">PNG, JPG or WEBP — DINOv2 scan runs automatically</p>
                                     </div>
                                   </div>
                                 ) : (
@@ -1411,10 +1411,10 @@ export default function Home() {
                                       )}
                                     </div>
                                     <div className="flex flex-col justify-center px-4 py-3 gap-0.5 flex-1">
-                                      <span className="font-bold text-slate-900 text-[13px]">
+                                      <span className="font-bold text-slate-900 text-body-bold">
                                         {isLoading ? "Scanning visual embeddings..." : grade ? grade.label : "Awaiting scan"}
                                       </span>
-                                      <span className="text-slate-500 text-[11px]">
+                                      <span className="text-slate-600 text-body-regular">
                                         {isLoading
                                           ? "Querying pgvector for visual duplicates..."
                                           : result
@@ -1428,7 +1428,7 @@ export default function Home() {
                                   {result?.top_3_saved_projects && result.top_3_saved_projects.filter((p: any) => p.similarity_pct > 0).length > 0 && (
                                     <div className="border-t border-slate-200/80">
                                       <div className="px-4 py-2 bg-white/60">
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">MATCHED PROJECTS IN CATALOG</span>
+                                        <span className="text-caption-bold font-bold text-slate-500 uppercase tracking-wider">MATCHED PROJECTS IN CATALOG</span>
                                       </div>
                                       <div className="flex flex-col divide-y divide-slate-100 max-h-[180px] overflow-y-auto">
                                         {result.top_3_saved_projects
@@ -1440,13 +1440,13 @@ export default function Home() {
                                                 {item.preview_image ? (
                                                   <img src={item.preview_image} alt={item.title} className="w-8 h-8 object-contain rounded border border-slate-200 bg-white flex-shrink-0" />
                                                 ) : (
-                                                  <div className="w-8 h-8 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-400 text-[9px] font-mono flex-shrink-0">#{item.id}</div>
+                                                  <div className="w-8 h-8 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-400 text-caption-bold flex-shrink-0">#{item.id}</div>
                                                 )}
                                                 <div className="flex-1 min-w-0">
-                                                  <span className="text-[11px] font-semibold text-slate-800 block truncate">ID #{item.id} — {item.title}</span>
-                                                  <span className="text-[10px] text-slate-500">{item.garment_type || "Garment"}</span>
+                                                  <span className="text-body-bold font-semibold text-slate-800 block truncate">ID #{item.id} — {item.title}</span>
+                                                  <span className="text-body-regular text-slate-500">{item.garment_type || "Garment"}</span>
                                                 </div>
-                                                <span className={`font-mono text-[11px] font-bold px-2 py-0.5 rounded flex-shrink-0 ${ig.bg} ${ig.text}`}>
+                                                <span className={`font-mono text-body-bold font-bold px-2 py-0.5 rounded flex-shrink-0 ${ig.bg} ${ig.text}`}>
                                                   {item.similarity_pct.toFixed(1)}%
                                                 </span>
                                               </div>
@@ -1464,14 +1464,14 @@ export default function Home() {
                                 const compState = componentsState[g] || { fabricWeight: "Cotton (Medium-weight)", imageFile: null, previewUrl: null, result: null };
                                 return (
                                   <div key={g} className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col justify-between gap-3">
-                                    <span className="text-xs font-bold text-slate-800 uppercase font-mono tracking-wide">{g}</span>
+                                    <span className="text-body-bold font-bold text-slate-800 uppercase font-mono tracking-wide">{g}</span>
                                     {!compState.previewUrl ? (
                                       <label className="border border-dashed border-slate-300 hover:border-[#155DFC] rounded-lg flex flex-col items-center justify-center p-4 aspect-square text-center cursor-pointer bg-white transition-colors">
                                         <input type="file" onChange={(e) => { if (e.target.files?.[0]) handleComponentFileChange(g, e.target.files[0]); }} accept="image/*" className="hidden" />
                                         <svg className="w-5 h-5 text-slate-400 mb-1" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                         </svg>
-                                        <span className="text-[10px] text-slate-500 font-medium">Upload {g}</span>
+                                        <span className="text-body-regular text-slate-500 font-medium">Upload {g}</span>
                                       </label>
                                     ) : (
                                       <div className="relative rounded-lg overflow-hidden aspect-square bg-white border border-slate-200 flex items-center justify-center p-1">
@@ -1493,25 +1493,25 @@ export default function Home() {
 
                       {/* Right Column — Engineering Specifications */}
                       <div className="xl:col-span-3 bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs flex flex-col gap-6">
-                        <h2 className="font-bold text-base text-slate-900 mb-2 font-display leading-tight">ENGINEERING SPECIFICATIONS</h2>
+                        <h2 className="font-bold text-heading-bold text-slate-900 mb-2 font-display leading-tight">ENGINEERING SPECIFICATIONS</h2>
                         <form id="process-sheet-form" onSubmit={projectMode === "doll" ? handleGenerateDollProcessSheet : handleGenerateProcessSheet} className="flex flex-col gap-5 flex-1">
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Project / Batch Name *</label>
+                            <label className="text-body-bold font-bold text-slate-800">Project / Batch Name *</label>
                             <input
                               type="text"
                               value={quizName}
                               onChange={(e) => setQuizName(e.target.value)}
                               placeholder="e.g. Autumn Casual Jacket Batch #01"
                               required
-                              className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                              className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
                             />
                           </div>
                           {projectMode === "single" ? (
                             <>
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-slate-700">Garment Category</label>
+                                <label className="text-body-bold font-bold text-slate-800">Garment Category</label>
                                 <select value={quizGarment} onChange={(e) => setQuizGarment(e.target.value)}
-                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Tops">
                                     <option value="Shirt">Kemeja (Shirt) — 8 Sewing Steps</option>
                                     <option value="T-Shirt">Kaos (T-Shirt) — 4 Sewing Steps</option>
@@ -1528,9 +1528,9 @@ export default function Home() {
                                 </select>
                               </div>
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-slate-700">Fabric Application / Weight</label>
+                                <label className="text-body-bold font-bold text-slate-800">Fabric Application / Weight</label>
                                 <select value={quizFabric} onChange={(e) => setQuizFabric(e.target.value)}
-                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Light-weight">
                                     <option value="Silk (Light-weight)">Sutra / Silk</option>
                                     <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
@@ -1558,9 +1558,9 @@ export default function Home() {
                             </>
                           ) : (
                             <div className="flex flex-col gap-1.5">
-                              <label className="text-xs font-semibold text-slate-700">Doll Type Template</label>
+                              <label className="text-body-bold font-bold text-slate-800">Doll Type Template</label>
                               <select value={dollType} onChange={(e) => setDollType(e.target.value)}
-                                className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                 {Object.keys(DOLL_TYPES).map(t => (
                                   <option key={t} value={t}>{t} — ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})</option>
                                 ))}
@@ -1569,14 +1569,14 @@ export default function Home() {
                           )}
 
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
+                            <label className="text-body-bold font-bold text-slate-800">Production Run Quantity (Batch Size)</label>
                             <div className="flex items-center gap-2">
                               {[100, 250, 500, 1000].map((qty) => (
                                 <button
                                   key={qty}
                                   type="button"
                                   onClick={() => setBatchQuantity(qty)}
-                                  className={`flex-1 py-2 px-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer border ${
+                                  className={`flex-1 py-2.5 px-2 rounded-xl text-body-bold font-mono font-bold transition-all cursor-pointer border ${
                                     batchQuantity === qty
                                       ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
                                       : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
@@ -1590,7 +1590,7 @@ export default function Home() {
                                 min={1}
                                 value={batchQuantity}
                                 onChange={(e) => setBatchQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="w-20 bg-slate-50/80 border border-slate-200/90 rounded-xl py-2 px-2 text-xs font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
+                                className="w-24 bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 px-2 text-body-bold font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
                                 placeholder="Qty"
                               />
                             </div>
@@ -1599,13 +1599,13 @@ export default function Home() {
                           <div className={`border rounded-xl overflow-hidden mt-auto transition-all ${
                             grade?.letter === "F" ? "border-red-200" : grade?.letter === "C" ? "border-orange-200" : grade?.letter === "B" ? "border-amber-200" : grade ? "border-emerald-200" : "border-slate-200"
                           }`}>
-                            <div className={`flex items-center justify-between px-4 py-2.5 text-xs ${wfBg} ${wfTxt}`}>
+                            <div className={`flex items-center justify-between px-4 py-2.5 text-body-bold ${wfBg} ${wfTxt}`}>
                               <span className="font-semibold">Workflow Status</span>
                               <span className="font-bold">
                                 {grade?.letter === "F" ? "Locked — Duplicate Pattern Detected" : grade ? "Ready for Compilation" : "Awaiting Pattern Scan"}
                               </span>
                             </div>
-                            <p className={`text-[11px] px-4 py-2.5 leading-relaxed ${
+                            <p className={`text-body-regular px-4 py-2.5 leading-relaxed ${
                               grade?.letter === "F" ? "bg-red-50 text-red-800" : grade?.letter === "C" ? "bg-orange-50 text-orange-800" : grade?.letter === "B" ? "bg-amber-50 text-amber-800" : grade ? "bg-emerald-50 text-emerald-800" : "bg-slate-50 text-slate-500"
                             }`}>
                               {grade?.letter === "F"
@@ -1904,13 +1904,13 @@ export default function Home() {
                   {/* Right Column: Step-by-Step Sewing Flow Table & Tooling */}
                   <div className="xl:col-span-3 flex flex-col gap-8">
                     <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs">
-                      <h2 className="font-bold text-base text-slate-900 mb-6 font-display leading-tight">
+                      <h2 className="font-bold text-heading-bold text-slate-900 mb-6 font-display leading-tight">
                         STEP-BY-STEP SEWING FLOW
                       </h2>
                       
                       <div className="overflow-hidden border border-slate-100 rounded-xl">
-                        <table className="w-full text-left text-sm text-slate-600 border-collapse">
-                          <thead className="bg-slate-50/70 text-[11px] font-mono text-slate-400 uppercase border-b border-slate-100">
+                        <table className="w-full text-left text-dense-regular text-slate-600 border-collapse">
+                          <thead className="bg-slate-50/70 text-caption-bold font-mono text-slate-400 uppercase border-b border-slate-100">
                             <tr>
                               <th className="py-4 px-6 font-bold w-16">Step</th>
                               <th className="py-4 px-4 font-bold">Action / Step Flow</th>
@@ -1982,7 +1982,7 @@ export default function Home() {
 
                     {/* Tooling Grid Recommendations */}
                     <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs">
-                      <h2 className="font-bold text-base text-slate-900 mb-6 font-display">
+                      <h2 className="font-bold text-heading-bold text-slate-900 mb-6 font-display">
                         RECOMMENDED JUKI MACHINERY
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1996,7 +1996,7 @@ export default function Home() {
                               />
                             </div>
                             <div className="p-5 flex flex-col flex-grow">
-                              <h3 className="font-bold text-slate-900 text-sm mb-1.5 font-display">{tool.name}</h3>
+                              <h3 className="font-bold text-subheading-bold text-slate-900 mb-1.5 font-display">{tool.name}</h3>
                               {renderSpecsDescription(tool.desc || tool.description)}
                             </div>
                           </div>
@@ -2251,11 +2251,11 @@ export default function Home() {
         {activeTab === "tooling-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Industrial Tooling Library</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Industrial Tooling Library</span>
+              <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Sewing Machinery Catalog
               </h1>
-              <p className="text-slate-500 text-xs max-w-2xl mb-4 leading-relaxed">
+              <p className="text-slate-600 text-body-regular max-w-2xl mb-4 leading-relaxed">
                 Explore specialized Juki sewing machinery catalog, stitch technical specifications, needles, and attachments.
               </p>
 
@@ -2345,7 +2345,7 @@ export default function Home() {
                       </div>
                       
                       <div className="p-6 flex flex-col flex-grow">
-                        <h3 className="font-display font-bold text-slate-900 text-sm mb-2">{tool.name}</h3>
+                        <h3 className="font-display font-bold text-subheading-bold text-slate-900 mb-2">{tool.name}</h3>
                         {renderSpecsDescription(tool.desc || tool.description)}
                       </div>
                     </div>
@@ -2503,11 +2503,11 @@ export default function Home() {
         {activeTab === "knowledge-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Engineering SOP & Technical Specs</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Engineering SOP &amp; Technical Specs</span>
+              <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Manufacturing Knowledge Base
               </h1>
-              <p className="text-slate-500 text-xs max-w-2xl mb-4 leading-relaxed">
+              <p className="text-slate-600 text-body-regular max-w-2xl mb-4 leading-relaxed">
                 Corporate engineering database, garment quality standards, and assembly reference manuals.
               </p>
 
@@ -2605,34 +2605,34 @@ export default function Home() {
                     <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300">
                       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
                         <div>
-                          <h2 className="font-display font-bold text-lg text-slate-900">{k.title}</h2>
-                          <p className="text-xs text-slate-400 font-mono mt-0.5">{k.ref}</p>
+                          <h2 className="font-display font-bold text-subheading-bold text-slate-900">{k.title}</h2>
+                          <p className="text-body-bold text-slate-500 font-mono mt-0.5">{k.ref}</p>
                         </div>
                         {k.smv && k.smv !== "N/A" && (
-                          <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-xs font-mono font-bold text-[#155DFC]">
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-body-bold font-mono font-bold text-[#155DFC]">
                             SMV: <span>{k.smv}</span>
                           </div>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-600 leading-relaxed mb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-body-regular text-slate-700 leading-relaxed mb-4">
                         {k.features && (
                           <div>
-                            <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">Key Features / Material Specs</strong>
-                            <p className="text-slate-700">{k.features}</p>
+                            <strong className="block text-caption-bold font-mono text-slate-400 uppercase tracking-wider mb-1">Key Features / Material Specs</strong>
+                            <p className="text-slate-800 text-body-regular">{k.features}</p>
                           </div>
                         )}
                         {k.tooling && (
                           <div>
-                            <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">Tooling Recommendations</strong>
-                            <p className="text-slate-700">{k.tooling}</p>
+                            <strong className="block text-caption-bold font-mono text-slate-400 uppercase tracking-wider mb-1">Tooling Recommendations</strong>
+                            <p className="text-slate-800 text-body-regular">{k.tooling}</p>
                           </div>
                         )}
                       </div>
 
                       {k.learnings && (
-                        <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 text-xs text-slate-700 leading-relaxed">
-                          <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1.5">Guidelines &amp; Manufacturing Learnings</strong>
+                        <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 text-body-regular text-slate-800 leading-relaxed">
+                          <strong className="block text-caption-bold font-mono text-slate-400 uppercase tracking-wider mb-1.5">Guidelines &amp; Manufacturing Learnings</strong>
                           {k.learnings}
                         </div>
                       )}
@@ -2648,17 +2648,17 @@ export default function Home() {
         {activeTab === "projects-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Database Management</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Database Management</span>
+              <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Active Projects &amp; History
               </h1>
-              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
+              <p className="text-slate-600 text-body-regular max-w-xl leading-relaxed">
                 Manage your active garment styles, persistent analysis runs, and process sheet history.
               </p>
             </header>
 
             <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs">
-              <h2 className="font-display font-bold text-base text-slate-900 mb-6">Saved Projects Database</h2>
+              <h2 className="font-display font-bold text-heading-bold text-slate-900 mb-6">Saved Projects Database</h2>
               <div className="border border-slate-100 rounded-xl">
                  <table className="w-full text-left text-xs text-slate-600 border-collapse">
                   <thead className="bg-slate-50/70 font-mono text-[11px] text-slate-400 uppercase border-b border-slate-100">
@@ -2779,11 +2779,11 @@ export default function Home() {
         {activeTab === "settings-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">System Preferences</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-caption-bold font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">System Preferences</span>
+              <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 System Settings
               </h1>
-              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
+              <p className="text-slate-600 text-body-regular max-w-xl leading-relaxed">
                 Configure your API hosts, DINOv2 AI embedding engine, and persistent database credentials.
               </p>
             </header>
