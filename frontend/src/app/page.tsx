@@ -2077,6 +2077,52 @@ export default function Home() {
                           </div>
                         </div>
                       )}
+
+                      {fullResult.line_balancing && (
+                        <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono text-indigo-600 font-bold uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200/60">
+                              Factory Line Balancing Allocation (500 pcs/day Target)
+                            </span>
+                            <span className="text-xs font-mono text-slate-500">
+                              Takt Time: <strong className="text-slate-900">{fullResult.line_balancing.takt_time_mins} mins/unit</strong>
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {fullResult.line_balancing.machine_allocations.map((alloc: any, i: number) => (
+                              <div key={i} className="bg-slate-50/80 border border-slate-200/70 rounded-xl p-3 flex items-center justify-between">
+                                <div>
+                                  <span className="text-xs font-bold font-mono text-slate-900 block">{alloc.machine_model}</span>
+                                  <span className="text-[10px] text-slate-500 font-mono">Total SMV: {alloc.total_smv_mins}m ({alloc.utilization_pct}% Util)</span>
+                                </div>
+                                <span className="inline-flex items-center rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold font-mono text-indigo-700 border border-indigo-200">
+                                  {alloc.required_units} {alloc.required_units === 1 ? 'Unit' : 'Units'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {fullResult.work_aids && fullResult.work_aids.length > 0 && (
+                        <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
+                          <span className="text-[10px] font-mono text-emerald-600 font-bold uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 w-fit">
+                            Work-Aid Tooling Attachments & Jigs
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {fullResult.work_aids.map((aid: any, i: number) => (
+                              <div key={i} className="bg-emerald-50/30 border border-emerald-100 rounded-xl p-3">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs font-bold text-slate-900">{aid.attachment_name}</span>
+                                  <span className="text-[9px] font-mono uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">{aid.aid_type}</span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 leading-snug">{aid.purpose}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

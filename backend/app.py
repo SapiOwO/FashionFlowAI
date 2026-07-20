@@ -621,6 +621,120 @@ def derive_tooling_from_sequence(sewing_sequence_detailed: list) -> list:
     return tooling
 
 
+def derive_work_aids_from_sequence(sewing_sequence_detailed: list, fabric_weight: str = "Medium") -> list:
+    """
+    Derive specialized work-aid tooling attachments (folders, binders, edge guides, acrylic templates, ultrasonic jigs)
+    for each step in sewing_sequence_detailed.
+    """
+    work_aids = []
+    for step in sewing_sequence_detailed:
+        op = (step.get("operation") or "").lower()
+        model = step.get("recommended_model", "")
+        step_num = step.get("step_num", 1)
+
+        aid_type = "Guide"
+        attachment_name = "Adjustable Magnetic Edge Guide (0.5-3.0cm)"
+        category = "Seam Alignment"
+        purpose = "Ensures uniform seam margin and straight stitch alignment"
+
+        if "hem" in op or "edge" in op:
+            aid_type = "Folder"
+            attachment_name = "Right-Angle Hemming Folder (2-Fold, 1/2\")"
+            category = "Hem Finishing"
+            purpose = "Automates edge folding and prevents raw fabric fraying"
+        elif "bind" in op or "collar" in op:
+            aid_type = "Binder"
+            attachment_name = "Double-Fold Bias Tape Binder Attachment"
+            category = "Collar / Binding"
+            purpose = "Feeds bias tape evenly around curved edges and necklines"
+        elif "pocket" in op or "flap" in op:
+            aid_type = "Template"
+            attachment_name = "Acrylic Pocket Setting Alignment Template"
+            category = "Pattern Marking"
+            purpose = "Guarantees symmetrical pocket placement across production runs"
+        elif "ultrasonic" in op or "weld" in op or "heat" in op:
+            aid_type = "Ultrasonic Jig"
+            attachment_name = "Ultrasonic Seam Sealing Roller Guide & Jig"
+            category = "Synthetic Joining"
+            purpose = "Provides pressure-assisted ultrasonic seam bonding without needles"
+        elif "button" in op or "tack" in op:
+            aid_type = "Clamping Jig"
+            attachment_name = "Pneumatic Work-Clamp Plate Jig"
+            category = "Fastener Setting"
+            purpose = "Holds fabric securely during automated bartacking or button sewing"
+
+        work_aids.append({
+            "step_num": step_num,
+            "operation": step.get("operation"),
+            "machine_model": model,
+            "aid_type": aid_type,
+            "attachment_name": attachment_name,
+            "category": category,
+            "purpose": purpose
+        })
+
+    return work_aids
+
+
+def calculate_line_balancing(sewing_sequence_detailed: list, batch_quantity: int = 100, target_daily_units: int = 500, shift_hours: float = 8.0) -> dict:
+    """
+    Calculate factory line balancing parameters: takt time, machine unit allocation breakdown per model,
+    and bottleneck operation step.
+    """
+    shift_mins = shift_hours * 60.0
+    target_units = max(1, target_daily_units)
+    takt_time_mins = round(shift_mins / target_units, 2)
+
+    machine_smv_map = {}
+    max_step_smv = 0.0
+    bottleneck_step = None
+
+    for step in sewing_sequence_detailed:
+        model = step.get("recommended_model", "UNRESOLVED")
+        try:
+            val_match = re.search(r"([0-9.]+)", str(step.get("smv_mins", "1.0")))
+            smv_val = float(val_match.group(1)) if val_match else 1.0
+        except (ValueError, TypeError):
+            smv_val = 1.0
+
+        machine_smv_map[model] = machine_smv_map.get(model, 0.0) + smv_val
+
+        if smv_val > max_step_smv:
+            max_step_smv = smv_val
+            bottleneck_step = {
+                "step_num": step.get("step_num"),
+                "operation": step.get("operation"),
+                "recommended_model": model,
+                "smv_mins": smv_val
+            }
+
+    efficiency_factor = 0.85
+    effective_takt = takt_time_mins * efficiency_factor if takt_time_mins > 0 else 1.0
+
+    machine_allocations = []
+    total_required_machines = 0
+    for model, total_smv in machine_smv_map.items():
+        req_units = int(np.ceil(total_smv / effective_takt)) if effective_takt > 0 else 1
+        req_units = max(1, req_units)
+        total_required_machines += req_units
+        machine_allocations.append({
+            "machine_model": model,
+            "total_smv_mins": round(total_smv, 2),
+            "required_units": req_units,
+            "utilization_pct": round(min(100.0, (total_smv / (req_units * effective_takt)) * 100.0), 1)
+        })
+
+    return {
+        "target_daily_units": target_units,
+        "shift_hours": shift_hours,
+        "takt_time_mins": takt_time_mins,
+        "total_line_machines": total_required_machines,
+        "machine_allocations": machine_allocations,
+        "bottleneck_step": bottleneck_step
+    }
+
+
+
 def normalize_garment_key(raw_garment_type: str) -> str:
     """
     Normalize a free-text garment_type string to its canonical template key.
@@ -821,6 +935,7 @@ def generate_process_sheet(req: ProcessSheetRequest):
 
     # Derive tooling_recommendations strictly from machines in sewing_sequence_detailed
     tooling_recommendations = derive_tooling_from_sequence(sewing_sequence_detailed)
+    work_aids = derive_work_aids_from_sequence(sewing_sequence_detailed, req.fabric_weight)
 
     # Batch SMV Scaling Calculation
     batch_qty = max(1, req.batch_quantity)
@@ -837,6 +952,8 @@ def generate_process_sheet(req: ProcessSheetRequest):
         "batch_total_hours": round((single_smv_val * batch_qty) / 60.0, 2),
         "operator_daily_capacity_pcs": round((8.0 * 60.0) / single_smv_val, 1) if single_smv_val > 0 else 0,
     }
+
+    line_balancing = calculate_line_balancing(sewing_sequence_detailed, batch_qty, target_daily_units=500)
 
     engineering_checklist = build_engineering_checklist(
         req.similarity_status,
@@ -855,9 +972,11 @@ def generate_process_sheet(req: ProcessSheetRequest):
             for s in sewing_sequence_detailed
         ],
         "tooling_recommendations": tooling_recommendations,
+        "work_aids": work_aids,
         "smv_range": smv_range,
         "complexity": complexity,
         "batch_production": batch_production,
+        "line_balancing": line_balancing,
         "engineering_checklist": engineering_checklist,
         "preview_image": req.preview_image,
         "historical_examples": search_similar_garments(get_mock_embedding(req.classification_name)),
@@ -960,6 +1079,9 @@ def generate_doll_process_sheet(req: DollSheetRequest):
         "operator_daily_capacity_pcs": round((8.0 * 60.0) / total_smv_val, 1) if total_smv_val > 0 else 0,
     }
 
+    work_aids = derive_work_aids_from_sequence(combined_sequence, req.components[0].fabric_weight if req.components else "Medium")
+    line_balancing = calculate_line_balancing(combined_sequence, batch_qty, target_daily_units=500)
+
     engineering_checklist = build_engineering_checklist(
         "APPROVED",
         len(combined_sequence),
@@ -979,10 +1101,12 @@ def generate_doll_process_sheet(req: DollSheetRequest):
             for s in combined_sequence
         ],
         "tooling_recommendations": tooling_recommendations,
+        "work_aids": work_aids,
         "smv_range": smv_range,
         "smv_breakdown": smv_breakdown,
         "complexity": complexity,
         "batch_production": batch_production,
+        "line_balancing": line_balancing,
         "engineering_checklist": engineering_checklist,
         "preview_image": req.components[0].preview_image if req.components else "globe.svg",
         "historical_examples": search_similar_garments(get_mock_embedding(req.doll_type)) if req.components else [],

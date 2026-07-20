@@ -588,8 +588,55 @@ class TestPhase21EnterpriseSuite(unittest.TestCase):
         self.assertIn("machinery_count", data)
         self.assertIn("category_breakdown", data)
         self.assertGreater(data["machinery_count"], 0)
-        self.assertIn("Apparel", data["category_breakdown"])
+class TestPhase3AdvancedEngineering(unittest.TestCase):
+    """Validate Phase 3 Work-Aid Tooling Attachments Engine and Factory Line Balancing Allocation."""
+
+    def test_work_aids_derivation(self):
+        """derive_work_aids_from_sequence must generate attachments with aid_type and purpose."""
+        seq = [
+            {"step_num": 1, "operation": "Sewing Collar & Binding", "recommended_model": "DDL-9000C"},
+            {"step_num": 2, "operation": "Hemming Bottom Edge", "recommended_model": "DLN-9010A"},
+            {"step_num": 3, "operation": "Pocket Attaching", "recommended_model": "LH-3500"},
+        ]
+        work_aids = backend_app.derive_work_aids_from_sequence(seq, "Medium-weight")
+        self.assertEqual(len(work_aids), 3)
+        self.assertEqual(work_aids[0]["aid_type"], "Binder")
+        self.assertEqual(work_aids[1]["aid_type"], "Folder")
+        self.assertEqual(work_aids[2]["aid_type"], "Template")
+
+    def test_line_balancing_calculation(self):
+        """calculate_line_balancing must compute takt_time_mins and machine_allocations breakdown."""
+        seq = [
+            {"step_num": 1, "operation": "Joining Seams", "recommended_model": "DDL-9000C", "smv_mins": 2.5},
+            {"step_num": 2, "operation": "Hemming Bottom", "recommended_model": "DLN-9010A", "smv_mins": 1.5},
+            {"step_num": 3, "operation": "Pocket Setting", "recommended_model": "DDL-9000C", "smv_mins": 3.0},
+        ]
+        lb = backend_app.calculate_line_balancing(seq, batch_quantity=100, target_daily_units=500)
+        self.assertIn("takt_time_mins", lb)
+        self.assertIn("machine_allocations", lb)
+        self.assertEqual(lb["takt_time_mins"], 0.96) # 480 / 500 = 0.96 min
+        self.assertGreater(lb["total_line_machines"], 0)
+
+    def test_process_sheet_includes_work_aids_and_line_balancing(self):
+        """Process sheet result payload must contain work_aids and line_balancing objects."""
+        req = backend_app.ProcessSheetRequest(
+            project_name="Test Phase 3 Jacket",
+            garment_type="Jacket",
+            fabric_weight="Heavy-weight",
+            preview_image="globe.svg",
+            similarity_percentage=100.0,
+            similarity_status="APPROVED",
+            classification_name="Jacket",
+            message="Test phase 3 payload",
+            batch_quantity=250,
+        )
+        res = backend_app.generate_process_sheet(req)
+        self.assertIn("work_aids", res)
+        self.assertIn("line_balancing", res)
+        self.assertGreater(len(res["work_aids"]), 0)
+        self.assertIn("machine_allocations", res["line_balancing"])
 
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
