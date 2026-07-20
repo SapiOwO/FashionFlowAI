@@ -103,6 +103,11 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Added `/api/master-data` endpoint in `backend/app.py` serving structured machinery catalog breakdowns and template counts.
   * Rendered **Engineering Readiness Checklist Card** in Step 3 of `Create Process Sheet` in `frontend/src/app/page.tsx`.
   * Added unit tests `TestPhase21EnterpriseSuite` in `backend/tests/test_backend_contract.py` (37 tests passing 100%).
+* **Phase 22: Advanced Pre-Production Engineering & Line Balancing Suite (2026-07-21)**:
+  * Implemented `derive_work_aids_from_sequence()` in `backend/app.py` auto-suggesting specialized work-aid tooling attachments (Right-Angle Hemming Folders, Double-Fold Bias Tape Binders, Adjustable Magnetic Edge Guides, Acrylic Pocket Setting Templates, and Ultrasonic Seam Sealing Jigs).
+  * Implemented `calculate_line_balancing()` in `backend/app.py` calculating factory line throughput parameters (Takt Time $0.96\text{m/unit}$ for 500 pcs/day target, JUKI machine unit allocations at 85% line efficiency, and bottleneck operation identification).
+  * Rendered **Work-Aid Tooling Attachments** and **Factory Line Balancing Allocation Breakdown** cards in Step 3 of `Create Process Sheet` in `frontend/src/app/page.tsx`.
+  * Added contract unit tests `TestPhase3AdvancedEngineering` in `backend/tests/test_backend_contract.py` (40 tests passing 100%).
 
 ---
 

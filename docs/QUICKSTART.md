@@ -88,3 +88,15 @@ python main.py
 ```
 
 Press `Ctrl+C` in the terminal to stop both servers at the same time.
+
+---
+
+## 5. Running Automated Contract Unit Tests
+
+To run the full suite of **40 automated integration & contract tests** covering DINOv2 vector extraction, machine resolver logic, work-aid tooling attachments, batch SMV scaling, and line balancing allocations:
+
+```powershell
+.venv\Scripts\python.exe -m unittest backend/tests/test_backend_contract.py
+```
+
+

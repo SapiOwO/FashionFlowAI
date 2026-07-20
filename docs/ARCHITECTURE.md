@@ -31,8 +31,10 @@ graph TD
   * Manages dual modes: SQLite (with numpy-based local vector search) or PostgreSQL (with native pgvector HNSW cosine searches).
   * Stores persistent analysis logs in the `analysis_history` table so that upload history is saved across server restarts.
   * Reads the Juki machinery catalogs (`data/juki_master_catalog.csv`) to seed the historical knowledge database and serve machine specs details on startup.
-* **Technical Machine Resolver & Batch SMV Engine**:
+* **Technical Machine Resolver, Work-Aid Tooling & Line Balancing Engine**:
   * Derives specialized presser feet (`Zipper Foot`, `Piping Foot`, `Button Clamp`, `Differential Feed Foot`) and stitch densities (`1.8mm/14 SPI`, `2.5mm/10 SPI`, `3.5mm/7 SPI`).
+  * **Work-Aid Tooling Attachments**: Auto-recommends Right-Angle Hemming Folders, Double-Fold Bias Tape Binders, Adjustable Magnetic Edge Guides, Acrylic Pocket Setting Templates, and Ultrasonic Seam Sealing Jigs.
+  * **Factory Line Balancing Allocator**: Calculates factory line throughput parameters (Takt Time $0.96\text{m/unit}$ for 500 pcs/day target), JUKI machine unit allocations at 85% line efficiency, and bottleneck operation identification.
   * Calculates batch production run scaling (`batch_total_hours` and operator daily capacity) for single garments and multi-component doll outfit sets.
 
 ---
