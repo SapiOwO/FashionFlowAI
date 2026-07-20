@@ -133,6 +133,14 @@ class TestMachineResolver(unittest.TestCase):
         result = backend_app.resolve_machine_for_step("Overlock / Safety Stitch", "Medium-weight")
         self.assertNotIn("Lockstitch", result.get("desc", ""), "Overlock resolver should not match Lockstitch machines")
 
+    def test_resolver_includes_needle_and_speed_attributes(self):
+        """Resolver must return needle, speed, and application attributes."""
+        result = backend_app.resolve_machine_for_step("1-needle Lockstitch", "Medium-weight")
+        self.assertIn("needle", result, "Resolved machine must include needle attribute")
+        self.assertIn("speed", result, "Resolved machine must include speed attribute")
+        self.assertIn("application", result, "Resolved machine must include application attribute")
+        self.assertNotEqual(result["needle"], "", "Needle attribute must not be empty")
+
 
 class TestBuildSewingSequence(unittest.TestCase):
     """Validate build_sewing_sequence produces correct canonical outputs."""

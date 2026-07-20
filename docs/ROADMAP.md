@@ -81,6 +81,10 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Added **Invisible UX Autocomplete Search** and **Category Dropdown Filters** to Sewing Machinery Catalog and Knowledge Base catalogs.
   * Standardized subtab naming 1-to-1 between sidebar navigation and viewport main headers.
   * Synchronized exact vertical Y-baseline pixel alignment (`px-10 py-6` padding) and normalized header category tags (`Process Sheet Engineering`).
+* **Phase 17: Technical Machine Specs & Needle Attributes Expansion (2026-07-21)**:
+  * Expanded `resolve_machine_for_step()` and `build_sewing_sequence()` in `backend/app.py` to extract `needle`, `speed`, and `application` fields directly from `juki_master_catalog.csv`.
+  * Updated Step 3 Sewing Flow Table in `Create Process Sheet` to display monospaced `Needle: DBx1 (#11)` badges and maximum sewing speeds (`5,000 sti/min`) for each step.
+  * Added regression test `test_resolver_includes_needle_and_speed_attributes` in `backend/tests/test_backend_contract.py` (31 tests passing 100%).
 
 ---
 

@@ -480,6 +480,9 @@ def resolve_machine_for_step(required_machine_type: str, fabric_weight: str) -> 
             "file": clean_image_filename(base_model),
             "desc": row.get("description", ""),
             "machine_type": required_machine_type,
+            "needle": row.get("needle", "N/A"),
+            "speed": row.get("speed", "N/A"),
+            "application": row.get("application", "N/A"),
         }
 
     def _is_type_match(row_type: str) -> bool:
@@ -519,6 +522,9 @@ def resolve_machine_for_step(required_machine_type: str, fabric_weight: str) -> 
         "file": "globe.svg",
         "desc": f"Warning: No JUKI catalog entry found for machine type '{required_machine_type}'.",
         "machine_type": required_machine_type,
+        "needle": "N/A",
+        "speed": "N/A",
+        "application": "N/A",
     }
 
 
@@ -553,6 +559,9 @@ def build_sewing_sequence(garment_key: str, fabric_weight: str, templates: dict)
             "recommended_model": matched["name"],
             "recommended_desc": matched["desc"],
             "recommended_file": matched["file"],
+            "needle": matched.get("needle", "N/A"),
+            "speed": matched.get("speed", "N/A"),
+            "application": matched.get("application", "N/A"),
         })
 
     return sewing_sequence_detailed, smv_range, complexity
