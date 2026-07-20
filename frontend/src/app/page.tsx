@@ -84,11 +84,11 @@ const formatActivityDate = (item: any): string => {
 const renderSpecsDescription = (desc: string) => {
   if (!desc) return null;
   // Split specs cleanly by line break or bullet dot symbol
-  const rawItems = desc.split(/[\n•]/).map(item => item.trim()).filter(Boolean);
+  const rawItems = desc.split(/[\nâ€¢]/).map(item => item.trim()).filter(Boolean);
   
   return (
     <div className="mt-4 border-t border-slate-100 pt-4 w-full">
-      <h4 className="text-caption-bold font-mono font-bold text-slate-400 uppercase tracking-widest mb-2.5">Technical Specifications</h4>
+      <h4 className="text-caption-regular font-mono font-bold text-slate-400 uppercase tracking-widest mb-2.5">Technical Specifications</h4>
       <div className="bg-slate-50/60 rounded-xl p-3.5 border border-slate-100 space-y-2">
         {rawItems.map((item, i) => {
           const cleanItem = item.replace(/\*\*/g, "").trim();
@@ -100,13 +100,13 @@ const renderSpecsDescription = (desc: string) => {
             const val = parts.slice(1).join(":").trim();
             return (
               <div key={i} className="flex justify-between items-center text-dense-regular border-b border-slate-100/60 pb-1.5 last:border-0 last:pb-0 gap-2">
-                <span className="font-normal text-dense-regular text-slate-500 flex-shrink-0">{key}</span>
-                <span className="font-semibold text-dense-bold text-slate-900 text-right truncate">{val}</span>
+                <span className="font-semibold text-slate-500 flex-shrink-0">{key}</span>
+                <span className="font-semibold text-slate-800 text-right truncate">{val}</span>
               </div>
             );
           }
           return (
-            <div key={i} className="text-dense-regular text-slate-700 font-medium">
+            <div key={i} className="text-dense-regular text-slate-600 font-medium">
               {cleanItem}
             </div>
           );
@@ -885,7 +885,7 @@ export default function Home() {
         <div className="flex items-center mb-10 h-8 pl-2 overflow-hidden">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-slate-700 hover:text-brand-blue focus:outline-none cursor-pointer p-1 rounded-lg hover:bg-slate-100/50 transition-colors flex items-center justify-center flex-shrink-0"
+            className="text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer p-1 rounded-lg hover:bg-slate-100/50 transition-colors flex items-center justify-center flex-shrink-0"
             aria-label="Toggle Sidebar"
           >
             <svg
@@ -901,7 +901,7 @@ export default function Home() {
           <span className={`font-display font-bold text-heading-bold text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
             isCollapsed ? "max-w-0 opacity-0 ml-0" : "max-w-[200px] opacity-100 ml-3.5"
           }`}>
-            FashionFlow <span className="bg-[#155DFC] text-white text-caption-bold uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
+            FashionFlow <span className="bg-[#155DFC] text-white text-caption-regular uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
           </span>
         </div>
 
@@ -911,7 +911,7 @@ export default function Home() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center rounded-lg text-body-regular py-3 px-3.5 transition-all duration-300 w-full cursor-pointer overflow-hidden ${
+              className={`flex items-center rounded-xl font-medium text-dense-regular py-3 px-3.5 transition-all duration-300 w-full cursor-pointer overflow-hidden ${
                 activeTab === item.id
                   ? "bg-[#155DFC] text-white shadow-xs font-semibold"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -956,33 +956,33 @@ export default function Home() {
         {activeTab === "dashboard-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Pre-Production Engineering</span>
+              <span className="text-caption-regular font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Pre-Production Engineering</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Engineering Dashboard
               </h1>
-              <p className="text-body-regular text-slate-600 max-w-2xl leading-relaxed">
+              <p className="text-slate-500 text-dense-regular max-w-2xl leading-relaxed">
                 AI-assisted garment analysis, originality verification, and process sheet generation for pre-production engineering.
               </p>
             </header>
 
             {/* Engineering KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-brand-blue/30 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-caption-bold font-mono text-slate-400 uppercase tracking-widest font-bold">Total Analyses</span>
+                  <span className="text-caption-regular font-mono text-slate-400 uppercase tracking-widest font-bold">Total Analyses</span>
                   <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                    <svg className="w-4 h-4 text-brand-blue" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
                 </div>
                 <p className="font-display font-bold text-display-bold text-slate-900">{analysisHistory.length}</p>
-                <p className="text-body-regular text-slate-500 mt-1">Engineering runs logged</p>
+                <p className="text-dense-regular text-slate-400 mt-1">Engineering runs logged</p>
               </div>
 
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-caption-bold font-mono text-slate-400 uppercase tracking-widest font-bold">Unique Designs</span>
+                  <span className="text-caption-regular font-mono text-slate-400 uppercase tracking-widest font-bold">Unique Designs</span>
                   <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
                     <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -995,12 +995,12 @@ export default function Home() {
                     return s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
                   }).length}
                 </p>
-                <p className="text-body-regular text-slate-500 mt-1">Approved original patterns</p>
+                <p className="text-dense-regular text-slate-400 mt-1">Approved original patterns</p>
               </div>
 
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-caption-bold font-mono text-slate-400 uppercase tracking-widest font-bold">Historical Matches</span>
+                  <span className="text-caption-regular font-mono text-slate-400 uppercase tracking-widest font-bold">Historical Matches</span>
                   <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
                     <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
@@ -1013,12 +1013,12 @@ export default function Home() {
                     return s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND" || (a.result?.similarity_percentage || 0) >= 90;
                   }).length}
                 </p>
-                <p className="text-body-regular text-slate-500 mt-1">Vector DB reference records</p>
+                <p className="text-dense-regular text-slate-400 mt-1">Vector DB reference records</p>
               </div>
 
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-caption-bold font-mono text-slate-400 uppercase tracking-widest font-bold">Avg. Est. SMV</span>
+                  <span className="text-caption-regular font-mono text-slate-400 uppercase tracking-widest font-bold">Avg. Est. SMV</span>
                   <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                     <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1036,7 +1036,7 @@ export default function Home() {
                       })()
                     : "N/A"}
                 </p>
-                <p className="text-body-regular text-slate-500 mt-1">min/pc average across projects</p>
+                <p className="text-dense-regular text-slate-400 mt-1">min/pc average across projects</p>
               </div>
             </div>
 
@@ -1045,29 +1045,29 @@ export default function Home() {
               {/* Left: System Workflow Guide */}
               <div className="lg:col-span-2 bg-white border border-slate-100 rounded-2xl p-7 shadow-2xs">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-display font-bold text-subheading-bold text-slate-900">Engineering Workflow</h2>
+                  <h2 className="font-display font-bold text-heading-bold text-slate-900">Engineering Workflow</h2>
                   <button
                     onClick={() => { setActiveTab("design-input-view"); setCurrentStep(1); }}
-                    className="text-body-bold font-semibold text-brand-blue hover:text-brand-blue-hover bg-blue-50 hover:bg-blue-100 px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                    className="text-dense-regular font-semibold text-[#155DFC] hover:text-[#1249cc] bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
                   >
-                    Start New Analysis →
+                    Start New Analysis â†’
                   </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-2.5 p-5 border border-blue-100 rounded-xl bg-blue-50/40">
-                    <div className="w-8 h-8 rounded-full bg-brand-blue text-white flex items-center justify-center font-bold text-sm">1</div>
-                    <h3 className="font-bold text-slate-900 text-body-bold font-display">Upload &amp; Originality</h3>
-                    <p className="text-body-regular text-slate-600 leading-relaxed">Upload garment sketch. DINOv2 vector engine verifies originality against database records with 95% threshold.</p>
+                  <div className="flex flex-col gap-2 p-5 border border-blue-100 rounded-xl bg-blue-50/40">
+                    <div className="w-8 h-8 rounded-full bg-[#155DFC] text-white flex items-center justify-center font-bold text-body-regular">1</div>
+                    <h3 className="font-bold text-slate-900 text-body-regular mt-1 font-display">Upload &amp; Originality</h3>
+                    <p className="text-dense-regular text-slate-500 leading-relaxed">Upload garment sketch. DINOv2 vector engine verifies originality against database records with 95% threshold.</p>
                   </div>
-                  <div className="flex flex-col gap-2.5 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
-                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">2</div>
-                    <h3 className="font-bold text-slate-900 text-body-bold font-display">Engineering Parameters</h3>
-                    <p className="text-body-regular text-slate-600 leading-relaxed">Define project parameters — garment type, fabric weight, component breakdown, and production specifications.</p>
+                  <div className="flex flex-col gap-2 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-body-regular">2</div>
+                    <h3 className="font-bold text-slate-900 text-body-regular mt-1 font-display">Engineering Parameters</h3>
+                    <p className="text-dense-regular text-slate-500 leading-relaxed">Define project parameters â€” garment type, fabric weight, component breakdown, and production specifications.</p>
                   </div>
-                  <div className="flex flex-col gap-2.5 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
-                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">3</div>
-                    <h3 className="font-bold text-slate-900 text-body-bold font-display">Process Sheet &amp; SMV</h3>
-                    <p className="text-body-regular text-slate-600 leading-relaxed">AI generates the sewing sequence, machine tooling recommendations, and estimated SMV for production planning.</p>
+                  <div className="flex flex-col gap-2 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-body-regular">3</div>
+                    <h3 className="font-bold text-slate-900 text-body-regular mt-1 font-display">Process Sheet &amp; SMV</h3>
+                    <p className="text-dense-regular text-slate-500 leading-relaxed">AI generates the sewing sequence, machine tooling recommendations, and estimated SMV for production planning.</p>
                   </div>
                 </div>
 
@@ -1083,8 +1083,8 @@ export default function Home() {
                   return (
                     <div className="mt-6 pt-6 border-t border-slate-100">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Originality Ratio</span>
-                        <span className="text-xs font-bold text-emerald-600">{approvedPct}% Approved</span>
+                        <span className="text-caption-regular font-mono text-slate-400 uppercase tracking-widest font-bold">Originality Ratio</span>
+                        <span className="text-dense-regular font-bold text-emerald-600">{approvedPct}% Approved</span>
                       </div>
                       <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
                         <div
@@ -1093,8 +1093,8 @@ export default function Home() {
                         />
                       </div>
                       <div className="flex justify-between mt-2 font-mono">
-                        <span className="text-[10px] text-slate-400">{approved} unique designs</span>
-                        <span className="text-[10px] text-slate-400">{rejected} historical matches</span>
+                        <span className="text-caption-regular text-slate-400">{approved} unique designs</span>
+                        <span className="text-caption-regular text-slate-400">{rejected} historical matches</span>
                       </div>
                     </div>
                   );
@@ -1104,7 +1104,7 @@ export default function Home() {
               {/* Right: Activity Feed */}
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex flex-col">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-display font-bold text-subheading-bold text-slate-900">Activity Feed</h2>
+                  <h2 className="font-display font-bold text-heading-bold text-slate-900">Activity Feed</h2>
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 animate-pulse" title="Live"></span>
                 </div>
                 {analysisHistory.length === 0 ? (
@@ -1112,7 +1112,7 @@ export default function Home() {
                     <svg className="w-8 h-8 text-slate-300 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-body-regular text-slate-500">No activity yet. Run your first analysis to see the feed.</p>
+                    <p className="text-dense-regular text-slate-400">No activity yet. Run your first analysis to see the feed.</p>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-0">
@@ -1123,27 +1123,27 @@ export default function Home() {
                       return (
                         <div key={idx} className="flex gap-3 py-3 border-b border-slate-100 last:border-0 items-start">
                           <div className="flex flex-col items-center gap-1 pt-1">
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isRejected ? "bg-amber-400" : "bg-brand-blue"}`} />
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isRejected ? "bg-amber-400" : "bg-[#155DFC]"}`} />
                             {idx < analysisHistory.slice(0, 8).length - 1 && (
                               <div className="w-px flex-1 bg-slate-100 min-h-[16px]" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-body-bold font-semibold text-slate-800 truncate">
+                            <p className="text-dense-regular font-semibold text-slate-800 truncate">
                               {isRejected ? "Historical Match Found" : "Analysis Complete"}
                             </p>
-                            <p className="text-body-regular text-slate-500 truncate">{item.fileName || item.result?.classification?.[0]?.class_name || "Untitled"}</p>
+                            <p className="text-dense-regular text-slate-400 truncate">{item.fileName || item.result?.classification?.[0]?.class_name || "Untitled"}</p>
                           </div>
-                          <span className="text-caption-bold font-mono text-slate-400 flex-shrink-0">{formattedTime}</span>
+                          <span className="text-caption-regular font-mono text-slate-400 flex-shrink-0">{formattedTime}</span>
                         </div>
                       );
                     })}
                     {analysisHistory.length > 8 && (
                       <button
                         onClick={() => setActiveTab("projects-view")}
-                        className="mt-3 text-body-bold font-semibold text-brand-blue hover:text-brand-blue-hover text-left cursor-pointer"
+                        className="mt-3 text-dense-regular font-semibold text-[#155DFC] hover:text-[#1249cc] text-left cursor-pointer"
                       >
-                        View all {analysisHistory.length} projects →
+                        View all {analysisHistory.length} projects â†’
                       </button>
                     )}
                   </div>
@@ -1153,12 +1153,12 @@ export default function Home() {
           </div>
         )}
 
-        {/* VIEW 2: Create Process Sheet — Refined Penpot-inspired Layout */}
+        {/* VIEW 2: Create Process Sheet â€” Refined Penpot-inspired Layout */}
         {activeTab === "design-input-view" && (() => {
-          /* ── Active Step Controller ── */
+          /* â”€â”€ Active Step Controller â”€â”€ */
           const cpStep = isQuizSubmitted ? 3 : currentStep;
 
-          /* ── Grade System ── */
+          /* â”€â”€ Grade System â”€â”€ */
           const isSingleRejected = result && ["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase());
           const isDollRejected = projectMode === "doll" && Object.values(componentsState).some(c => c.result && ["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((c.result.status || "").toUpperCase()));
           const isPatternRejected = projectMode === "single" ? isSingleRejected : isDollRejected;
@@ -1167,7 +1167,7 @@ export default function Home() {
           const getGrade = (pct: number) => {
             if (!result) return null;
             if (pct >= 90) return { letter: "F", label: "Duplicate Detected",     bg: "bg-red-600",    text: "text-white",       cardBorder: "border-red-200",    cardBg: "bg-red-50/60",    rowBg: "bg-red-100",    rowText: "text-red-800" };
-            if (pct >= 70) return { letter: "C", label: "High Overlap — Review",  bg: "bg-orange-500", text: "text-white",       cardBorder: "border-orange-200", cardBg: "bg-orange-50/60", rowBg: "bg-orange-100", rowText: "text-orange-800" };
+            if (pct >= 70) return { letter: "C", label: "High Overlap â€” Review",  bg: "bg-orange-500", text: "text-white",       cardBorder: "border-orange-200", cardBg: "bg-orange-50/60", rowBg: "bg-orange-100", rowText: "text-orange-800" };
             if (pct >= 50) return { letter: "B", label: "Notable Overlap",        bg: "bg-amber-400",  text: "text-amber-950",   cardBorder: "border-amber-200",  cardBg: "bg-amber-50/60",  rowBg: "bg-amber-100",  rowText: "text-amber-800" };
             if (pct >= 30) return { letter: "A", label: "Original",               bg: "bg-emerald-500",text: "text-white",       cardBorder: "border-emerald-200",cardBg: "bg-emerald-50/60",rowBg: "bg-emerald-100",rowText: "text-emerald-800" };
             return               { letter: "A+", label: "Highly Original",         bg: "bg-emerald-600",text: "text-white",       cardBorder: "border-emerald-200",cardBg: "bg-emerald-50/60",rowBg: "bg-emerald-100",rowText: "text-emerald-800" };
@@ -1186,20 +1186,20 @@ export default function Home() {
 
           return (
             <div className="fade-in w-full flex flex-col min-h-screen bg-white">
-              {/* ── BANNER — Sleek compact header matching exact Y baseline ── */}
+              {/* â”€â”€ BANNER â€” Sleek compact header matching exact Y baseline â”€â”€ */}
               <div className="bg-[#155DFC] px-10 py-6 flex items-center justify-between no-print print:hidden">
                 <div>
-                  <span className="text-caption-bold font-mono text-blue-200/90 font-bold uppercase tracking-widest bg-blue-600/50 px-2 py-0.5 rounded-md inline-block">Process Sheet Engineering</span>
+                  <span className="text-caption-regular font-mono text-blue-200/90 font-bold uppercase tracking-widest bg-blue-600/50 px-2 py-0.5 rounded-md inline-block">Process Sheet Engineering</span>
                   <h1 className="font-display font-bold text-display-bold text-white tracking-tight mt-1 mb-1.5">
                     Create Process Sheet
                   </h1>
-                  <p className="text-blue-100/90 text-body-regular max-w-xl leading-relaxed">
+                  <p className="text-blue-100/90 text-dense-regular max-w-xl leading-relaxed">
                     Compile industrial sewing specifications, machine allocations, and SMV timing.
                   </p>
                 </div>
               </div>
 
-              {/* ── STEPPER TABS — Wide, balanced equal-width tabs matching Penpot ── */}
+              {/* â”€â”€ STEPPER TABS â€” Wide, balanced equal-width tabs matching Penpot â”€â”€ */}
               <div className="bg-[#155DFC] flex items-end px-10 no-print print:hidden">
                 {[
                   { n: 1, label: "STEP 1" },
@@ -1219,7 +1219,7 @@ export default function Home() {
                           setCurrentStep(n);
                         }
                       }}
-                      className={`flex-1 py-3.5 text-body-bold font-bold rounded-t-xl select-none text-center font-mono transition-all cursor-pointer ${
+                      className={`flex-1 py-3.5 text-dense-regular font-bold rounded-t-xl select-none text-center font-mono transition-all cursor-pointer ${
                         active
                           ? "bg-white text-[#155DFC] relative z-10"
                           : done
@@ -1233,17 +1233,17 @@ export default function Home() {
                 })}
               </div>
 
-              {/* ── CONTENT PANEL ── */}
+              {/* â”€â”€ CONTENT PANEL â”€â”€ */}
               <div className="bg-white flex-1 flex flex-col justify-between">
-                {/* ── STEP 1: Project Mode Selection Slide ── */}
+                {/* â”€â”€ STEP 1: Project Mode Selection Slide â”€â”€ */}
                 {cpStep === 1 && (
                   <div className="flex-1 flex flex-col justify-between">
                     <div className="flex-1 flex flex-col justify-center p-10">
                       <div className="max-w-4xl mx-auto w-full my-auto flex flex-col gap-8">
                         <div className="text-center">
-                          <span className="text-caption-bold font-mono font-bold text-[#155DFC] uppercase tracking-widest">Step 1 of 3</span>
-                          <h2 className="font-display font-bold text-heading-bold text-slate-900 mt-1">Select Garment Engineering Mode</h2>
-                          <p className="text-slate-600 text-body-regular mt-1 max-w-md mx-auto leading-relaxed">
+                          <span className="text-dense-regular font-mono font-bold text-[#155DFC] uppercase tracking-widest">Step 1 of 3</span>
+                          <h2 className="font-display font-bold text-display-bold text-slate-900 mt-1">Select Garment Engineering Mode</h2>
+                          <p className="text-slate-500 text-body-regular mt-1 max-w-md mx-auto leading-relaxed">
                             Choose your production setup before compiling sewing specifications and machine allocations.
                           </p>
                         </div>
@@ -1252,10 +1252,10 @@ export default function Home() {
                           {/* Option 1: Single Garment */}
                           <div
                             onClick={() => setProjectMode("single")}
-                            className={`p-7 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-6 ${
+                            className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
                               projectMode === "single"
-                                ? "border-[#155DFC] bg-blue-50/40 shadow-xs ring-1 ring-[#155DFC]/20"
-                                : "border-slate-200 hover:border-[#155DFC]/50 bg-white hover:bg-slate-50/50"
+                                ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
+                                : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -1274,8 +1274,8 @@ export default function Home() {
                             </div>
 
                             <div>
-                              <h3 className="font-display font-bold text-subheading-bold text-slate-900">Single Garment Specification</h3>
-                              <p className="text-body-regular text-slate-500 mt-1.5 leading-relaxed">
+                              <h3 className="font-display font-bold text-slate-900 text-subheading-regular">Single Garment Specification</h3>
+                              <p className="text-dense-regular text-slate-500 mt-1.5 leading-relaxed">
                                 Compile process sheet for an individual garment (Shirt, T-Shirt, Jacket, Pants, Dress, or Hat). Includes DINOv2 originality check.
                               </p>
                             </div>
@@ -1284,10 +1284,10 @@ export default function Home() {
                           {/* Option 2: Doll Outfit Set */}
                           <div
                             onClick={() => setProjectMode("doll")}
-                            className={`p-7 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-6 ${
+                            className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
                               projectMode === "doll"
-                                ? "border-[#155DFC] bg-blue-50/40 shadow-xs ring-1 ring-[#155DFC]/20"
-                                : "border-slate-200 hover:border-[#155DFC]/50 bg-white hover:bg-slate-50/50"
+                                ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
+                                : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -1306,8 +1306,8 @@ export default function Home() {
                             </div>
 
                             <div>
-                              <h3 className="font-display font-bold text-subheading-bold text-slate-900">Doll Outfit Set Project</h3>
-                              <p className="text-body-regular text-slate-500 mt-1.5 leading-relaxed">
+                              <h3 className="font-display font-bold text-slate-900 text-subheading-regular">Doll Outfit Set Project</h3>
+                              <p className="text-dense-regular text-slate-500 mt-1.5 leading-relaxed">
                                 Multi-component specification set for doll apparel (Teddy Bear, Fashion Doll, Plushie Mascot, or School Academy outfit sets).
                               </p>
                             </div>
@@ -1316,12 +1316,12 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Bottom Action Bar — Clean borderless matching Penpot */}
+                    {/* Bottom Action Bar â€” Clean borderless matching Penpot */}
                     <div className="bg-white px-10 py-5 flex items-center justify-between mt-auto">
                       <button
                         type="button"
                         onClick={handleResetWorkspace}
-                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer active:scale-98"
+                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-dense-regular rounded-xl transition-all cursor-pointer active:scale-98"
                       >
                         Reset Selection
                       </button>
@@ -1329,7 +1329,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setCurrentStep(2)}
-                        className="px-8 py-3 bg-brand-blue hover:bg-brand-blue-hover text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
+                        className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-dense-regular rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
                       >
                         <span>Continue to Step 2</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -1341,14 +1341,14 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* ── STEP 2: Pattern Sketch & Engineering Specifications ── */}
+                {/* â”€â”€ STEP 2: Pattern Sketch & Engineering Specifications â”€â”€ */}
                 {cpStep === 2 && !isQuizSubmitted && (
                   <div className="flex-1 flex flex-col justify-between">
-                    <div className="p-8 md:p-10 grid grid-cols-1 xl:grid-cols-5 gap-8">
-                      {/* Left Column — Upload & DINOv2 Scan */}
-                      <div className="xl:col-span-2 bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs relative flex flex-col justify-between gap-6">
+                    <div className="p-10 grid grid-cols-1 lg:grid-cols-2 gap-10 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+                      {/* Left â€” Upload & DINOv2 Scan */}
+                      <div className="flex flex-col gap-6 lg:pr-6">
                         <div>
-                          <h2 className="font-bold text-heading-bold text-slate-900 mb-6 font-display leading-tight">GARMENT SKETCH</h2>
+                          <h2 className="text-dense-regular font-bold text-slate-400 uppercase tracking-widest mb-4">GARMENT SKETCH</h2>
                           {projectMode === "single" ? (
                             <div className="flex flex-col gap-5">
                               <div
@@ -1358,10 +1358,10 @@ export default function Home() {
                                 onClick={triggerFileSelect}
                                 className={`border-2 border-dashed rounded-xl flex flex-col items-center justify-center min-h-[280px] text-center cursor-pointer transition-all ${
                                   isDragOver
-                                    ? "border-brand-blue bg-blue-50/50"
+                                    ? "border-[#155DFC] bg-blue-50/50"
                                     : previewUrl
                                     ? "border-slate-200 bg-slate-50/50"
-                                    : "border-slate-200 hover:border-brand-blue bg-slate-50/30"
+                                    : "border-slate-200 hover:border-[#155DFC] bg-slate-50/30"
                                 }`}
                               >
                                 <input
@@ -1373,14 +1373,14 @@ export default function Home() {
                                 />
                                 {!previewUrl ? (
                                   <div className="flex flex-col items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center">
+                                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#155DFC] flex items-center justify-center">
                                       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                                       </svg>
                                     </div>
                                     <div>
-                                      <p className="text-body-bold font-semibold text-slate-800">Click or drag garment sketch here</p>
-                                      <p className="text-body-regular text-slate-500 mt-1">PNG, JPG or WEBP — DINOv2 scan runs automatically</p>
+                                      <p className="text-body-regular font-semibold text-slate-700">Click or drag garment sketch here</p>
+                                      <p className="text-dense-regular text-slate-400 mt-1">PNG, JPG or WEBP â€” DINOv2 scan runs automatically</p>
                                     </div>
                                   </div>
                                 ) : (
@@ -1388,37 +1388,37 @@ export default function Home() {
                                     <img
                                       src={result ? result.preview_image : previewUrl}
                                       alt="Garment Sketch"
-                                      className="max-h-[520px] w-auto rounded-2xl object-contain shadow-xs transition-all duration-300"
+                                      className="max-h-[250px] object-contain rounded-lg"
                                     />
                                   </div>
                                 )}
                               </div>
-                              {/* DINOv2 Grade Card — SecurityHeaders style */}
+                              {/* DINOv2 Grade Card â€” SecurityHeaders style */}
                               {previewUrl && (
-                                <div className={`border rounded-xl overflow-hidden text-xs transition-all ${grade ? grade.cardBorder : "border-slate-200"} ${grade ? grade.cardBg : "bg-slate-50"}`}>
+                                <div className={`border rounded-xl overflow-hidden text-dense-regular transition-all ${grade ? grade.cardBorder : "border-slate-200"} ${grade ? grade.cardBg : "bg-slate-50"}`}>
                                   {/* Header row with big badge */}
                                   <div className="flex items-stretch">
-                                    <div className={`flex items-center justify-center w-16 flex-shrink-0 ${grade ? grade.bg : "bg-brand-blue"}`}>
+                                    <div className={`flex items-center justify-center w-16 flex-shrink-0 ${grade ? grade.bg : "bg-[#155DFC]"}`}>
                                       {isLoading ? (
                                         <svg className="w-7 h-7 animate-spin text-white" fill="none" viewBox="0 0 24 24">
                                           <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                                           <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                         </svg>
                                       ) : (
-                                        <span className={`font-black text-2xl leading-none ${grade ? grade.text : "text-white"}`}>
-                                          {grade ? grade.letter : "–"}
+                                        <span className={`font-black text-display-bold leading-none ${grade ? grade.text : "text-white"}`}>
+                                          {grade ? grade.letter : "â€“"}
                                         </span>
                                       )}
                                     </div>
                                     <div className="flex flex-col justify-center px-4 py-3 gap-0.5 flex-1">
-                                      <span className="font-bold text-slate-900 text-body-bold">
+                                      <span className="font-bold text-slate-900 text-[13px]">
                                         {isLoading ? "Scanning visual embeddings..." : grade ? grade.label : "Awaiting scan"}
                                       </span>
-                                      <span className="text-slate-600 text-body-regular">
+                                      <span className="text-slate-500 text-dense-regular">
                                         {isLoading
                                           ? "Querying pgvector for visual duplicates..."
                                           : result
-                                          ? `Catalog similarity: ${simPct.toFixed(1)}% — ${grade?.letter === "F" ? "Duplicate detected. Locked." : grade?.letter === "C" ? "High overlap. Review before proceeding." : grade?.letter === "B" ? "Some overlap. Proceed with caution." : "Pattern uniqueness verified."}`
+                                          ? `Catalog similarity: ${simPct.toFixed(1)}% â€” ${grade?.letter === "F" ? "Duplicate detected. Locked." : grade?.letter === "C" ? "High overlap. Review before proceeding." : grade?.letter === "B" ? "Some overlap. Proceed with caution." : "Pattern uniqueness verified."}`
                                           : "Upload a sketch to begin scan."}
                                       </span>
                                     </div>
@@ -1428,7 +1428,7 @@ export default function Home() {
                                   {result?.top_3_saved_projects && result.top_3_saved_projects.filter((p: any) => p.similarity_pct > 0).length > 0 && (
                                     <div className="border-t border-slate-200/80">
                                       <div className="px-4 py-2 bg-white/60">
-                                        <span className="text-caption-bold font-bold text-slate-500 uppercase tracking-wider">MATCHED PROJECTS IN CATALOG</span>
+                                        <span className="text-caption-regular font-bold text-slate-500 uppercase tracking-wider">MATCHED PROJECTS IN CATALOG</span>
                                       </div>
                                       <div className="flex flex-col divide-y divide-slate-100 max-h-[180px] overflow-y-auto">
                                         {result.top_3_saved_projects
@@ -1440,13 +1440,13 @@ export default function Home() {
                                                 {item.preview_image ? (
                                                   <img src={item.preview_image} alt={item.title} className="w-8 h-8 object-contain rounded border border-slate-200 bg-white flex-shrink-0" />
                                                 ) : (
-                                                  <div className="w-8 h-8 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-400 text-caption-bold flex-shrink-0">#{item.id}</div>
+                                                  <div className="w-8 h-8 rounded border border-slate-200 bg-slate-100 flex items-center justify-center text-slate-400 text-caption-regular font-mono flex-shrink-0">#{item.id}</div>
                                                 )}
                                                 <div className="flex-1 min-w-0">
-                                                  <span className="text-body-bold font-semibold text-slate-800 block truncate">ID #{item.id} — {item.title}</span>
-                                                  <span className="text-body-regular text-slate-500">{item.garment_type || "Garment"}</span>
+                                                  <span className="text-dense-regular font-semibold text-slate-800 block truncate">ID #{item.id} â€” {item.title}</span>
+                                                  <span className="text-caption-regular text-slate-500">{item.garment_type || "Garment"}</span>
                                                 </div>
-                                                <span className={`font-mono text-body-bold font-bold px-2 py-0.5 rounded flex-shrink-0 ${ig.bg} ${ig.text}`}>
+                                                <span className={`font-mono text-dense-regular font-bold px-2 py-0.5 rounded flex-shrink-0 ${ig.bg} ${ig.text}`}>
                                                   {item.similarity_pct.toFixed(1)}%
                                                 </span>
                                               </div>
@@ -1464,14 +1464,14 @@ export default function Home() {
                                 const compState = componentsState[g] || { fabricWeight: "Cotton (Medium-weight)", imageFile: null, previewUrl: null, result: null };
                                 return (
                                   <div key={g} className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col justify-between gap-3">
-                                    <span className="text-body-bold font-bold text-slate-800 uppercase font-mono tracking-wide">{g}</span>
+                                    <span className="text-dense-regular font-bold text-slate-800 uppercase font-mono tracking-wide">{g}</span>
                                     {!compState.previewUrl ? (
-                                      <label className="border border-dashed border-slate-300 hover:border-brand-blue rounded-lg flex flex-col items-center justify-center p-4 aspect-square text-center cursor-pointer bg-white transition-colors">
+                                      <label className="border border-dashed border-slate-300 hover:border-[#155DFC] rounded-lg flex flex-col items-center justify-center p-4 aspect-square text-center cursor-pointer bg-white transition-colors">
                                         <input type="file" onChange={(e) => { if (e.target.files?.[0]) handleComponentFileChange(g, e.target.files[0]); }} accept="image/*" className="hidden" />
                                         <svg className="w-5 h-5 text-slate-400 mb-1" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                         </svg>
-                                        <span className="text-body-regular text-slate-500 font-medium">Upload {g}</span>
+                                        <span className="text-caption-regular text-slate-500 font-medium">Upload {g}</span>
                                       </label>
                                     ) : (
                                       <div className="relative rounded-lg overflow-hidden aspect-square bg-white border border-slate-200 flex items-center justify-center p-1">
@@ -1479,8 +1479,8 @@ export default function Home() {
                                         <button
                                           type="button"
                                           onClick={() => setComponentsState(prev => ({ ...prev, [g]: { ...prev[g], imageFile: null, previewUrl: null, result: null } }))}
-                                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-800/80 text-white flex items-center justify-center hover:bg-black transition-colors text-[10px]"
-                                        >✕</button>
+                                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-slate-800/80 text-white flex items-center justify-center hover:bg-black transition-colors text-caption-regular"
+                                        >âœ•</button>
                                       </div>
                                     )}
                                   </div>
@@ -1491,46 +1491,46 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Right Column — Engineering Specifications */}
-                      <div className="xl:col-span-3 bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs flex flex-col gap-6">
-                        <h2 className="font-bold text-heading-bold text-slate-900 mb-2 font-display leading-tight">ENGINEERING SPECIFICATIONS</h2>
+                      {/* Right â€” Engineering Specifications */}
+                      <div className="flex flex-col gap-5 lg:pl-6">
+                        <h2 className="text-dense-regular font-bold text-slate-400 uppercase tracking-widest">ENGINEERING SPECIFICATIONS</h2>
                         <form id="process-sheet-form" onSubmit={projectMode === "doll" ? handleGenerateDollProcessSheet : handleGenerateProcessSheet} className="flex flex-col gap-5 flex-1">
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-body-bold font-bold text-slate-800">Project / Batch Name *</label>
+                            <label className="text-dense-regular font-semibold text-slate-700">Project / Batch Name *</label>
                             <input
                               type="text"
                               value={quizName}
                               onChange={(e) => setQuizName(e.target.value)}
                               placeholder="e.g. Autumn Casual Jacket Batch #01"
                               required
-                              className="bg-slate-50/80 border border-slate-200/90 rounded-lg py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                              className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
                             />
                           </div>
                           {projectMode === "single" ? (
                             <>
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-body-bold font-bold text-slate-800">Garment Category</label>
+                                <label className="text-dense-regular font-semibold text-slate-700">Garment Category</label>
                                 <select value={quizGarment} onChange={(e) => setQuizGarment(e.target.value)}
-                                  className="bg-slate-50/80 border border-slate-200/90 rounded-lg py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Tops">
-                                    <option value="Shirt">Kemeja (Shirt) — 8 Sewing Steps</option>
-                                    <option value="T-Shirt">Kaos (T-Shirt) — 4 Sewing Steps</option>
-                                    <option value="Jacket">Jaket / Outerwear — 6 Sewing Steps</option>
+                                    <option value="Shirt">Kemeja (Shirt) â€” 8 Sewing Steps</option>
+                                    <option value="T-Shirt">Kaos (T-Shirt) â€” 4 Sewing Steps</option>
+                                    <option value="Jacket">Jaket / Outerwear â€” 6 Sewing Steps</option>
                                   </optgroup>
                                   <optgroup label="Bottoms">
-                                    <option value="Pants">Celana Panjang (Pants) — 6 Sewing Steps</option>
-                                    <option value="Skirt">Rok (Skirt) — 4 Sewing Steps</option>
+                                    <option value="Pants">Celana Panjang (Pants) â€” 6 Sewing Steps</option>
+                                    <option value="Skirt">Rok (Skirt) â€” 4 Sewing Steps</option>
                                   </optgroup>
                                   <optgroup label="Full-body">
-                                    <option value="Dress">Gaun / Dress — 5 Sewing Steps</option>
-                                    <option value="Hat">Topi / Hat — 5 Sewing Steps</option>
+                                    <option value="Dress">Gaun / Dress â€” 5 Sewing Steps</option>
+                                    <option value="Hat">Topi / Hat â€” 5 Sewing Steps</option>
                                   </optgroup>
                                 </select>
                               </div>
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-body-bold font-bold text-slate-800">Fabric Application / Weight</label>
+                                <label className="text-dense-regular font-semibold text-slate-700">Fabric Application / Weight</label>
                                 <select value={quizFabric} onChange={(e) => setQuizFabric(e.target.value)}
-                                  className="bg-slate-50/80 border border-slate-200/90 rounded-lg py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Light-weight">
                                     <option value="Silk (Light-weight)">Sutra / Silk</option>
                                     <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
@@ -1558,25 +1558,25 @@ export default function Home() {
                             </>
                           ) : (
                             <div className="flex flex-col gap-1.5">
-                              <label className="text-body-bold font-bold text-slate-800">Doll Type Template</label>
+                              <label className="text-dense-regular font-semibold text-slate-700">Doll Type Template</label>
                               <select value={dollType} onChange={(e) => setDollType(e.target.value)}
-                                className="bg-slate-50/80 border border-slate-200/90 rounded-lg py-3.5 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-body-regular text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                 {Object.keys(DOLL_TYPES).map(t => (
-                                  <option key={t} value={t}>{t} — ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})</option>
+                                  <option key={t} value={t}>{t} â€” ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})</option>
                                 ))}
                               </select>
                             </div>
                           )}
 
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-body-bold font-bold text-slate-800">Production Run Quantity (Batch Size)</label>
+                            <label className="text-dense-regular font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
                             <div className="flex items-center gap-2">
                               {[100, 250, 500, 1000].map((qty) => (
                                 <button
                                   key={qty}
                                   type="button"
                                   onClick={() => setBatchQuantity(qty)}
-                                  className={`flex-1 py-2 px-2 rounded-lg text-dense-bold font-mono font-bold transition-all cursor-pointer border ${
+                                  className={`flex-1 py-2 px-2 rounded-xl text-dense-regular font-mono font-bold transition-all cursor-pointer border ${
                                     batchQuantity === qty
                                       ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
                                       : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
@@ -1590,22 +1590,22 @@ export default function Home() {
                                 min={1}
                                 value={batchQuantity}
                                 onChange={(e) => setBatchQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="w-20 bg-slate-50/80 border border-slate-200/90 rounded-lg py-2 px-2 text-dense-bold font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
+                                className="w-20 bg-slate-50/80 border border-slate-200/90 rounded-xl py-2 px-2 text-dense-regular font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
                                 placeholder="Qty"
                               />
                             </div>
                           </div>
-                          {/* Workflow Status — SecurityHeaders banner style */}
-                          <div className={`border rounded-lg overflow-hidden mt-auto transition-all ${
+                          {/* Workflow Status â€” SecurityHeaders banner style */}
+                          <div className={`border rounded-xl overflow-hidden mt-auto transition-all ${
                             grade?.letter === "F" ? "border-red-200" : grade?.letter === "C" ? "border-orange-200" : grade?.letter === "B" ? "border-amber-200" : grade ? "border-emerald-200" : "border-slate-200"
                           }`}>
-                            <div className={`flex items-center justify-between px-4 py-2.5 text-body-bold ${wfBg} ${wfTxt}`}>
+                            <div className={`flex items-center justify-between px-4 py-2.5 text-dense-regular ${wfBg} ${wfTxt}`}>
                               <span className="font-semibold">Workflow Status</span>
                               <span className="font-bold">
-                                {grade?.letter === "F" ? "Locked — Duplicate Pattern Detected" : grade ? "Ready for Compilation" : "Awaiting Pattern Scan"}
+                                {grade?.letter === "F" ? "Locked â€” Duplicate Pattern Detected" : grade ? "Ready for Compilation" : "Awaiting Pattern Scan"}
                               </span>
                             </div>
-                            <p className={`text-body-regular px-4 py-2.5 leading-relaxed ${
+                            <p className={`text-dense-regular px-4 py-2.5 leading-relaxed ${
                               grade?.letter === "F" ? "bg-red-50 text-red-800" : grade?.letter === "C" ? "bg-orange-50 text-orange-800" : grade?.letter === "B" ? "bg-amber-50 text-amber-800" : grade ? "bg-emerald-50 text-emerald-800" : "bg-slate-50 text-slate-500"
                             }`}>
                               {grade?.letter === "F"
@@ -1618,12 +1618,12 @@ export default function Home() {
                         </form>
                       </div>
                     </div>
-                    {/* ── ANCHORED BOTTOM ACTION BAR — Step 2 ── */}
+                    {/* â”€â”€ ANCHORED BOTTOM ACTION BAR â€” Step 2 â”€â”€ */}
                     <div className="bg-white px-10 py-5 flex items-center justify-between mt-auto border-t border-slate-100/60">
                       <button
                         type="button"
                         onClick={handleResetStep2}
-                        className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 text-body-bold font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+                        className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 font-semibold text-dense-regular rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                       >
                         <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -1635,16 +1635,16 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={handleSafeBackToStep1}
-                          className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-body-bold font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+                          className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-dense-regular rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                         >
-                          ← Back to Mode Choice
+                          â† Back to Mode Choice
                         </button>
 
                         <button
                           type="submit"
                           form="process-sheet-form"
                           disabled={isLoading || !quizName.trim() || Boolean(isPatternRejected) || (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))}
-                          className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white text-body-bold font-bold rounded-lg flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+                          className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-dense-regular rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
                         >
                           {isLoading ? (
                             <>
@@ -1668,20 +1668,20 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* ── STEP 2 / PHASE 2: Process Sheet Output ── */}
+                {/* â”€â”€ STEP 2 / PHASE 2: Process Sheet Output â”€â”€ */}
                 {isQuizSubmitted && fullResult && (
                   <>
-                    {/* ── DEDICATED PRINT / PDF TECH PACK EXPORT SHEET (NATIVE PRINT MODE ONLY) ── */}
+                    {/* â”€â”€ DEDICATED PRINT / PDF TECH PACK EXPORT SHEET (NATIVE PRINT MODE ONLY) â”€â”€ */}
                     <div className="hidden print:block w-full text-slate-900 font-sans p-2 space-y-4">
                       {/* Print Document Header */}
                       <div className="flex justify-between items-end pb-3 border-b-2 border-slate-900">
                         <div>
-                          <span className="text-[10px] font-mono font-bold text-brand-blue uppercase tracking-wider">FASHIONFLOW AI — GARMENT TECHNICAL SPECIFICATION SHEET</span>
-                          <h1 className="font-bold text-heading-bold text-slate-900 mt-0.5">{quizName}</h1>
+                          <span className="text-caption-regular font-mono font-bold text-[#155DFC] uppercase tracking-wider">FASHIONFLOW AI â€” GARMENT TECHNICAL SPECIFICATION SHEET</span>
+                          <h1 className="text-heading-bold font-bold text-slate-900 mt-0.5">{quizName}</h1>
                         </div>
-                        <div className="text-right text-[10px] font-mono text-slate-600 space-y-0.5">
+                        <div className="text-right text-caption-regular font-mono text-slate-600 space-y-0.5">
                           <div><strong>SPEC ID:</strong> FF-SPEC-#{Math.floor(100000 + Math.random() * 900000)}</div>
-                          <div><strong>CATEGORY:</strong> {quizGarment} ({quizFabric})</div>
+                          <div><strong>DATE:</strong> {new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}</div>
                           <div><strong>STATUS:</strong> APPROVED &amp; LOCKED</div>
                         </div>
                       </div>
@@ -1690,14 +1690,14 @@ export default function Home() {
                       <div className="grid grid-cols-5 gap-4">
                         {/* Bento Card 1: Sketch Image */}
                         <div className="col-span-2 border border-slate-300 rounded-lg p-3 bg-white flex flex-col items-center justify-center">
-                          <span className="text-[10px] font-bold font-mono text-slate-500 uppercase self-start mb-2">Visual Garment Layout</span>
+                          <span className="text-caption-regular font-bold font-mono text-slate-500 uppercase self-start mb-2">Visual Garment Layout</span>
                           <img src={fullResult.preview_image} alt="Sketch" className="max-h-36 object-contain rounded" />
                         </div>
 
                         {/* Bento Card 2: Engineering Parameters & DINOv2 Metadata */}
                         <div className="col-span-3 border border-slate-300 rounded-lg p-3 bg-white flex flex-col justify-between">
-                          <span className="text-[10px] font-bold font-mono text-slate-500 uppercase mb-2">Engineering &amp; Originality Parameters</span>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                          <span className="text-caption-regular font-bold font-mono text-slate-500 uppercase mb-2">Engineering &amp; Originality Parameters</span>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-dense-regular">
                             <div><span className="text-slate-500">Garment Type:</span> <strong className="text-slate-900">{quizGarment}</strong></div>
                             <div><span className="text-slate-500">Fabric Weight:</span> <strong className="text-slate-900">{quizFabric}</strong></div>
                             <div><span className="text-slate-500">Classified Motif:</span> <strong className="text-slate-900">{fullResult?.classification?.[0]?.class_name || "Original Sketch"}</strong></div>
@@ -1710,10 +1710,10 @@ export default function Home() {
 
                       {/* Bento Card 3: Industrial Sewing Sequence Table */}
                       <div className="border border-slate-300 rounded-lg p-3 bg-white">
-                        <span className="text-caption-bold font-mono text-slate-500 uppercase mb-2 block">Industrial Sewing Sequence &amp; Machine Allocation Table</span>
+                        <span className="text-caption-regular font-bold font-mono text-slate-500 uppercase mb-2 block">Industrial Sewing Sequence &amp; Machine Allocation Table</span>
                         <table className="w-full text-left text-dense-regular border-collapse">
                           <thead>
-                            <tr className="bg-slate-100 font-mono text-caption-bold text-slate-700">
+                            <tr className="bg-slate-100 font-bold font-mono text-caption-regular text-slate-700">
                               <th className="p-1.5 border border-slate-300 w-12 text-center">Step</th>
                               <th className="p-1.5 border border-slate-300">Operation / Step Name</th>
                               <th className="p-1.5 border border-slate-300 w-16 text-center">Component</th>
@@ -1724,11 +1724,11 @@ export default function Home() {
                           <tbody>
                             {fullResult.sewing_steps && fullResult.sewing_steps.map((step: any, i: number) => (
                               <tr key={i} className="text-dense-regular hover:bg-slate-50">
-                                <td className="p-1.5 border border-slate-200 text-center font-mono text-dense-bold">{step.step}</td>
+                                <td className="p-1.5 border border-slate-200 text-center font-mono font-bold">{step.step}</td>
                                 <td className="p-1.5 border border-slate-200 font-medium text-slate-900">{step.action}</td>
-                                <td className="p-1.5 border border-slate-200 text-center font-mono text-caption-bold">{step.part || "Main"}</td>
-                                <td className="p-1.5 border border-slate-200 font-mono text-caption-bold text-blue-800">{step.recommended_model || "Juki Lockstitch DDL-9000C"}</td>
-                                <td className="p-1.5 border border-slate-200 text-right font-mono text-dense-bold">{(0.45 + (i % 3) * 0.15).toFixed(2)}</td>
+                                <td className="p-1.5 border border-slate-200 text-center font-mono text-caption-regular">{step.part || "Main"}</td>
+                                <td className="p-1.5 border border-slate-200 font-mono text-caption-regular text-blue-800">{step.recommended_model || "Juki Lockstitch DDL-9000C"}</td>
+                                <td className="p-1.5 border border-slate-200 text-right font-mono font-semibold">{(0.45 + (i % 3) * 0.15).toFixed(2)}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -1738,34 +1738,34 @@ export default function Home() {
                       {/* Bento Card 4: Summary Footers */}
                       <div className="grid grid-cols-4 gap-3 text-center">
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
-                          <div className="text-[9px] font-mono text-slate-500 uppercase">Total Operations</div>
-                          <div className="text-sm font-bold text-slate-900">{fullResult.sewing_steps?.length || 0} Steps</div>
+                          <div className="text-caption-regular font-mono text-slate-500 uppercase">Total Operations</div>
+                          <div className="text-body-regular font-bold text-slate-900">{fullResult.sewing_steps?.length || 0} Steps</div>
                         </div>
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
-                          <div className="text-[9px] font-mono text-slate-500 uppercase">Estimated Total SMV</div>
-                          <div className="text-sm font-bold text-brand-blue">3.45 Minutes</div>
+                          <div className="text-caption-regular font-mono text-slate-500 uppercase">Estimated Total SMV</div>
+                          <div className="text-body-regular font-bold text-[#155DFC]">3.45 Minutes</div>
                         </div>
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
-                          <div className="text-[9px] font-mono text-slate-500 uppercase">Target Line Output</div>
-                          <div className="text-sm font-bold text-emerald-700">104 Pcs / Hour</div>
+                          <div className="text-caption-regular font-mono text-slate-500 uppercase">Target Line Output</div>
+                          <div className="text-body-regular font-bold text-emerald-700">104 Pcs / Hour</div>
                         </div>
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
-                          <div className="text-[9px] font-mono text-slate-500 uppercase">Recommended Juki Line</div>
-                          <div className="text-sm font-bold text-slate-900">4 Ops / 3 Machines</div>
+                          <div className="text-caption-regular font-mono text-slate-500 uppercase">Recommended Juki Line</div>
+                          <div className="text-body-regular font-bold text-slate-900">4 Ops / 3 Machines</div>
                         </div>
                       </div>
                     </div>
 
-                    {/* ── WEB APPLICATION INTERACTIVE UI (RESTORED 100% FOR ON-SCREEN VIEWING) ── */}
+                    {/* â”€â”€ WEB APPLICATION INTERACTIVE UI (RESTORED 100% FOR ON-SCREEN VIEWING) â”€â”€ */}
                     <div className="flex-1 p-8 flex flex-col gap-8 animate-in fade-in duration-300 print:hidden">
                     {/* Official Industrial Technical Spec Header (Visible only during Print / PDF Export) */}
                     <div className="hidden print:block mb-6 pb-4 border-b-2 border-slate-900">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-caption-bold font-mono font-bold text-brand-blue uppercase tracking-widest">FASHIONFLOW AI — GARMENT INDUSTRIAL SPECIFICATION</div>
-                          <h1 className="font-bold text-heading-bold text-slate-900 mt-0.5">{quizName}</h1>
+                          <div className="text-caption-regular font-mono font-bold text-[#155DFC] uppercase tracking-widest">FASHIONFLOW AI â€” GARMENT INDUSTRIAL SPECIFICATION</div>
+                          <h1 className="font-bold text-display-bold text-slate-900 mt-0.5">{quizName}</h1>
                         </div>
-                        <div className="text-right font-mono text-caption-bold text-slate-600 space-y-0.5">
+                        <div className="text-right font-mono text-caption-regular text-slate-600 space-y-0.5">
                           <div><span className="font-bold">STATUS:</span> FINALIZED &amp; LOCKED</div>
                           <div><span className="font-bold">CATEGORY:</span> {quizGarment} ({quizFabric})</div>
                           <div><span className="font-bold">SPEC ID:</span> FF-SPEC-#{Math.floor(100000 + Math.random() * 900000)}</div>
@@ -1776,26 +1776,26 @@ export default function Home() {
                     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-200 pb-6 no-print">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest">
+                          <span className="text-dense-regular font-mono text-[#155DFC] font-bold uppercase tracking-widest">
                             {fullResult.is_doll_project ? "Doll Outfit Process Sheet Set" : "Process Specification Sheet"}
                           </span>
-                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-caption-bold font-bold border border-emerald-200 flex items-center gap-1.5">
+                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-caption-regular font-bold border border-emerald-200 flex items-center gap-1.5">
                             <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                             </svg>
                             FINALIZED &amp; LOCKED
                           </span>
                         </div>
-                        <h1 className="font-display font-bold text-display-bold text-slate-900">{quizName}</h1>
+                        <h1 className="font-sans font-bold text-display-bold text-slate-900">{quizName}</h1>
                       </div>
                       <div className="flex items-center gap-3 no-print">
-                        <button onClick={() => window.print()} className="px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-body-bold font-semibold transition-colors cursor-pointer flex items-center gap-1.5">
+                        <button onClick={() => window.print()} className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-dense-regular transition-colors cursor-pointer flex items-center gap-1.5">
                           <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                           </svg>
                           Export Specs
                         </button>
-                        <button onClick={handleResetWorkspace} className="px-5 py-2.5 rounded-lg bg-[#155DFC] hover:bg-[#1249cc] text-white text-body-bold font-bold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5">
+                        <button onClick={handleResetWorkspace} className="px-5 py-2.5 rounded-xl bg-[#155DFC] hover:bg-[#1249cc] text-white font-medium text-dense-regular transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5">
                           <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                           </svg>
@@ -1810,21 +1810,21 @@ export default function Home() {
                   <div className="xl:col-span-2 flex flex-col gap-6">
                     {fullResult.is_doll_project ? (
                       <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs">
-                        <h2 className="font-bold text-heading-bold text-slate-900 mb-4 font-display">Doll Outfit Components</h2>
+                        <h2 className="font-bold text-slate-900 text-subheading-regular mb-4 font-display">Doll Outfit Components</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Array.isArray(fullResult.classification) && fullResult.classification.map((comp: any, idx: number) => {
                             const compKey = comp.component;
                             const compImg = componentsState[compKey]?.previewUrl || "globe.svg";
                             return (
-                              <div key={idx} className="border border-slate-100 rounded-lg overflow-hidden p-3 bg-slate-50/60 flex flex-col gap-2">
+                              <div key={idx} className="border border-slate-100 rounded-xl overflow-hidden p-3 bg-slate-50/60 flex flex-col gap-2">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-caption-bold font-bold text-[#155DFC] uppercase font-mono">{compKey}</span>
-                                  <span className="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">Approved</span>
+                                  <span className="text-caption-regular font-bold text-[#155DFC] uppercase font-mono">{compKey}</span>
+                                  <span className="text-caption-regular text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">Approved</span>
                                 </div>
                                 <div className="aspect-video bg-white border border-slate-100 rounded-lg flex items-center justify-center overflow-hidden">
                                   <img src={compImg} alt={compKey} className="max-w-full max-h-full object-contain" />
                                 </div>
-                                <div className="text-[11px] text-slate-600 font-semibold truncate mt-1">
+                                <div className="text-dense-regular text-slate-600 font-semibold truncate mt-1">
                                   {comp.class_name}
                                 </div>
                               </div>
@@ -1834,7 +1834,7 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs relative">
-                        <h2 className="font-bold text-heading-bold text-slate-900 mb-6 font-display leading-tight">Visual Layout Analysis</h2>
+                        <h2 className="font-bold text-slate-900 text-subheading-regular mb-6 font-display leading-tight">Visual Layout Analysis</h2>
                         <div className="relative w-full flex items-center justify-center pt-0 px-1 pb-1">
                           <img
                             src={fullResult.preview_image}
@@ -1852,7 +1852,7 @@ export default function Home() {
                                 height: `${det.box[3] - det.box[1]}%`,
                               }}
                             >
-                              <span className="absolute -top-5 -left-0.5 bg-[#155DFC] text-white font-mono text-[9px] py-0.5 px-1.5 rounded-xs whitespace-nowrap shadow-xs">
+                              <span className="absolute -top-5 -left-0.5 bg-[#155DFC] text-white font-mono text-caption-regular py-0.5 px-1.5 rounded-xs whitespace-nowrap shadow-xs">
                                 {det.label} ({(det.confidence * 100).toFixed(0)}%)
                               </span>
                             </div>
@@ -1862,36 +1862,36 @@ export default function Home() {
                     )}
 
                     <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs">
-                      <h3 className="font-bold text-subheading-bold text-slate-900 mb-4 font-display leading-tight">
+                      <h3 className="font-bold text-slate-900 text-body-regular mb-4 font-display">
                         {fullResult.is_doll_project ? "Doll Project Metadata" : "Pattern Metadata"}
                       </h3>
                       <div className="space-y-3.5">
                         {fullResult.is_doll_project ? (
                           <>
-                            <div className="flex justify-between items-center text-xs">
+                            <div className="flex justify-between items-center text-dense-regular">
                               <span className="text-slate-400 font-medium">Doll Type:</span>
                               <span className="font-semibold text-slate-900">{fullResult.doll_type}</span>
                             </div>
-                            <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
+                            <div className="flex justify-between items-center text-dense-regular border-t border-slate-100 pt-2.5">
                               <span className="text-slate-400 font-medium">Total Components:</span>
                               <span className="font-semibold text-slate-900">{fullResult.project_details?.components_count || 1} Garments</span>
                             </div>
                           </>
                         ) : (
                           <>
-                            <div className="flex justify-between items-center text-xs">
+                            <div className="flex justify-between items-center text-dense-regular">
                               <span className="text-slate-400 font-medium">Classified Motif:</span>
                               <span className="font-semibold text-slate-900">{fullResult?.classification?.[0]?.class_name || "Original Sketch Pattern"}</span>
                             </div>
-                            <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
+                            <div className="flex justify-between items-center text-dense-regular border-t border-slate-100 pt-2.5">
                               <span className="text-slate-400 font-medium">Similarity Score:</span>
                               <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">{fullResult.similarity_percentage}% (Approved)</span>
                             </div>
-                            <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
+                            <div className="flex justify-between items-center text-dense-regular border-t border-slate-100 pt-2.5">
                               <span className="text-slate-400 font-medium">Garment Category:</span>
                               <span className="font-semibold text-slate-900">{quizGarment}</span>
                             </div>
-                            <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
+                            <div className="flex justify-between items-center text-dense-regular border-t border-slate-100 pt-2.5">
                               <span className="text-slate-400 font-medium">Fabric Application:</span>
                               <span className="font-semibold text-slate-900">{quizFabric}</span>
                             </div>
@@ -1904,13 +1904,13 @@ export default function Home() {
                   {/* Right Column: Step-by-Step Sewing Flow Table & Tooling */}
                   <div className="xl:col-span-3 flex flex-col gap-8">
                     <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs">
-                      <h2 className="font-bold text-heading-bold text-slate-900 mb-6 font-display leading-tight">
+                      <h2 className="font-bold text-subheading-regular text-slate-900 mb-6 font-display leading-tight">
                         STEP-BY-STEP SEWING FLOW
                       </h2>
                       
-                      <div className="overflow-hidden border border-slate-100 rounded-lg">
-                        <table className="w-full text-left text-dense-regular text-slate-600 border-collapse">
-                          <thead className="bg-slate-50/70 text-caption-bold font-mono text-slate-400 uppercase border-b border-slate-100">
+                      <div className="overflow-hidden border border-slate-100 rounded-xl">
+                        <table className="w-full text-left text-body-regular text-slate-600 border-collapse">
+                          <thead className="bg-slate-50/70 text-dense-regular font-mono text-slate-400 uppercase border-b border-slate-100">
                             <tr>
                               <th className="py-4 px-6 font-bold w-16">Step</th>
                               <th className="py-4 px-4 font-bold">Action / Step Flow</th>
@@ -1925,7 +1925,7 @@ export default function Home() {
                                   <td className="py-4 px-6 font-semibold text-slate-900 font-mono">{step.step_num}</td>
                                   <td className="py-4 px-4 font-medium text-slate-700">
                                     {step.component && (
-                                      <span className="inline-flex items-center text-[9px] uppercase font-mono font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 text-brand-blue rounded-md mr-2 align-middle">
+                                      <span className="inline-flex items-center text-caption-regular uppercase font-mono font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 text-[#155DFC] rounded-md mr-2 align-middle">
                                         {step.component}
                                       </span>
                                     )}
@@ -1935,31 +1935,31 @@ export default function Home() {
                                   <td className="py-4 px-6">
                                     <div className="flex flex-col gap-1.5">
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-semibold text-slate-900 text-xs">{step.recommended_model}</span>
+                                        <span className="font-semibold text-slate-900 text-dense-regular">{step.recommended_model}</span>
                                         {step.needle && step.needle !== "N/A" && (
-                                          <span className="text-[10px] font-mono text-brand-blue bg-blue-50 border border-blue-200/80 px-1.5 py-0.5 rounded font-medium">
+                                          <span className="text-caption-regular font-mono text-[#155DFC] bg-blue-50 border border-blue-200/80 px-1.5 py-0.5 rounded font-medium">
                                             Needle: {step.needle}
                                           </span>
                                         )}
                                         {step.stitch_spec && (
-                                          <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded font-medium">
+                                          <span className="text-caption-regular font-mono text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded font-medium">
                                             Stitch: {step.stitch_spec}
                                           </span>
                                         )}
                                       </div>
-                                      <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono flex-wrap">
+                                      <div className="flex items-center gap-2 text-caption-regular text-slate-400 font-mono flex-wrap">
                                         <span>{step.machine_type}</span>
                                         {step.presser_foot && (
                                           <>
-                                            <span>•</span>
-                                            <span className="text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
+                                            <span>â€¢</span>
+                                            <span className="text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded text-caption-regular">
                                               {step.presser_foot}
                                             </span>
                                           </>
                                         )}
                                         {step.speed && step.speed !== "N/A" && (
                                           <>
-                                            <span>•</span>
+                                            <span>â€¢</span>
                                             <span className="text-slate-500 font-semibold">{step.speed}</span>
                                           </>
                                         )}
@@ -1982,12 +1982,12 @@ export default function Home() {
 
                     {/* Tooling Grid Recommendations */}
                     <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs">
-                      <h2 className="font-bold text-heading-bold text-slate-900 mb-6 font-display">
+                      <h2 className="font-bold text-subheading-regular text-slate-900 mb-6 font-display">
                         RECOMMENDED JUKI MACHINERY
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {fullResult.tooling_recommendations && fullResult.tooling_recommendations.map((tool: any, idx: number) => (
-                          <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-brand-blue/40 transition-all duration-300">
+                          <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
                             <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-4 relative overflow-hidden">
                               <img 
                                 src={`/image/${tool.file}`} 
@@ -1996,7 +1996,7 @@ export default function Home() {
                               />
                             </div>
                             <div className="p-5 flex flex-col flex-grow">
-                              <h3 className="font-bold text-subheading-bold text-slate-900 mb-1.5 font-display">{tool.name}</h3>
+                              <h3 className="font-bold text-slate-900 text-body-regular mb-1.5 font-display">{tool.name}</h3>
                               {renderSpecsDescription(tool.desc || tool.description)}
                             </div>
                           </div>
@@ -2008,21 +2008,21 @@ export default function Home() {
                     <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs flex flex-col gap-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">
+                          <span className="text-dense-regular font-mono text-slate-400 uppercase tracking-widest block mb-1">
                             {fullResult.is_doll_project ? "TOTAL ESTIMATED OUTSET SMV" : "ESTIMATED SMV"}
                           </span>
                           <div className="flex items-baseline gap-2">
-                            <span className="font-display font-bold text-3xl text-slate-900">
+                            <span className="font-display font-bold text-display-bold text-slate-900">
                               {(!fullResult.smv_range || fullResult.smv_range === "N/A") ? "13.5" : fullResult.smv_range.replace(" mins", "")}
                             </span>
-                            <span className="text-sm font-semibold text-slate-400">min/pc set</span>
+                            <span className="text-body-regular font-semibold text-slate-400">min/pc set</span>
                           </div>
                         </div>
 
                         <div className="flex gap-8">
                           <div>
-                            <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Complexity</span>
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
+                            <span className="text-caption-regular font-mono text-slate-400 uppercase block mb-1">Complexity</span>
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-dense-regular font-semibold border ${
                               fullResult.complexity === "High" 
                                 ? "bg-red-50 text-red-700 border-red-200" 
                                 : "bg-blue-50 text-blue-700 border-blue-200"
@@ -2031,8 +2031,8 @@ export default function Home() {
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Confidence</span>
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                            <span className="text-caption-regular font-mono text-slate-400 uppercase block mb-1">Confidence</span>
+                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-dense-regular font-semibold text-emerald-700 border border-emerald-200">
                               High (Verified)
                             </span>
                           </div>
@@ -2043,56 +2043,40 @@ export default function Home() {
                         <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
+                              <span className="text-caption-regular font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
                                 Batch Production Scaling
                               </span>
-                              <span className="text-xs font-semibold text-slate-700">
+                              <span className="text-dense-regular font-semibold text-slate-700">
                                 Run Size: <strong className="font-mono text-slate-900">{fullResult.batch_production.batch_quantity} pcs</strong>
                               </span>
                             </div>
-                            <span className="text-xs font-mono text-slate-500 font-medium">
+                            <span className="text-dense-regular font-mono text-slate-500 font-medium">
                               Single Unit: <strong className="text-slate-900">{fullResult.batch_production.single_unit_smv_mins} mins</strong>
                             </span>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                             <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
-                              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Total Run SMV</span>
+                              <span className="text-caption-regular font-mono text-slate-400 uppercase tracking-wider block mb-1">Total Run SMV</span>
                               <span className="font-display font-bold text-heading-bold text-slate-900 font-mono">
-                                {fullResult.batch_production.batch_total_smv_mins.toLocaleString()} <span className="text-xs font-normal text-slate-400">mins</span>
+                                {fullResult.batch_production.batch_total_smv_mins.toLocaleString()} <span className="text-dense-regular font-normal text-slate-400">mins</span>
                               </span>
                             </div>
                             <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
-                              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Est. Production Duration</span>
-                              <span className="font-display font-bold text-heading-bold text-brand-blue font-mono">
-                                {fullResult.batch_production.batch_total_hours} <span className="text-xs font-normal text-slate-400">hrs</span>
+                              <span className="text-caption-regular font-mono text-slate-400 uppercase tracking-wider block mb-1">Est. Production Duration</span>
+                              <span className="font-display font-bold text-heading-bold text-[#155DFC] font-mono">
+                                {fullResult.batch_production.batch_total_hours} <span className="text-dense-regular font-normal text-slate-400">hrs</span>
                               </span>
                             </div>
                             <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
-                              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Daily Capacity / Operator</span>
+                              <span className="text-caption-regular font-mono text-slate-400 uppercase tracking-wider block mb-1">Daily Capacity / Operator</span>
                               <span className="font-display font-bold text-heading-bold text-emerald-600 font-mono">
-                                {fullResult.batch_production.operator_daily_capacity_pcs} <span className="text-xs font-normal text-slate-400">pcs/day</span>
+                                {fullResult.batch_production.operator_daily_capacity_pcs} <span className="text-dense-regular font-normal text-slate-400">pcs/day</span>
                               </span>
                             </div>
                           </div>
                         </div>
                       )}
-
-                      <div className="border-t border-slate-100 pt-6 flex items-center justify-between flex-wrap gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                          <span className="text-xs font-mono font-bold text-slate-800 uppercase tracking-wide">
-                            Approved for Production Release
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500">
-                          <span>{fullResult.sewing_sequence_detailed?.length || 0} Sewing Operations</span>
-                          <span>•</span>
-                          <span>{fullResult.tooling_recommendations?.length || 0} Juki Models Mapped</span>
-                          <span>•</span>
-                          <span className="text-brand-blue font-semibold">DINOv2 Verified</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -2110,7 +2094,7 @@ export default function Home() {
               <div className="w-full">
                 <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">Sewing Sequence</span>
+                    <span className="text-dense-regular font-mono text-slate-400 uppercase tracking-widest">Sewing Sequence</span>
                     <h1 className="font-display font-bold text-4xl text-black mt-1">
                       {result?.classification?.[0]?.class_name || "Original Sketch Pattern"}
                     </h1>
@@ -2118,9 +2102,9 @@ export default function Home() {
 
                   {/* Top action buttons matching photo */}
                   <div className="flex gap-2">
-                    <button className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-blue-600 text-white shadow-xs">FRONT</button>
-                    <button className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700">BACK</button>
-                    <button className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1">
+                    <button className="px-5 py-2.5 text-dense-regular font-semibold rounded-lg bg-blue-600 text-white shadow-xs">FRONT</button>
+                    <button className="px-5 py-2.5 text-dense-regular font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700">BACK</button>
+                    <button className="px-5 py-2.5 text-dense-regular font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
                       </svg>
@@ -2152,7 +2136,7 @@ export default function Home() {
                               height: `${det.box[3] - det.box[1]}%`,
                             }}
                           >
-                            <span className="absolute -top-5 -left-0.5 bg-blue-600 text-white font-mono text-[9px] py-0.5 px-1.5 rounded-sm whitespace-nowrap">
+                            <span className="absolute -top-5 -left-0.5 bg-blue-600 text-white font-mono text-caption-regular py-0.5 px-1.5 rounded-sm whitespace-nowrap">
                               {det.label} ({(det.confidence * 100).toFixed(0)}%)
                             </span>
                           </div>
@@ -2169,8 +2153,8 @@ export default function Home() {
                       </h2>
                       
                       <div className="overflow-hidden border border-zinc-150 rounded-lg">
-                        <table className="w-full text-left text-sm text-slate-600 border-collapse">
-                          <thead className="bg-slate-50 text-[11px] font-mono text-slate-400 uppercase border-b border-zinc-150">
+                        <table className="w-full text-left text-body-regular text-slate-600 border-collapse">
+                          <thead className="bg-slate-50 text-dense-regular font-mono text-slate-400 uppercase border-b border-zinc-150">
                             <tr>
                               <th className="py-4.5 px-6 font-bold w-16">Step</th>
                               <th className="py-4.5 px-4 font-bold">Action / Step Flow</th>
@@ -2187,7 +2171,7 @@ export default function Home() {
                                   <td className="py-4 px-4 font-medium text-slate-700">{step}</td>
                                   <td className="py-4 px-4 flex justify-center">{getPartIcon(step)}</td>
                                   <td className="py-4 px-6">
-                                    <div className="flex items-center justify-between border border-zinc-200 rounded-md py-1.5 px-3 bg-slate-50 font-mono text-xs w-full">
+                                    <div className="flex items-center justify-between border border-zinc-200 rounded-md py-1.5 px-3 bg-slate-50 font-mono text-dense-regular w-full">
                                       <span>{machineLabel}</span>
                                       <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -2205,25 +2189,25 @@ export default function Home() {
                     {/* ESTIMATED SMV CARD */}
                     <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs flex items-center justify-between">
                       <div>
-                        <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">
+                        <span className="text-dense-regular font-mono text-slate-400 uppercase tracking-widest block mb-1">
                           ESTIMATED SMV
                         </span>
                         <div className="flex items-baseline gap-2">
                           <span className="font-display font-bold text-4xl text-black">
                             {result.smv_range.split(" ")[0]}
                           </span>
-                          <span className="text-sm font-semibold text-slate-400">min/pc</span>
+                          <span className="text-body-regular font-semibold text-slate-400">min/pc</span>
                         </div>
                       </div>
 
                       <div className="flex gap-8">
                         <div>
-                          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Range</span>
-                          <span className="text-sm font-bold text-slate-700">{result.smv_range}</span>
+                          <span className="text-caption-regular font-mono text-slate-400 uppercase block mb-1">Range</span>
+                          <span className="text-body-regular font-bold text-slate-700">{result.smv_range}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Confidence</span>
-                          <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 border border-green-200">
+                          <span className="text-caption-regular font-mono text-slate-400 uppercase block mb-1">Confidence</span>
+                          <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-dense-regular font-semibold text-green-700 border border-green-200">
                             High
                           </span>
                         </div>
@@ -2238,7 +2222,7 @@ export default function Home() {
                   <svg className="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
-                  <p className="text-slate-400 text-sm max-w-md">
+                  <p className="text-slate-400 text-body-regular max-w-md">
                     Please upload a sketch in the <strong>Design Input</strong> tab and execute analysis to view step-by-step assembly flows.
                   </p>
                 </div>
@@ -2251,11 +2235,11 @@ export default function Home() {
         {activeTab === "tooling-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Industrial Tooling Library</span>
+              <span className="text-caption-regular font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Industrial Tooling Library</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Sewing Machinery Catalog
               </h1>
-              <p className="text-slate-600 text-body-regular max-w-2xl mb-4 leading-relaxed">
+              <p className="text-slate-500 text-dense-regular max-w-2xl mb-4 leading-relaxed">
                 Explore specialized Juki sewing machinery catalog, stitch technical specifications, needles, and attachments.
               </p>
 
@@ -2265,7 +2249,7 @@ export default function Home() {
                 <select
                   value={selectedMachineCategory}
                   onChange={(e) => setSelectedMachineCategory(e.target.value)}
-                  className="bg-white border border-slate-200/80 rounded-lg px-4 py-2.5 text-body-bold font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
+                  className="bg-white border border-slate-200/80 rounded-xl px-4 py-2.5 text-dense-regular font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
                 >
                   <option value="All Categories">All Categories</option>
                   <option value="Lockstitch">Lockstitch (DDL / DLN / DLU)</option>
@@ -2287,7 +2271,7 @@ export default function Home() {
                     }}
                     onFocus={() => setShowMachineryAutocomplete(true)}
                     onBlur={() => setTimeout(() => setShowMachineryAutocomplete(false), 200)}
-                    className="w-full bg-white border border-slate-200/80 rounded-lg py-2.5 pl-10 pr-4 text-body-regular font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
+                    className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 pl-10 pr-4 text-dense-regular font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
                   />
                   <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -2295,7 +2279,7 @@ export default function Home() {
 
                   {/* Autocomplete Popup Suggestions (Good UX) */}
                   {showMachineryAutocomplete && machinerySearch.trim().length > 0 && defaultMachines && (
-                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
                       {defaultMachines
                         .filter(tool => 
                           tool.name.toLowerCase().includes(machinerySearch.toLowerCase()) || 
@@ -2309,10 +2293,10 @@ export default function Home() {
                               setMachinerySearch(tool.name);
                               setShowMachineryAutocomplete(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-xs flex justify-between items-center cursor-pointer transition-colors border-b border-slate-100 last:border-0"
+                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-dense-regular flex justify-between items-center cursor-pointer transition-colors border-b border-slate-100 last:border-0"
                           >
                             <span className="font-bold text-slate-900 font-mono">{tool.name}</span>
-                            <span className="text-[10px] text-slate-400 truncate max-w-[200px]">{tool.desc || tool.description}</span>
+                            <span className="text-caption-regular text-slate-400 truncate max-w-[200px]">{tool.desc || tool.description}</span>
                           </button>
                         ))}
                     </div>
@@ -2331,7 +2315,7 @@ export default function Home() {
                     return matchesSearch && (tool.name.toLowerCase().includes(selectedMachineCategory.toLowerCase()) || (tool.desc || "").toLowerCase().includes(selectedMachineCategory.toLowerCase()));
                   })
                   .map((tool, idx) => (
-                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-brand-blue/40 transition-all duration-300">
+                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
                       {/* Machine Photo Rendering */}
                       <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-3 relative overflow-hidden">
                         <img 
@@ -2345,7 +2329,7 @@ export default function Home() {
                       </div>
                       
                       <div className="p-6 flex flex-col flex-grow">
-                        <h3 className="font-display font-bold text-subheading-bold text-slate-900 mb-2">{tool.name}</h3>
+                        <h3 className="font-display font-bold text-slate-900 text-body-regular mb-2">{tool.name}</h3>
                         {renderSpecsDescription(tool.desc || tool.description)}
                       </div>
                     </div>
@@ -2353,20 +2337,20 @@ export default function Home() {
               ) : (
                 <div className="col-span-full py-12 flex flex-col items-center justify-center space-y-6">
                   <div className="w-full max-w-md bg-white border border-slate-100 rounded-2xl p-6 text-center shadow-2xs">
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-2">
+                    <div className="flex items-center justify-between text-dense-regular font-semibold text-slate-600 mb-2">
                       <span className="flex items-center gap-2">
                         <span className="relative flex h-2.5 w-2.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-blue"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#155DFC]"></span>
                         </span>
                         Loading Juki Machinery Catalog...
                       </span>
-                      <span className="font-mono text-brand-blue font-bold">120 / 310</span>
+                      <span className="font-mono text-[#155DFC] font-bold">120 / 310</span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div className="bg-brand-blue h-full rounded-full animate-pulse transition-all duration-500 w-[40%]"></div>
+                      <div className="bg-[#155DFC] h-full rounded-full animate-pulse transition-all duration-500 w-[40%]"></div>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-2">Streaming specialized Juki tooling specifications asynchronously...</p>
+                    <p className="text-dense-regular text-slate-400 mt-2">Streaming specialized Juki tooling specifications asynchronously...</p>
                   </div>
 
                   {/* Skeleton Cards */}
@@ -2396,14 +2380,14 @@ export default function Home() {
               <h1 className="font-display font-bold text-4xl text-black mb-2">
                 SMV Estimator
               </h1>
-              <p className="text-slate-500 text-lg">
+              <p className="text-slate-500 text-heading-bold">
                 Calculates Standard Allowed Minutes (SAM/SMV) based on seam lengths, machine stitches per minute, and operator allowances.
               </p>
             </header>
 
             <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs max-w-4xl">
               <h2 className="font-display font-semibold text-heading-bold mb-6">Standard Allowed Minutes Formula</h2>
-              <div className="bg-slate-50 rounded-lg p-6 font-mono text-sm text-slate-700 mb-8 border border-zinc-150 leading-relaxed">
+              <div className="bg-slate-50 rounded-lg p-6 font-mono text-body-regular text-slate-700 mb-8 border border-zinc-150 leading-relaxed">
                 SMV = (Basic Time) + (Bundle Allowance) + (Machine Allowance) + (Personal Allowance)<br />
                 Basic Time = (Observed Time * Rating) / 100
               </div>
@@ -2411,20 +2395,20 @@ export default function Home() {
               <h3 className="font-display font-semibold text-md text-black mb-4">Calculation Factors</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="border border-zinc-200 rounded-lg p-5 bg-white">
-                  <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">Standard Allowance</span>
+                  <span className="text-dense-regular font-mono text-slate-400 uppercase tracking-widest block mb-1">Standard Allowance</span>
                   <span className="font-display font-bold text-heading-bold text-black">15% - 20%</span>
                 </div>
                 <div className="border border-zinc-200 rounded-lg p-5 bg-white">
-                  <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">Machine RPM</span>
+                  <span className="text-dense-regular font-mono text-slate-400 uppercase tracking-widest block mb-1">Machine RPM</span>
                   <span className="font-display font-bold text-heading-bold text-black">4,500 - 5,500</span>
                 </div>
                 <div className="border border-zinc-200 rounded-lg p-5 bg-white">
-                  <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">Estimated Efficiency</span>
+                  <span className="text-dense-regular font-mono text-slate-400 uppercase tracking-widest block mb-1">Estimated Efficiency</span>
                   <span className="font-display font-bold text-heading-bold text-blue-600">85% (Target)</span>
                 </div>
               </div>
 
-              <div className="border-t border-zinc-200 pt-6 text-sm text-slate-500 leading-relaxed">
+              <div className="border-t border-zinc-200 pt-6 text-body-regular text-slate-500 leading-relaxed">
                 Estimations are dynamically matched with sewing process history using the vector database. Run a **Design Input** to receive garment-specific calculations.
               </div>
             </div>
@@ -2438,7 +2422,7 @@ export default function Home() {
               <h1 className="font-display font-bold text-4xl text-black mb-2">
                 Historical Knowledge Search
               </h1>
-              <p className="text-slate-500 text-lg">
+              <p className="text-slate-500 text-heading-bold">
                 Query pgvector similarity database for similar reference items, tooling logs, and past learnings.
               </p>
             </header>
@@ -2463,12 +2447,12 @@ export default function Home() {
             {/* Results Grid */}
             <div className="border border-zinc-150 rounded-xl p-9 bg-white min-h-[400px] flex flex-col justify-center">
               {searchResults.length === 0 ? (
-                <p className="text-slate-400 text-center text-sm">
+                <p className="text-slate-400 text-center text-body-regular">
                   No historical entries in database. Add items to database to search.
                 </p>
               ) : (
                 <div>
-                  <h2 className="font-display font-semibold text-2xl text-black mb-8">
+                  <h2 className="font-display font-semibold text-display-bold text-black mb-8">
                     Similar Historical Process Sheets ({searchResults.length} Matches Found)
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2478,16 +2462,16 @@ export default function Home() {
                           <h3 className="font-display font-semibold text-black text-md">
                             {match.title}
                           </h3>
-                          <span className="text-[10px] font-mono text-slate-400">
+                          <span className="text-caption-regular font-mono text-slate-400">
                             {match.ref}
                           </span>
                         </div>
-                        <div className="text-xs text-slate-500 space-y-2 mb-4 leading-relaxed">
+                        <div className="text-dense-regular text-slate-500 space-y-2 mb-4 leading-relaxed">
                           <div><strong>Specs:</strong> {match.features}</div>
                           <div><strong>Tooling:</strong> {match.tooling}</div>
                           <div><strong>SMV:</strong> {match.smv}</div>
                         </div>
-                        <div className="border-t border-zinc-200 pt-3 text-[11px] text-slate-400 leading-relaxed">
+                        <div className="border-t border-zinc-200 pt-3 text-dense-regular text-slate-400 leading-relaxed">
                           <strong>Learnings:</strong> {match.learnings}
                         </div>
                       </div>
@@ -2503,11 +2487,11 @@ export default function Home() {
         {activeTab === "knowledge-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Engineering SOP &amp; Technical Specs</span>
+              <span className="text-caption-regular font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Engineering SOP & Technical Specs</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Manufacturing Knowledge Base
               </h1>
-              <p className="text-slate-600 text-body-regular max-w-2xl mb-4 leading-relaxed">
+              <p className="text-slate-500 text-dense-regular max-w-2xl mb-4 leading-relaxed">
                 Corporate engineering database, garment quality standards, and assembly reference manuals.
               </p>
 
@@ -2516,7 +2500,7 @@ export default function Home() {
                 <select
                   value={selectedKnowledgeCategory}
                   onChange={(e) => setSelectedKnowledgeCategory(e.target.value)}
-                  className="bg-white border border-slate-200/80 rounded-lg px-4 py-2.5 text-body-bold font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
+                  className="bg-white border border-slate-200/80 rounded-xl px-4 py-2.5 text-dense-regular font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
                 >
                   <option value="All Categories">All Categories</option>
                   <option value="Shirt">Formal &amp; Casual Shirts</option>
@@ -2536,7 +2520,7 @@ export default function Home() {
                     }}
                     onFocus={() => setShowKnowledgeAutocomplete(true)}
                     onBlur={() => setTimeout(() => setShowKnowledgeAutocomplete(false), 200)}
-                    className="w-full bg-white border border-slate-200/80 rounded-lg py-2.5 pl-10 pr-4 text-body-regular font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
+                    className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 pl-10 pr-4 text-dense-regular font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
                   />
                   <svg
                     className="absolute left-3.5 top-3 h-4 w-4 text-slate-400"
@@ -2550,7 +2534,7 @@ export default function Home() {
 
                   {/* Autocomplete Popup */}
                   {showKnowledgeAutocomplete && knowledgeSearch.trim().length > 0 && knowledgeBase && (
-                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 text-left">
                       {knowledgeBase
                         .filter((k: any) => 
                           k.title.toLowerCase().includes(knowledgeSearch.toLowerCase()) || 
@@ -2564,10 +2548,10 @@ export default function Home() {
                               setKnowledgeSearch(k.title);
                               setShowKnowledgeAutocomplete(false);
                             }}
-                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-xs flex justify-between items-center cursor-pointer transition-colors border-b border-slate-100 last:border-0"
+                            className="w-full text-left px-4 py-2 hover:bg-blue-50 text-dense-regular flex justify-between items-center cursor-pointer transition-colors border-b border-slate-100 last:border-0"
                           >
                             <span className="font-bold text-slate-900 font-display">{k.title}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">{k.ref}</span>
+                            <span className="text-caption-regular text-slate-400 font-mono">{k.ref}</span>
                           </button>
                         ))}
                     </div>
@@ -2578,7 +2562,7 @@ export default function Home() {
 
             <div className="space-y-6 max-w-4xl">
               {knowledgeBase.length === 0 ? (
-                <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500 text-sm shadow-2xs">
+                <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500 text-body-regular shadow-2xs">
                   Loading corporate reference guides and sewing parameters from database...
                 </div>
               ) : (
@@ -2595,44 +2579,44 @@ export default function Home() {
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500 text-sm shadow-2xs">
+                      <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500 text-body-regular shadow-2xs">
                         No reference logs match your search criteria.
                       </div>
                     );
                   }
 
                   return filtered.map((k: any, idx: number) => (
-                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs hover:border-brand-blue/40 transition-all duration-300">
+                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300">
                       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
                         <div>
-                          <h2 className="font-display font-bold text-subheading-bold text-slate-900">{k.title}</h2>
-                          <p className="text-body-bold text-slate-500 font-mono mt-0.5">{k.ref}</p>
+                          <h2 className="font-display font-bold text-heading-bold text-slate-900">{k.title}</h2>
+                          <p className="text-dense-regular text-slate-400 font-mono mt-0.5">{k.ref}</p>
                         </div>
                         {k.smv && k.smv !== "N/A" && (
-                          <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-body-bold font-mono font-bold text-brand-blue">
+                          <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-dense-regular font-mono font-bold text-[#155DFC]">
                             SMV: <span>{k.smv}</span>
                           </div>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-body-regular text-slate-700 leading-relaxed mb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-dense-regular text-slate-600 leading-relaxed mb-4">
                         {k.features && (
                           <div>
-                            <strong className="block text-caption-bold font-mono text-slate-400 uppercase tracking-wider mb-1">Key Features / Material Specs</strong>
-                            <p className="text-slate-800 text-body-regular">{k.features}</p>
+                            <strong className="block text-caption-regular font-mono text-slate-400 uppercase tracking-wider mb-1">Key Features / Material Specs</strong>
+                            <p className="text-slate-700">{k.features}</p>
                           </div>
                         )}
                         {k.tooling && (
                           <div>
-                            <strong className="block text-caption-bold font-mono text-slate-400 uppercase tracking-wider mb-1">Tooling Recommendations</strong>
-                            <p className="text-slate-800 text-body-regular">{k.tooling}</p>
+                            <strong className="block text-caption-regular font-mono text-slate-400 uppercase tracking-wider mb-1">Tooling Recommendations</strong>
+                            <p className="text-slate-700">{k.tooling}</p>
                           </div>
                         )}
                       </div>
 
                       {k.learnings && (
-                        <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 text-body-regular text-slate-800 leading-relaxed">
-                          <strong className="block text-caption-bold font-mono text-slate-400 uppercase tracking-wider mb-1.5">Guidelines &amp; Manufacturing Learnings</strong>
+                        <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 text-dense-regular text-slate-700 leading-relaxed">
+                          <strong className="block text-caption-regular font-mono text-slate-400 uppercase tracking-wider mb-1.5">Guidelines &amp; Manufacturing Learnings</strong>
                           {k.learnings}
                         </div>
                       )}
@@ -2648,20 +2632,20 @@ export default function Home() {
         {activeTab === "projects-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Database Management</span>
+              <span className="text-caption-regular font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Database Management</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 Active Projects &amp; History
               </h1>
-              <p className="text-slate-600 text-body-regular max-w-xl leading-relaxed">
+              <p className="text-slate-500 text-dense-regular max-w-xl leading-relaxed">
                 Manage your active garment styles, persistent analysis runs, and process sheet history.
               </p>
             </header>
 
             <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs">
-              <h2 className="font-display font-bold text-heading-bold text-slate-900 mb-6">Saved Projects Database</h2>
+              <h2 className="font-display font-bold text-subheading-regular text-slate-900 mb-6">Saved Projects Database</h2>
               <div className="border border-slate-100 rounded-xl">
                  <table className="w-full text-left text-dense-regular text-slate-600 border-collapse">
-                  <thead className="bg-slate-50/70 font-mono text-caption-bold text-slate-400 uppercase border-b border-slate-100">
+                  <thead className="bg-slate-50/70 font-mono text-dense-regular text-slate-400 uppercase border-b border-slate-100">
                     <tr>
                       <th className="py-4 px-6 font-bold w-16">ID</th>
                       <th className="py-4 px-6 font-bold">Project Name</th>
@@ -2673,7 +2657,7 @@ export default function Home() {
                   <tbody className="divide-y divide-slate-100 bg-white">
                     {analysisHistory.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-400 font-medium text-body-regular">No active projects found. Upload sketches in Create Process Sheet to populate database.</td>
+                        <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">No active projects found. Upload sketches in Create Process Sheet to populate database.</td>
                       </tr>
                     ) : (
                       analysisHistory.map((item, idx) => {
@@ -2682,16 +2666,16 @@ export default function Home() {
                         const formattedDate = formatActivityDate(item);
                         return (
                           <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="py-4 px-6 font-semibold font-mono text-slate-900 text-dense-bold">{item.id}</td>
-                            <td className="py-4 px-6 font-semibold text-slate-900 text-body-bold">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</td>
-                            <td className="py-4 px-6 font-mono text-slate-500 text-dense-regular">{formattedDate}</td>
+                            <td className="py-4 px-6 font-semibold font-mono text-slate-900">{item.id}</td>
+                            <td className="py-4 px-6 font-semibold text-slate-900">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</td>
+                            <td className="py-4 px-6 font-mono text-slate-500">{formattedDate}</td>
                             <td className="py-4 px-6">
                               {isRejected ? (
-                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-caption-bold text-amber-700 border border-amber-200">
+                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-dense-regular font-semibold text-amber-700 border border-amber-200">
                                   Duplicate Locked
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-caption-bold text-emerald-700 border border-emerald-200">
+                                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-dense-regular font-semibold text-emerald-700 border border-emerald-200">
                                   Approved
                                 </span>
                               )}
@@ -2726,7 +2710,7 @@ export default function Home() {
                                         handleLoadProject(item);
                                         setActiveMenuId(null);
                                       }}
-                                      className="w-full text-left px-4 py-2 text-xs hover:bg-blue-50 text-brand-blue font-semibold flex items-center gap-2 border-b border-slate-100 cursor-pointer"
+                                      className="w-full text-left px-4 py-2 text-dense-regular hover:bg-blue-50 text-[#155DFC] font-semibold flex items-center gap-2 border-b border-slate-100 cursor-pointer"
                                     >
                                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2740,7 +2724,7 @@ export default function Home() {
                                         setActiveMenuId(null);
                                         handleRenameProject(item.id, item.fileName || "");
                                       }}
-                                      className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
+                                      className="w-full text-left px-4 py-2 text-dense-regular hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
                                     >
                                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
@@ -2753,7 +2737,7 @@ export default function Home() {
                                         setActiveMenuId(null);
                                         handleDeleteProject(item.id);
                                       }}
-                                      className="w-full text-left px-4 py-2 text-xs hover:bg-red-50 text-red-600 flex items-center gap-2 border-t border-slate-100 cursor-pointer font-semibold"
+                                      className="w-full text-left px-4 py-2 text-dense-regular hover:bg-red-50 text-red-600 flex items-center gap-2 border-t border-slate-100 cursor-pointer font-semibold"
                                     >
                                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -2779,30 +2763,30 @@ export default function Home() {
         {activeTab === "settings-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-caption-bold font-mono text-brand-blue font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">System Preferences</span>
+              <span className="text-caption-regular font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">System Preferences</span>
               <h1 className="font-display font-bold text-display-bold text-slate-900 tracking-tight mt-1 mb-1.5">
                 System Settings
               </h1>
-              <p className="text-slate-600 text-body-regular max-w-xl leading-relaxed">
+              <p className="text-slate-500 text-dense-regular max-w-xl leading-relaxed">
                 Configure your API hosts, DINOv2 AI embedding engine, and persistent database credentials.
               </p>
             </header>
 
             <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs max-w-4xl space-y-6">
               <div>
-                <h3 className="font-bold text-slate-900 text-xs font-mono uppercase tracking-wider mb-2">API Host Configuration</h3>
-                <input type="text" disabled value="http://127.0.0.1:8000" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-xs font-mono text-slate-700 font-semibold" />
+                <h3 className="font-bold text-slate-900 text-dense-regular font-mono uppercase tracking-wider mb-2">API Host Configuration</h3>
+                <input type="text" disabled value="http://127.0.0.1:8000" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-dense-regular font-mono text-slate-700 font-semibold" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-xs font-mono uppercase tracking-wider mb-2">Visual Feature Extractor Engine</h3>
-                <input type="text" disabled value="DINOv2 ViT-S/14 Deep Neural Embedding Engine (384-dim)" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-xs font-mono text-slate-700 font-semibold" />
+                <h3 className="font-bold text-slate-900 text-dense-regular font-mono uppercase tracking-wider mb-2">Visual Feature Extractor Engine</h3>
+                <input type="text" disabled value="DINOv2 ViT-S/14 Deep Neural Embedding Engine (384-dim)" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-dense-regular font-mono text-slate-700 font-semibold" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-xs font-mono uppercase tracking-wider mb-2">Vector Similarity Database</h3>
-                <input type="text" disabled value="pgvector / SQLite Vector Indexing (Cosine Similarity Threshold: 95.0%)" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-xs font-mono text-slate-700 font-semibold" />
+                <h3 className="font-bold text-slate-900 text-dense-regular font-mono uppercase tracking-wider mb-2">Vector Similarity Database</h3>
+                <input type="text" disabled value="pgvector / SQLite Vector Indexing (Cosine Similarity Threshold: 95.0%)" className="w-full bg-slate-50/70 border border-slate-100 rounded-xl p-3 text-dense-regular font-mono text-slate-700 font-semibold" />
               </div>
-              <div className="text-xs text-slate-400 leading-relaxed pt-4 border-t border-slate-100 font-mono">
-                To switch between SQLite and PostgreSQL, update your <code className="bg-slate-100 px-1.5 py-0.5 rounded text-brand-blue">.env</code> settings at the project root and restart python server.
+              <div className="text-dense-regular text-slate-400 leading-relaxed pt-4 border-t border-slate-100 font-mono">
+                To switch between SQLite and PostgreSQL, update your <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[#155DFC]">.env</code> settings at the project root and restart python server.
               </div>
             </div>
           </div>
@@ -2819,8 +2803,8 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">Return to Step 1 Mode Choice?</h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  <h3 className="font-bold text-slate-900 text-subheading-regular">Return to Step 1 Mode Choice?</h3>
+                  <p className="text-dense-regular text-slate-500 mt-1 leading-relaxed">
                     Going back to Step 1 will reset your current sketch upload and filled engineering parameters.
                   </p>
                 </div>
@@ -2830,14 +2814,14 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setShowBackConfirmModal(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-dense-regular font-semibold rounded-xl transition-all cursor-pointer"
                 >
                   Cancel &amp; Keep Progress
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmBackToStep1}
-                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm cursor-pointer"
+                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-dense-regular font-semibold rounded-xl transition-all shadow-sm cursor-pointer"
                 >
                   Yes, Return to Step 1
                 </button>
