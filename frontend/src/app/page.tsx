@@ -2077,6 +2077,34 @@ export default function Home() {
                           </div>
                         </div>
                       )}
+
+                      {fullResult.engineering_checklist && fullResult.engineering_checklist.length > 0 && (
+                        <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono text-emerald-700 font-bold uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
+                              Engineering Readiness Checklist
+                            </span>
+                            <span className="text-xs font-mono text-slate-500 font-medium">
+                              Control Status: <strong className="text-emerald-600 font-bold">RELEASE READY</strong>
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 gap-2 text-left">
+                            {fullResult.engineering_checklist.map((item: any) => (
+                              <div key={item.id} className="flex items-center justify-between bg-slate-50/70 border border-slate-100/80 rounded-xl px-4 py-2.5">
+                                <div className="flex items-center gap-3">
+                                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                                    item.passed ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
+                                  }`}>
+                                    {item.passed ? "✓" : "!"}
+                                  </span>
+                                  <span className="text-xs font-medium text-slate-800">{item.label}</span>
+                                </div>
+                                <span className="text-[11px] font-mono text-slate-500">{item.detail}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

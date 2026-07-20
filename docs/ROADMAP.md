@@ -98,6 +98,11 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Added `derive_presser_foot()` and `derive_stitch_spec()` helper functions in `backend/app.py` mapping specialized feet (`Zipper Foot`, `Piping Foot`, `Button Clamp`, `Differential Feed Foot`) and stitch densities (`1.8mm/14 SPI`, `2.5mm/10 SPI`, `3.5mm/7 SPI`).
   * Rendered Presser Foot and Stitch Spec badges alongside Needle Specification badges in Step 3 Sewing Flow Table in `frontend/src/app/page.tsx`.
   * Added unit test `test_sewing_sequence_operation_details` in `backend/tests/test_backend_contract.py` (35 tests passing 100%).
+* **Phase 21: Enterprise Engineering Control & Master Data Suite (2026-07-21)**:
+  * Added `build_engineering_checklist()` in `backend/app.py` constructing FexQMS-style 5-point Pre-Production Readiness Checklists (`Visual Originality`, `Sewing Sequence`, `Machinery Specs`, `Batch Scaling`, `Vector References`).
+  * Added `/api/master-data` endpoint in `backend/app.py` serving structured machinery catalog breakdowns and template counts.
+  * Rendered **Engineering Readiness Checklist Card** in Step 3 of `Create Process Sheet` in `frontend/src/app/page.tsx`.
+  * Added unit tests `TestPhase21EnterpriseSuite` in `backend/tests/test_backend_contract.py` (37 tests passing 100%).
 
 ---
 

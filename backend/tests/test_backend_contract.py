@@ -557,5 +557,39 @@ class TestFastAPICaching(unittest.TestCase):
         self.assertLess(elapsed_ms, 10.0, f"Average cached query latency must be < 10ms, got {elapsed_ms:.3f}ms")
 
 
+class TestPhase21EnterpriseSuite(unittest.TestCase):
+    """Validate FexQMS-style Pre-Production Engineering Checklist and Master Data API endpoints."""
+
+    def test_engineering_checklist_structure(self):
+        """Process sheet generation must include 5-point engineering checklist."""
+        req = backend_app.ProcessSheetRequest(
+            project_name="Test Enterprise Shirt",
+            garment_type="Shirt",
+            fabric_weight="Medium-weight",
+            preview_image="globe.svg",
+            similarity_percentage=100.0,
+            similarity_status="APPROVED",
+            classification_name="Shirt",
+            message="Test checklist",
+            batch_quantity=100,
+        )
+        res = backend_app.generate_process_sheet(req)
+        self.assertIn("engineering_checklist", res, "Result payload must include engineering_checklist")
+        checklist = res["engineering_checklist"]
+        self.assertEqual(len(checklist), 5, "Checklist must contain exactly 5 points")
+        for point in checklist:
+            self.assertIn("label", point)
+            self.assertIn("status", point)
+            self.assertTrue(point["passed"])
+
+    def test_master_data_endpoint(self):
+        """Master data endpoint must return catalog counts and category breakdown."""
+        data = backend_app.get_master_data()
+        self.assertIn("machinery_count", data)
+        self.assertIn("category_breakdown", data)
+        self.assertGreater(data["machinery_count"], 0)
+        self.assertIn("Apparel", data["category_breakdown"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
