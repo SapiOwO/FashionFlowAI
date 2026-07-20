@@ -24,12 +24,16 @@ graph TD
 
 ### 2. Python AI & Database Microservice (FastAPI Uvicorn Service)
 * Runs independently on port `8000`.
-* **AI Engine**: Loads YOLOv11, PyTorch (MobileNetV3/ResNet/CLIP), and computer vision pre-processors.
+* **AI Engine**: Loads YOLOv11, PyTorch (MobileNetV3/ResNet/EfficientNet), Meta DINOv2 Small (`dinov2_vits14`), and computer vision pre-processors.
+* **Fast In-Memory Caching (`_JUKI_CATALOG_CACHE` & `_KNOWLEDGE_CACHE`)**: Module-level memory caches serve static Juki machinery and knowledge base queries with sub-10ms response times (< 0.1ms average cached latency).
 * **Database Metastore (`backend/db.py`)**: 
   * Automatically handles schema creation and database seeding.
   * Manages dual modes: SQLite (with numpy-based local vector search) or PostgreSQL (with native pgvector HNSW cosine searches).
   * Stores persistent analysis logs in the `analysis_history` table so that upload history is saved across server restarts.
   * Reads the Juki machinery catalogs (`data/juki_master_catalog.csv`) to seed the historical knowledge database and serve machine specs details on startup.
+* **Technical Machine Resolver & Batch SMV Engine**:
+  * Derives specialized presser feet (`Zipper Foot`, `Piping Foot`, `Button Clamp`, `Differential Feed Foot`) and stitch densities (`1.8mm/14 SPI`, `2.5mm/10 SPI`, `3.5mm/7 SPI`).
+  * Calculates batch production run scaling (`batch_total_hours` and operator daily capacity) for single garments and multi-component doll outfit sets.
 
 ---
 

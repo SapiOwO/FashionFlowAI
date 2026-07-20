@@ -1,190 +1,122 @@
 # FashionFlow AI — Garment Production Intelligence System
 
-> **Intelligent pattern recognition + process sheet generation for garment production.**  
-> Upload a garment sketch → AI checks design originality via DINOv2 vector retrieval → Fill in parameters → Get a full production spec sheet with sewing steps, Juki machine recommendations, SMV estimates, and Top-3 historical project baselines.
+> **Intelligent pattern recognition, original sketch verification, and automated process sheet compilation for garment manufacturing.**  
+> Upload a garment or doll outfit sketch → AI checks design originality via Meta DINOv2 visual embeddings → Configure engineering parameters → Receive a complete production specification sheet with step-by-step sewing flows, Juki machine model recommendations, presser foot & needle specifications, batch SMV scaling, and historical baselines.
 
-*Last Updated: 2026-07-19 (Native pgvector HNSW Migration)*
+*Last Updated: 2026-07-21 (Phase 20: Operation Detail Expansion & Fast In-Memory Caching)*
 
 ---
 
-## 📸 UI Screenshots & Training Results
+## 📸 System Interface & Architecture
 
-### Application UI Screenshots
+### Application Workflows & Views
 
-| System Workflow Dashboard | Originality Check & Quiz Form |
+| System Engineering Dashboard | Process Sheet Studio & Parameter Form |
 |:-:|:-:|
-| ![System Workflow Dashboard](image/Dashboard.png) | ![Originality Check & Quiz Form](image/CreateProcessSheet.png) |
+| ![System Engineering Dashboard](image/Dashboard.png) | ![Originality Check & Quiz Form](image/CreateProcessSheet.png) |
 
-| Process Specification Sheet | Saved Projects Database |
+| Step-by-Step Sewing Flow & Specs | Saved Active Projects History |
 |:-:|:-:|
 | ![Process Specification Sheet](image/CreateProcessSheet2.png) | ![Saved Projects Database](image/ActiveProjects.png) |
 
-| Pattern Originality Knowledge Base | All Juki Machinery Catalog |
+| Manufacturing Knowledge Base | Sewing Machinery Catalog |
 |:-:|:-:|
 | ![Pattern Originality Knowledge Base](image/KnowledgeBase.png) | ![All Juki Machinery Catalog](image/SewingToolsCatalog.png) |
 
-### Training Loss Curves & Model Performance
+---
 
-| MobileNetV3 Large | ResNet50 | EfficientNet-B0 |
-|:-:|:-:|:-:|
-| ![MobileNet Training Loss](image/mobilenet_training_loss.png) | ![ResNet50 Training Loss](image/resnet50_training_loss.png) | ![EfficientNet Training Loss](image/efficientnet_training_loss.png) |
+## 📊 DINOv2 Visual Similarity Retrieval Benchmark
 
-> **Pipeline A (Classification Models):** MobileNetV3-Large, ResNet50, and EfficientNet-B0 trained on the **Indonesian Batik Motifs (Corak App)** dataset — 10 batik classes, ~1,200 images — on Google Colab with GPU acceleration. Accuracy: **94.2%** on final validation run.  
-> **Pipeline B (Visual Embedding & Retrieval):** **Meta DINOv2 Small (`dinov2_vits14`)** self-supervised Vision Transformer pre-loaded at startup for zero-retraining 384-dim visual similarity retrieval.
+FashionFlow AI utilizes **Meta DINOv2 Small (`dinov2_vits14`)**, a self-supervised Vision Transformer, to extract L2-normalized 384-dimensional feature representations from uploaded garment sketches and photos. Visual similarity is calculated using cosine distance via PostgreSQL native `pgvector` HNSW indexing.
+
+### Empirical Image Similarity Matrix (`use_this_example/`)
+
+The table below demonstrates real DINOv2 pairwise cosine similarity scores evaluated across sample test images:
+
+| Query / Reference | <img src="docs/assets/eval_matrix/wallpaper.jpg" width="90" alt="Wallpaper" /><br />**Wallpaper** | <img src="docs/assets/eval_matrix/wallpaper_2xupscaled.jpg" width="90" alt="Wallpaper 2x" /><br />**Wallpaper 2x** | <img src="docs/assets/eval_matrix/doll.jpg" width="90" alt="Doll" /><br />**Doll** | <img src="docs/assets/eval_matrix/doll_blackandwhite.jpg" width="90" alt="Doll B&W" /><br />**Doll B&W** | <img src="docs/assets/eval_matrix/batik1.jpg" width="90" alt="Batik 1" /><br />**Batik 1** | <img src="docs/assets/eval_matrix/batik2.jpg" width="90" alt="Batik 2" /><br />**Batik 2** |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/assets/eval_matrix/wallpaper.jpg" width="90" alt="Wallpaper" /><br />**Wallpaper** | **1.0000000** | **0.9963874** | 0.3777580 | 0.3280388 | -0.0770774 | 0.0269208 |
+| <img src="docs/assets/eval_matrix/wallpaper_2xupscaled.jpg" width="90" alt="Wallpaper 2x" /><br />**Wallpaper 2x** | **0.9963874** | **1.0000000** | 0.3831076 | 0.3341874 | -0.0792709 | 0.0249313 |
+| <img src="docs/assets/eval_matrix/doll.jpg" width="90" alt="Doll" /><br />**Doll** | 0.3777580 | 0.3831076 | **1.0000000** | **0.8980661** | -0.0893405 | -0.0364631 |
+| <img src="docs/assets/eval_matrix/doll_blackandwhite.jpg" width="90" alt="Doll B&W" /><br />**Doll B&W** | 0.3280388 | 0.3341874 | **0.8980661** | **1.0000000** | -0.0498432 | -0.0650231 |
+| <img src="docs/assets/eval_matrix/batik1.jpg" width="90" alt="Batik 1" /><br />**Batik 1** | -0.0770774 | -0.0792709 | -0.0893405 | -0.0498432 | **1.0000000** | 0.4234626 |
+| <img src="docs/assets/eval_matrix/batik2.jpg" width="90" alt="Batik 2" /><br />**Batik 2** | 0.0269208 | 0.0249313 | -0.0364631 | -0.0650231 | 0.4234626 | **1.0000000** |
+
+### Key Benchmark Insights
+
+1. **Resolution & Upscaling Invariance**: `wallpaper.jpg` vs `wallpaper_2xupscaled.jpg` yields **0.9963874** (99.64% similarity). High-resolution rescales are reliably detected as exact visual duplicates.
+2. **Color Invariance**: `doll.jpg` vs `doll_blackandwhite.jpg` yields **0.8980661** (89.81% similarity). DINOv2 captures structural and geometric pattern shapes even when color channels are removed.
+3. **Distinct Pattern Differentiation**: Unrelated textile patterns (`batik1.jpg` vs `wallpaper.jpg`) produce near-zero or negative similarity scores (**-0.0770774**), preventing false positive duplicate locks.
 
 ---
 
-## 📊 Empirical Model Evaluation & Real-World Benchmarks
+## ⚡ Performance & Execution Latency
 
-FashionFlow AI employs a **Decoupled 2-Pipeline Architecture** separating Garment Recognition from Visual Similarity Retrieval.
-
-### 1. DINOv2 Image Transformation Robustness Benchmark
-
-Tested against real-world smartphone camera photo distortions (upscaling, brightness shifts, camera tilt):
-
-| Test Transformation Scenario | DINOv2 Cosine Similarity | Threshold ($\ge 90\%$) | System Output Verdict |
-|---|:---:|:---:|---|
-| **Identical Image Upload** | **100.0%** | Match | `HISTORICAL_MATCH_FOUND` |
-| **Upscaled Image (2x Resolution)** | **100.0%** | Match | `HISTORICAL_MATCH_FOUND` |
-| **Pencahayaan Berubah (+20% Brightness)** | **99.8%** | Match | `HISTORICAL_MATCH_FOUND` |
-| **Kamera Miring / Rotasi 10°** | **92.0%** | Match | `HISTORICAL_MATCH_FOUND` |
-| **Pola Garmen Berbeda Sama Sekali** | **< 85.0%** | No Match | `APPROVED` (Safe for Production) |
-
-### 2. Empirical Sample Dataset Benchmarks (`use_this_example/`)
-
-Evaluated against non-real-life illustrations, plush dolls, and complex batik patterns included in the `use_this_example/` directory:
-
-| Test Sample File | Target Match | Empirical Similarity | System Status Result |
-|---|---|:---:|---|
-| `wallpaper_2xupscaled.jpg` vs `wallpaper.jpg` | ID #1 (`Wallpaper Project`) | **99.6%** | `HISTORICAL_MATCH_FOUND` (Matched ID #1) |
-| `doll.jpg` vs re-uploaded `doll.jpg` | ID #1 (`Doll Project`) | **100.0%** | `HISTORICAL_MATCH_FOUND` (Matched ID #1) |
-| `batik1.jpg`, `batik2.jpg`, `teto.jpg` | Vector Extraction | **384-dim L2** | `APPROVED` (Clean Vector Extraction) |
-
-### 3. Pipeline Latency Benchmarks (`timings_ms`)
-
-Average execution timing breakdown per image upload request on CPU:
-
-| Pipeline Stage | Latency Range | Output |
+| Pipeline Stage | Average Latency | Description / Target |
 |---|:---:|---|
-| **CV Preprocessing & Crop** | ~12.4 ms | Scaled & Cropped Image Tensor |
-| **DINOv2 Feature Vector Extraction** | ~32.1 ms | 384-dim L2 Unit Vector |
-| **pgvector / SQLite HNSW Search** | ~3.8 ms | Top-3 Nearest Neighbor Matches |
-| **Total End-to-End Latency** | **~48.3 ms** | Complete Process Spec Payload |
+| **In-Memory Catalog Query** | **< 0.1 ms** | Fast module-level caching layer (`_JUKI_CATALOG_CACHE`) |
+| **OpenCV Preprocessing & Perspective Correction** | ~12.4 ms | Auto-perspective tilt correction & crop |
+| **DINOv2 Feature Vector Extraction** | ~32.1 ms | 384-dim L2 unit vector generation |
+| **pgvector HNSW Cosine Search** | ~3.8 ms | $O(\log n)$ vector retrieval |
+| **Total End-to-End Latency** | **~48.3 ms** | Complete process sheet compilation payload |
 
 ---
 
-## 🗂️ Project Architecture
+## 🗂️ Project Repository Architecture
 
-```
+```text
 fashionflowrework/
 ├── backend/
-│   ├── app.py                      <-- FastAPI backend (port 8000)
-│   │                                   - /api/predict          → 2-Pipeline classification & DINOv2 visual search
-│   │                                   - /api/generate-sheet   → Process sheet compilation & vector persistence
-│   │                                   - /api/validate-catalog → Catalog diagnostics & resolution checks
-│   │                                   - /api/history          → Upload history CRUD & DELETE
-│   │                                   - /api/history/clear    → Clear history & reset sequence ID to 1
-│   │                                   - /api/models           → Discover available .pth files
-│   ├── db.py                       <-- Dual metastore (SQLite / PostgreSQL+pgvector HNSW)
+│   ├── app.py                      <-- FastAPI application & machine resolver engine
+│   ├── db.py                       <-- Dual metastore (PostgreSQL + pgvector HNSW / SQLite)
 │   └── tests/
-│       ├── test_backend_contract.py <-- 30 automated regression & DINOv2 robustness tests
-│       └── test_example_folder.py   <-- 4 integration tests on user sample images
+│       ├── test_backend_contract.py <-- 35 automated integration & performance tests
+│       └── test_example_folder.py   <-- Integration tests on sample datasets
 ├── frontend/
-│   └── src/app/page.tsx            <-- Next.js frontend dashboard (port 3000)
+│   └── src/app/page.tsx            <-- Next.js 16 (Turbopack) dashboard UI
 ├── data/
-│   ├── machine_aliases.json        <-- Single Source of Truth for machine categories & resolver rules
-│   ├── juki_master_catalog.csv     <-- Consolidated Master Juki Catalog (310 records)
-│   ├── sewing_templates.json       <-- Sewing step templates (Shirt, T-Shirt, Jacket, Pants, Skirt, Dress)
-│   └── historical_products.csv     <-- Historical process records (seed data)
+│   ├── machine_aliases.json        <-- Machine category mapping & resolver rules
+│   ├── juki_master_catalog.csv     <-- Master Juki Machinery catalog (310 models)
+│   └── sewing_templates.json       <-- Step-by-step sewing templates
 ├── docs/
-│   ├── ARCHITECTURE.md             <-- System boundaries & 7-stage CV pipeline docs
-│   ├── CASE_STUDIES.md             <-- 5W+1H Diagnostic Matrix logs (Case Studies #5 - #10)
-│   ├── QUICKSTART.md               <-- Setup & run instructions
-│   └── ROADMAP.md                  <-- Completed milestones vs roadmap
-├── image/                          <-- UI screenshots & model training media storage
-├── models/
-│   ├── efficientnet_textiles.pth   <-- EfficientNet-B0 trained weights
-│   ├── mobilenet_textiles.pth      <-- MobileNetV3 Large trained weights
-│   └── resnet50_textiles.pth       <-- ResNet50 trained weights
-├── Dockerfile.backend / Dockerfile.frontend / docker-compose.yml <-- Production container orchestration
-├── import_csv.py                   <-- Seeds historical_products.csv into database
-├── main.py                         <-- Unified launcher (starts both servers)
+│   ├── ARCHITECTURE.md             <-- System architecture & pipeline details
+│   ├── ROADMAP.md                  <-- Milestone roadmap (Phases 1-20 completed)
+│   ├── QUICKSTART.md               <-- Environment setup guide
+│   └── assets/eval_matrix/        <-- Thumbnail assets for DINOv2 evaluation matrix
+├── use_this_example/               <-- Empirical test images & benchmark dataset
+├── main.py                         <-- Unified process launcher (starts FastAPI + Next.js)
 └── requirements.txt
 ```
 
 ---
 
-## ⚙️ Setup & Installation
+## 🚀 Quickstart & Verification
 
-### 1. System Requirements
-
-| Environment Requirement | Verified Version | Mandate & Notes |
-|---|---|---|
-| **Python** | `3.12.6` | Mandatory `.venv` virtual environment |
-| **Node.js** | `18.x` / `20.x` | Required for Next.js 16 (Turbopack) |
-| **PyTorch** | `2.x` | CPU / GPU inference for DINOv2 (`dinov2_vits14`) |
-| **Database** | PostgreSQL + `pgvector` / SQLite | HNSW cosine similarity vector search |
-
-### 2. Clone & Install
+### 1. Installation
 
 ```bash
-# 1. Activate Python virtual environment
+# Create and activate virtual environment
 python -m venv .venv
+.venv\Scripts\Activate.ps1   # Windows
+# source .venv/bin/activate  # macOS / Linux
 
-# Windows (PowerShell):
-.venv\Scripts\Activate.ps1
-
-# macOS / Linux:
-source .venv/bin/activate
-
-# 2. Install Python dependencies
+# Install backend & frontend dependencies
 pip install -r requirements.txt
-
-# 3. Install Next.js dependencies
-cd frontend
-npm install
-cd ..
+cd frontend && npm install && cd ..
 ```
 
-### 3. Configure Environment
-
-Copy `.env.example` to `.env`:
-
-```bash
-cp .env.example .env
-```
-
-### 4. Seed Historical Data (Optional)
-
-```bash
-python import_csv.py
-```
-
----
-
-## 🚀 Running the App & Tests
-
-### Start the Unified Application
+### 2. Launch Application
 
 ```bash
 python main.py
 ```
+- **Frontend Dashboard**: `http://localhost:3000`
+- **FastAPI Backend**: `http://127.0.0.1:8000`
+- **Catalog Diagnostics**: `http://127.0.0.1:8000/api/validate-catalog`
 
-This single command starts both servers:
-
-| Server | URL |
-|---|---|
-| Frontend (Next.js) | http://localhost:3000 |
-| Backend API (FastAPI) | http://127.0.0.1:8000 |
-| API Health Check | http://127.0.0.1:8000/ |
-| Catalog Diagnostic Endpoint | http://127.0.0.1:8000/api/validate-catalog |
-
-### Run Backend Data Contract & DINOv2 Regression Tests
+### 3. Run Automated Unit & Integration Tests
 
 ```bash
-# Execute 34 automated regression and integration tests:
-.venv\Scripts\python.exe -m pytest backend/tests/ -v
+.venv\Scripts\python.exe -m unittest backend/tests/test_backend_contract.py
 ```
-
-
-
+- Executes **35 automated integration tests** covering DINOv2 vector extraction, machine resolver logic, presser foot specs, batch SMV scaling, and sub-10ms caching.
