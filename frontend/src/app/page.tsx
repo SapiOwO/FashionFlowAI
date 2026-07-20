@@ -1344,11 +1344,11 @@ export default function Home() {
                 {/* ── STEP 2: Pattern Sketch & Engineering Specifications ── */}
                 {cpStep === 2 && !isQuizSubmitted && (
                   <div className="flex-1 flex flex-col justify-between">
-                    <div className="p-10 grid grid-cols-1 lg:grid-cols-2 gap-10 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
-                      {/* Left — Upload & DINOv2 Scan */}
-                      <div className="flex flex-col gap-6 lg:pr-6">
+                    <div className="p-8 md:p-10 grid grid-cols-1 xl:grid-cols-5 gap-8">
+                      {/* Left Column — Upload & DINOv2 Scan */}
+                      <div className="xl:col-span-2 bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs relative flex flex-col justify-between gap-6">
                         <div>
-                          <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">GARMENT SKETCH</h2>
+                          <h2 className="font-bold text-base text-slate-900 mb-6 font-display leading-tight">GARMENT SKETCH</h2>
                           {projectMode === "single" ? (
                             <div className="flex flex-col gap-5">
                               <div
@@ -1384,7 +1384,7 @@ export default function Home() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="relative w-full flex items-center justify-center p-3 bg-[#f8fafc]/50 rounded-2xl border border-slate-100">
+                                  <div className="relative w-full flex items-center justify-center p-3">
                                     <img
                                       src={result ? result.preview_image : previewUrl}
                                       alt="Garment Sketch"
@@ -1491,9 +1491,9 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Right — Engineering Specifications */}
-                      <div className="flex flex-col gap-5 lg:pl-6">
-                        <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">ENGINEERING SPECIFICATIONS</h2>
+                      {/* Right Column — Engineering Specifications */}
+                      <div className="xl:col-span-3 bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs flex flex-col gap-6">
+                        <h2 className="font-bold text-base text-slate-900 mb-2 font-display leading-tight">ENGINEERING SPECIFICATIONS</h2>
                         <form id="process-sheet-form" onSubmit={projectMode === "doll" ? handleGenerateDollProcessSheet : handleGenerateProcessSheet} className="flex flex-col gap-5 flex-1">
                           <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-semibold text-slate-700">Project / Batch Name *</label>
