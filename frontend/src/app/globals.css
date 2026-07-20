@@ -1,60 +1,18 @@
 @import "tailwindcss";
 
-@theme {
-  --font-display: var(--font-outfit), sans-serif;
-  --font-sans: var(--font-geist-sans), sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
-
-  /* Industrial Brand Color Tokens */
-  --color-brand-blue: #155dfc;
-  --color-brand-blue-hover: #1249cc;
-  --color-border-whisper: #f1f5f9;
-
-  /* Harmonious Industrial Typography Scale Variables */
-  --text-display: 30px;
-  --text-display--line-height: 1.2;
-
-  --text-heading: 20px;
-  --text-heading--line-height: 1.3;
-
-  --text-subheading: 16px;
-  --text-subheading--line-height: 1.4;
-
-  --text-body: 14px;
-  --text-body--line-height: 1.5;
-
-  --text-dense: 12px;
-  --text-dense--line-height: 1.4;
-
-  --text-caption: 10px;
-  --text-caption--line-height: 1.4;
-}
-
 :root {
   --background: #ffffff;
   --foreground: #1e293b;
-  --brand-blue: #155dfc;
-  --brand-blue-hover: #1249cc;
-  --border-whisper: #f1f5f9;
-
-  /* Enterprise Design Tokens: Border Radius & Spacing Defaults */
-  --radius-sm: 0.5rem;   /* 8px */
-  --radius-md: 0.75rem;  /* 12px */
-  --radius-lg: 1rem;     /* 16px */
-  --radius-xl: 1.5rem;   /* 24px */
-
-  --gap-xs: 0.5rem;      /* 8px */
-  --gap-sm: 0.75rem;     /* 12px */
-  --gap-md: 1rem;        /* 16px */
-  --gap-lg: 1.5rem;      /* 24px */
+  --brand-blue: #005cea;
+  --brand-blue-hover: #004ac2;
+  --border-whisper: #e4e4e7;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 h1, h2, h3, .font-display {
@@ -63,106 +21,6 @@ h1, h2, h3, .font-display {
 
 code, pre, .font-mono {
   font-family: var(--font-geist-mono), monospace;
-}
-
-/* ── INDUSTRIAL BRAND COLOR UTILITIES (Guaranteed 100% Rendering) ── */
-.bg-brand-blue {
-  background-color: #155dfc !important;
-}
-
-.text-brand-blue {
-  color: #155dfc !important;
-}
-
-.border-brand-blue {
-  border-color: #155dfc !important;
-}
-
-.hover\:bg-brand-blue-hover:hover {
-  background-color: #1249cc !important;
-}
-
-.hover\:text-brand-blue-hover:hover {
-  color: #1249cc !important;
-}
-.text-display-bold {
-  font-family: var(--font-outfit), sans-serif;
-  font-size: var(--text-display);
-  line-height: var(--text-display--line-height);
-  font-weight: 700;
-}
-
-.text-display-regular {
-  font-family: var(--font-outfit), sans-serif;
-  font-size: var(--text-display);
-  line-height: var(--text-display--line-height);
-  font-weight: 400;
-}
-
-.text-heading-bold {
-  font-family: var(--font-outfit), sans-serif;
-  font-size: var(--text-heading);
-  line-height: var(--text-heading--line-height);
-  font-weight: 700;
-}
-
-.text-heading-regular {
-  font-family: var(--font-outfit), sans-serif;
-  font-size: var(--text-heading);
-  line-height: var(--text-heading--line-height);
-  font-weight: 400;
-}
-
-.text-subheading-bold {
-  font-family: var(--font-outfit), sans-serif;
-  font-size: var(--text-subheading);
-  line-height: var(--text-subheading--line-height);
-  font-weight: 700;
-}
-
-.text-subheading-regular {
-  font-family: var(--font-outfit), sans-serif;
-  font-size: var(--text-subheading);
-  line-height: var(--text-subheading--line-height);
-  font-weight: 400;
-}
-
-.text-body-bold {
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
-  font-weight: 600;
-}
-
-.text-body-regular {
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
-  font-weight: 400;
-}
-
-.text-dense-bold {
-  font-size: var(--text-dense);
-  line-height: var(--text-dense--line-height);
-  font-weight: 600;
-}
-
-.text-dense-regular {
-  font-size: var(--text-dense);
-  line-height: var(--text-dense--line-height);
-  font-weight: 400;
-}
-
-.text-caption-bold {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: var(--text-caption);
-  line-height: var(--text-caption--line-height);
-  font-weight: 700;
-}
-
-.text-caption-regular {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: var(--text-caption);
-  line-height: var(--text-caption--line-height);
-  font-weight: 400;
 }
 
 /* ── PRINT MEDIA SPECIFICATIONS (Clean A4 Technical Spec Export) ── */
@@ -213,7 +71,7 @@ code, pre, .font-mono {
   }
 
   table th, table td {
-    border: 1px solid #94a3b8 !important;
+    border: 1px solid #e2e8f0 !important;
   }
 }
 
