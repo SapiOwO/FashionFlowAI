@@ -472,5 +472,63 @@ class TestDINOv2RealRetrievalRobustness(unittest.TestCase):
         )
 
 
+class TestBatchSMVScaling(unittest.TestCase):
+    """Validate batch production SMV scaling calculations in generate-sheet endpoints."""
+
+    def test_single_garment_batch_smv_scaling(self):
+        """Single garment batch_quantity = 500 must correctly multiply SMV mins and hours."""
+        req = backend_app.ProcessSheetRequest(
+            project_name="Test Batch Shirt",
+            garment_type="Shirt",
+            fabric_weight="Medium-weight",
+            preview_image="globe.svg",
+            similarity_percentage=100.0,
+            similarity_status="APPROVED",
+            classification_name="Shirt",
+            message="Test batch run",
+            batch_quantity=500,
+        )
+        res = backend_app.generate_process_sheet(req)
+        self.assertIn("batch_production", res, "Result payload must contain batch_production object")
+        b = res["batch_production"]
+        self.assertEqual(b["batch_quantity"], 500)
+        self.assertGreater(b["single_unit_smv_mins"], 0)
+        self.assertEqual(b["batch_total_smv_mins"], round(b["single_unit_smv_mins"] * 500, 2))
+        self.assertEqual(b["batch_total_hours"], round((b["single_unit_smv_mins"] * 500) / 60.0, 2))
+
+    def test_doll_sheet_batch_smv_scaling(self):
+        """Doll outfit set batch_quantity = 200 must sum component SMVs and scale batch hours."""
+        req = backend_app.DollSheetRequest(
+            project_name="Test Batch Doll Set",
+            doll_type="Teddy Bear",
+            components=[
+                backend_app.GarmentComponent(
+                    garment_type="Jacket",
+                    fabric_weight="Heavy-weight",
+                    preview_image="globe.svg",
+                    classification_name="Jacket",
+                    similarity_percentage=100.0,
+                    similarity_status="APPROVED",
+                ),
+                backend_app.GarmentComponent(
+                    garment_type="Pants",
+                    fabric_weight="Medium-weight",
+                    preview_image="globe.svg",
+                    classification_name="Pants",
+                    similarity_percentage=100.0,
+                    similarity_status="APPROVED",
+                ),
+            ],
+            message="Test doll batch",
+            batch_quantity=200,
+        )
+        res = backend_app.generate_doll_process_sheet(req)
+        self.assertIn("batch_production", res)
+        b = res["batch_production"]
+        self.assertEqual(b["batch_quantity"], 200)
+        self.assertGreater(b["single_unit_smv_mins"], 0)
+        self.assertEqual(b["batch_total_smv_mins"], round(b["single_unit_smv_mins"] * 200, 2))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -85,6 +85,11 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Expanded `resolve_machine_for_step()` and `build_sewing_sequence()` in `backend/app.py` to extract `needle`, `speed`, and `application` fields directly from `juki_master_catalog.csv`.
   * Updated Step 3 Sewing Flow Table in `Create Process Sheet` to display monospaced `Needle: DBx1 (#11)` badges and maximum sewing speeds (`5,000 sti/min`) for each step.
   * Added regression test `test_resolver_includes_needle_and_speed_attributes` in `backend/tests/test_backend_contract.py` (31 tests passing 100%).
+* **Phase 18: Multi-Garment Outfit Set Workflows & Batch SMV Scaling (2026-07-21)**:
+  * Extended `/api/generate-sheet` and `/api/generate-doll-sheet` endpoints in `backend/app.py` to support `batch_quantity` parameters and calculate `batch_production` scaling metrics (total SMV mins, total run hours, and operator daily capacity).
+  * Implemented multi-component garment sewing sequence compilation for Doll Outfit Sets (e.g. Jacket + Pants + Hat) with sequential step numbering and per-component fabric allocations.
+  * Added **Batch Production Run Selector** (100, 250, 500, 1000 pcs or custom) in Step 2 parameters form and rendered **Batch Production Scaling Summary Card** in Step 3 process sheet view.
+  * Added contract unit tests `TestBatchSMVScaling` in `backend/tests/test_backend_contract.py` (33 tests passing 100%).
 
 ---
 

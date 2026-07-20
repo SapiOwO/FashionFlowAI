@@ -163,6 +163,7 @@ export default function Home() {
   const [quizName, setQuizName] = useState("");
   const [quizGarment, setQuizGarment] = useState("Shirt");
   const [quizFabric, setQuizFabric] = useState("Medium-weight");
+  const [batchQuantity, setBatchQuantity] = useState(100);
   const [isQuizSubmitted, setIsQuizSubmitted] = useState(false);
   const [fullResult, setFullResult] = useState<any | null>(null);
 
@@ -417,7 +418,8 @@ export default function Home() {
         project_name: quizName.trim(),
         doll_type: dollType,
         components: componentsList,
-        message: `Consolidated doll clothing process sheet for ${dollType}.`
+        message: `Consolidated doll clothing process sheet for ${dollType}.`,
+        batch_quantity: batchQuantity,
       };
 
       const res = await fetch("http://127.0.0.1:8000/api/generate-doll-sheet", {
@@ -485,7 +487,8 @@ export default function Home() {
         classification_name: targetResult?.classification?.[0]?.class_name || "Original Pattern",
         message: targetResult.message,
         // CRITICAL: send visual_vector so backend can persist it for future cosine-similarity duplicate detection
-        visual_vector: targetResult.visual_vector || []
+        visual_vector: targetResult.visual_vector || [],
+        batch_quantity: batchQuantity,
       };
 
       const res = await fetch("http://127.0.0.1:8000/api/generate-sheet", {
@@ -1564,6 +1567,34 @@ export default function Home() {
                               </select>
                             </div>
                           )}
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
+                            <div className="flex items-center gap-2">
+                              {[100, 250, 500, 1000].map((qty) => (
+                                <button
+                                  key={qty}
+                                  type="button"
+                                  onClick={() => setBatchQuantity(qty)}
+                                  className={`flex-1 py-2 px-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer border ${
+                                    batchQuantity === qty
+                                      ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
+                                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                                  }`}
+                                >
+                                  {qty} pcs
+                                </button>
+                              ))}
+                              <input
+                                type="number"
+                                min={1}
+                                value={batchQuantity}
+                                onChange={(e) => setBatchQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                className="w-20 bg-slate-50/80 border border-slate-200/90 rounded-xl py-2 px-2 text-xs font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
+                                placeholder="Qty"
+                              />
+                            </div>
+                          </div>
                           {/* Workflow Status — SecurityHeaders banner style */}
                           <div className={`border rounded-xl overflow-hidden mt-auto transition-all ${
                             grade?.letter === "F" ? "border-red-200" : grade?.letter === "C" ? "border-orange-200" : grade?.letter === "B" ? "border-amber-200" : grade ? "border-emerald-200" : "border-slate-200"
@@ -1994,6 +2025,45 @@ export default function Home() {
                           </div>
                         </div>
                       </div>
+
+                      {fullResult.batch_production && (
+                        <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
+                                Batch Production Scaling
+                              </span>
+                              <span className="text-xs font-semibold text-slate-700">
+                                Run Size: <strong className="font-mono text-slate-900">{fullResult.batch_production.batch_quantity} pcs</strong>
+                              </span>
+                            </div>
+                            <span className="text-xs font-mono text-slate-500 font-medium">
+                              Single Unit: <strong className="text-slate-900">{fullResult.batch_production.single_unit_smv_mins} mins</strong>
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                            <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
+                              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Total Run SMV</span>
+                              <span className="font-display font-bold text-xl text-slate-900 font-mono">
+                                {fullResult.batch_production.batch_total_smv_mins.toLocaleString()} <span className="text-xs font-normal text-slate-400">mins</span>
+                              </span>
+                            </div>
+                            <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
+                              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Est. Production Duration</span>
+                              <span className="font-display font-bold text-xl text-[#155DFC] font-mono">
+                                {fullResult.batch_production.batch_total_hours} <span className="text-xs font-normal text-slate-400">hrs</span>
+                              </span>
+                            </div>
+                            <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
+                              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Daily Capacity / Operator</span>
+                              <span className="font-display font-bold text-xl text-emerald-600 font-mono">
+                                {fullResult.batch_production.operator_daily_capacity_pcs} <span className="text-xs font-normal text-slate-400">pcs/day</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
