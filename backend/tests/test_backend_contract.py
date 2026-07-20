@@ -162,7 +162,7 @@ class TestBuildSewingSequence(unittest.TestCase):
     def test_sequence_fields_present(self):
         seq, _, _ = backend_app.build_sewing_sequence("tshirt", "Medium-weight", self.templates)
         for step in seq:
-            for key in ["step_num", "operation", "machine_type", "recommended_model", "recommended_desc", "recommended_file"]:
+            for key in ["step_num", "operation", "machine_type", "recommended_model", "recommended_desc", "recommended_file", "presser_foot", "stitch_spec"]:
                 self.assertIn(key, step, f"Step is missing key '{key}'")
 
     def test_no_tshirt_step_has_zipper_operation(self):
@@ -170,6 +170,14 @@ class TestBuildSewingSequence(unittest.TestCase):
         for step in seq:
             self.assertNotIn("zipper", step["operation"].lower(), f"T-Shirt step has zipper: {step['operation']}")
             self.assertNotIn("hood", step["operation"].lower(), f"T-Shirt step has hood: {step['operation']}")
+
+    def test_sewing_sequence_operation_details(self):
+        """Verify presser_foot and stitch_spec are correctly derived."""
+        seq, _, _ = backend_app.build_sewing_sequence("jacket", "Denim (Heavy-weight)", self.templates)
+        for step in seq:
+            self.assertIsNotNone(step.get("presser_foot"))
+            self.assertIn("SPI", step.get("stitch_spec", ""))
+            self.assertEqual(step.get("stitch_spec"), "3.5 mm (7 SPI)")
 
 
 class TestDerivToolingFromSequence(unittest.TestCase):

@@ -532,6 +532,35 @@ def resolve_machine_for_step(required_machine_type: str, fabric_weight: str) -> 
     }
 
 
+def derive_presser_foot(operation: str, machine_type: str) -> str:
+    """Derive specialized Juki presser foot or clamp based on operation action and machine type."""
+    op_l = operation.lower()
+    m_l = machine_type.lower()
+    if "zipper" in op_l:
+        return "Zipper Foot (Narrow Hinged)"
+    elif "button" in op_l:
+        return "Button Sewing Clamp / Foot"
+    elif "bartack" in op_l or "tack" in op_l:
+        return "Bartacking Foot / Work Clamp"
+    elif "hem" in op_l or "fold" in op_l or "edge" in op_l:
+        return "Piping / Hemmer Presser Foot"
+    elif "coverstitch" in m_l or "interlock" in m_l:
+        return "Differential Feed Foot"
+    elif "overlock" in m_l:
+        return "Overedge / Safety Stitch Foot"
+    return "Standard Hinged Presser Foot"
+
+
+def derive_stitch_spec(fabric_weight: str) -> str:
+    """Derive recommended stitch length and density (SPI) based on fabric weight."""
+    w_l = fabric_weight.lower()
+    if any(k in w_l for k in ["light", "silk", "chiffon", "organza"]):
+        return "1.8 mm (14 SPI)"
+    elif any(k in w_l for k in ["heavy", "denim", "corduroy", "fur", "canvas"]):
+        return "3.5 mm (7 SPI)"
+    return "2.5 mm (10 SPI)"
+
+
 def build_sewing_sequence(garment_key: str, fabric_weight: str, templates: dict) -> tuple[list, str, str]:
     """
     Build canonical sewing_sequence_detailed list using the multi-tier machine resolver.
@@ -566,6 +595,8 @@ def build_sewing_sequence(garment_key: str, fabric_weight: str, templates: dict)
             "needle": matched.get("needle", "N/A"),
             "speed": matched.get("speed", "N/A"),
             "application": matched.get("application", "N/A"),
+            "presser_foot": derive_presser_foot(step["operation"], step["required_machine_type"]),
+            "stitch_spec": derive_stitch_spec(fabric_weight),
         })
 
     return sewing_sequence_detailed, smv_range, complexity

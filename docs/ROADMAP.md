@@ -94,16 +94,20 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Implemented module-level in-memory cache (`_JUKI_CATALOG_CACHE` and `_KNOWLEDGE_CACHE`) for static catalog queries in `backend/app.py`.
   * Reduced `get_all_juki_catalog()` response latency to sub-10ms ($< 0.1\text{ms}$ average cached query time).
   * Added performance benchmark unit test `TestFastAPICaching` in `backend/tests/test_backend_contract.py` (34 tests passing 100%).
+* **Phase 20: Operation Detail Expansion - Presser Foot & Stitch Specs (2026-07-21)**:
+  * Added `derive_presser_foot()` and `derive_stitch_spec()` helper functions in `backend/app.py` mapping specialized feet (`Zipper Foot`, `Piping Foot`, `Button Clamp`, `Differential Feed Foot`) and stitch densities (`1.8mm/14 SPI`, `2.5mm/10 SPI`, `3.5mm/7 SPI`).
+  * Rendered Presser Foot and Stitch Spec badges alongside Needle Specification badges in Step 3 Sewing Flow Table in `frontend/src/app/page.tsx`.
+  * Added unit test `test_sewing_sequence_operation_details` in `backend/tests/test_backend_contract.py` (35 tests passing 100%).
 
 ---
 
 ## Remaining Tasks (For Your Team)
 
-### 1. Bootcamp Next Iteration (Immediate Scope - Toy Manufacturer Feedback)
-* [ ] **Per-Doll Project Setup**: Shift frontend/backend focus from single fabric pieces to complete doll projects comprising multiple garments (e.g. jacket + pants + hat).
-* [ ] **Multi-Fabric Sequence Support**: Generate combined engineering process workflows for multiple distinct fabric components within the same doll outfit.
-* [ ] **Batch SMV Scaling**: Integrate SMV batching to multiply single-garment assembly times (SAM/SMV) into production run quantities (e.g., 100 to 1,000 pieces).
-* [ ] **Operation Detail Expansion**: Add granular description fields for specific needle handling and presser foot actions in the sewing sequence.
+### 1. Bootcamp Next Iteration (Completed Scope - Toy Manufacturer Requirements Met)
+* [x] **Per-Doll Project Setup**: Shift frontend/backend focus from single fabric pieces to complete doll projects comprising multiple garments (e.g. jacket + pants + hat).
+* [x] **Multi-Fabric Sequence Support**: Generate combined engineering process workflows for multiple distinct fabric components within the same doll outfit.
+* [x] **Batch SMV Scaling**: Integrate SMV batching to multiply single-garment assembly times (SAM/SMV) into production run quantities (e.g., 100 to 1,000 pieces).
+* [x] **Operation Detail Expansion**: Add granular description fields for specific needle handling and presser foot actions in the sewing sequence.
 
 ### 3. Internship & Post-Bootcamp Roadmap (Experimental Scope)
 * [ ] **3D Mannequin Preview (WebGL/WebGPU)**: Model a low-poly doll mannequin base mesh in Blender, optimize it via Meshopt and KTX2 compression, and load it dynamically in Next.js (via Three.js/React Three Fiber) to support real-time 2D fabric texture mapping overlays.

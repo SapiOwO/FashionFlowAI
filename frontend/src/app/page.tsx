@@ -1933,7 +1933,7 @@ export default function Home() {
                                   </td>
                                   <td className="py-4 px-4 flex justify-center">{getPartIcon(step.operation)}</td>
                                   <td className="py-4 px-6">
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col gap-1.5">
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-semibold text-slate-900 text-xs">{step.recommended_model}</span>
                                         {step.needle && step.needle !== "N/A" && (
@@ -1941,9 +1941,22 @@ export default function Home() {
                                             Needle: {step.needle}
                                           </span>
                                         )}
+                                        {step.stitch_spec && (
+                                          <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded font-medium">
+                                            Stitch: {step.stitch_spec}
+                                          </span>
+                                        )}
                                       </div>
                                       <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono flex-wrap">
                                         <span>{step.machine_type}</span>
+                                        {step.presser_foot && (
+                                          <>
+                                            <span>•</span>
+                                            <span className="text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
+                                              {step.presser_foot}
+                                            </span>
+                                          </>
+                                        )}
                                         {step.speed && step.speed !== "N/A" && (
                                           <>
                                             <span>•</span>
