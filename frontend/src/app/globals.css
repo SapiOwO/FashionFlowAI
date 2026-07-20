@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+@theme {
+  --font-display: var(--font-outfit), sans-serif;
+  --font-sans: var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  /* Golden Ratio / Fibonacci Typography Scale */
+  --text-display: 42px;
+  --text-display--line-height: 1.15;
+
+  --text-heading: 26px;
+  --text-heading--line-height: 1.25;
+
+  --text-subheading: 20px;
+  --text-subheading--line-height: 1.35;
+
+  --text-body: 16px;
+  --text-body--line-height: 1.5;
+
+  --text-caption: 10px;
+  --text-caption--line-height: 1.4;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #1e293b;

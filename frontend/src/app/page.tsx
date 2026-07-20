@@ -1045,29 +1045,29 @@ export default function Home() {
               {/* Left: System Workflow Guide */}
               <div className="lg:col-span-2 bg-white border border-slate-100 rounded-2xl p-7 shadow-2xs">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-display font-bold text-lg text-slate-900">Engineering Workflow</h2>
+                  <h2 className="font-display font-bold text-subheading-bold text-slate-900">Engineering Workflow</h2>
                   <button
                     onClick={() => { setActiveTab("design-input-view"); setCurrentStep(1); }}
-                    className="text-xs font-semibold text-[#155DFC] hover:text-[#1249cc] bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                    className="text-body-bold font-semibold text-[#155DFC] hover:text-[#1249cc] bg-blue-50 hover:bg-blue-100 px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
                   >
                     Start New Analysis →
                   </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-2 p-5 border border-blue-100 rounded-xl bg-blue-50/40">
+                  <div className="flex flex-col gap-2.5 p-5 border border-blue-100 rounded-xl bg-blue-50/40">
                     <div className="w-8 h-8 rounded-full bg-[#155DFC] text-white flex items-center justify-center font-bold text-sm">1</div>
-                    <h3 className="font-bold text-slate-900 text-sm mt-1 font-display">Upload &amp; Originality</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">Upload garment sketch. DINOv2 vector engine verifies originality against database records with 95% threshold.</p>
+                    <h3 className="font-bold text-slate-900 text-body-bold font-display">Upload &amp; Originality</h3>
+                    <p className="text-body-regular text-slate-600 leading-relaxed">Upload garment sketch. DINOv2 vector engine verifies originality against database records with 95% threshold.</p>
                   </div>
-                  <div className="flex flex-col gap-2 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
+                  <div className="flex flex-col gap-2.5 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
                     <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">2</div>
-                    <h3 className="font-bold text-slate-900 text-sm mt-1 font-display">Engineering Parameters</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">Define project parameters — garment type, fabric weight, component breakdown, and production specifications.</p>
+                    <h3 className="font-bold text-slate-900 text-body-bold font-display">Engineering Parameters</h3>
+                    <p className="text-body-regular text-slate-600 leading-relaxed">Define project parameters — garment type, fabric weight, component breakdown, and production specifications.</p>
                   </div>
-                  <div className="flex flex-col gap-2 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
+                  <div className="flex flex-col gap-2.5 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
                     <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">3</div>
-                    <h3 className="font-bold text-slate-900 text-sm mt-1 font-display">Process Sheet &amp; SMV</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">AI generates the sewing sequence, machine tooling recommendations, and estimated SMV for production planning.</p>
+                    <h3 className="font-bold text-slate-900 text-body-bold font-display">Process Sheet &amp; SMV</h3>
+                    <p className="text-body-regular text-slate-600 leading-relaxed">AI generates the sewing sequence, machine tooling recommendations, and estimated SMV for production planning.</p>
                   </div>
                 </div>
 
