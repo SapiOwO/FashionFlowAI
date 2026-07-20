@@ -1576,7 +1576,7 @@ export default function Home() {
                                   key={qty}
                                   type="button"
                                   onClick={() => setBatchQuantity(qty)}
-                                  className={`flex-1 py-2.5 px-2 rounded-lg text-body-bold font-mono font-bold transition-all cursor-pointer border ${
+                                  className={`flex-1 py-2 px-2 rounded-lg text-dense-bold font-mono font-bold transition-all cursor-pointer border ${
                                     batchQuantity === qty
                                       ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
                                       : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
@@ -1590,13 +1590,13 @@ export default function Home() {
                                 min={1}
                                 value={batchQuantity}
                                 onChange={(e) => setBatchQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="w-24 bg-slate-50/80 border border-slate-200/90 rounded-lg py-2.5 px-2 text-body-bold font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
+                                className="w-20 bg-slate-50/80 border border-slate-200/90 rounded-lg py-2 px-2 text-dense-bold font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
                                 placeholder="Qty"
                               />
                             </div>
                           </div>
                           {/* Workflow Status — SecurityHeaders banner style */}
-                          <div className={`border rounded-xl overflow-hidden mt-auto transition-all ${
+                          <div className={`border rounded-lg overflow-hidden mt-auto transition-all ${
                             grade?.letter === "F" ? "border-red-200" : grade?.letter === "C" ? "border-orange-200" : grade?.letter === "B" ? "border-amber-200" : grade ? "border-emerald-200" : "border-slate-200"
                           }`}>
                             <div className={`flex items-center justify-between px-4 py-2.5 text-body-bold ${wfBg} ${wfTxt}`}>
@@ -1623,7 +1623,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={handleResetStep2}
-                        className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 text-body-bold font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+                        className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 text-body-bold font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                       >
                         <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -1635,7 +1635,7 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={handleSafeBackToStep1}
-                          className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-body-bold font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+                          className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-body-bold font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                         >
                           ← Back to Mode Choice
                         </button>
@@ -1644,7 +1644,7 @@ export default function Home() {
                           type="submit"
                           form="process-sheet-form"
                           disabled={isLoading || !quizName.trim() || Boolean(isPatternRejected) || (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))}
-                          className="px-8 py-3 bg-brand-blue hover:bg-brand-blue-hover text-white text-body-bold font-bold rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+                          className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white text-body-bold font-bold rounded-lg flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
                         >
                           {isLoading ? (
                             <>
@@ -1789,13 +1789,13 @@ export default function Home() {
                         <h1 className="font-display font-bold text-display-bold text-slate-900">{quizName}</h1>
                       </div>
                       <div className="flex items-center gap-3 no-print">
-                        <button onClick={() => window.print()} className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-body-bold font-semibold transition-colors cursor-pointer flex items-center gap-1.5">
+                        <button onClick={() => window.print()} className="px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-body-bold font-semibold transition-colors cursor-pointer flex items-center gap-1.5">
                           <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                           </svg>
                           Export Specs
                         </button>
-                        <button onClick={handleResetWorkspace} className="px-5 py-2.5 rounded-xl bg-brand-blue hover:bg-brand-blue-hover text-white text-body-bold font-bold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5">
+                        <button onClick={handleResetWorkspace} className="px-5 py-2.5 rounded-lg bg-[#155DFC] hover:bg-[#1249cc] text-white text-body-bold font-bold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5">
                           <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                           </svg>
@@ -1810,15 +1810,15 @@ export default function Home() {
                   <div className="xl:col-span-2 flex flex-col gap-6">
                     {fullResult.is_doll_project ? (
                       <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs">
-                        <h2 className="font-bold text-slate-900 text-base mb-4 font-display">Doll Outfit Components</h2>
+                        <h2 className="font-bold text-heading-bold text-slate-900 mb-4 font-display">Doll Outfit Components</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Array.isArray(fullResult.classification) && fullResult.classification.map((comp: any, idx: number) => {
                             const compKey = comp.component;
                             const compImg = componentsState[compKey]?.previewUrl || "globe.svg";
                             return (
-                              <div key={idx} className="border border-slate-100 rounded-xl overflow-hidden p-3 bg-slate-50/60 flex flex-col gap-2">
+                              <div key={idx} className="border border-slate-100 rounded-lg overflow-hidden p-3 bg-slate-50/60 flex flex-col gap-2">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-[10px] font-bold text-brand-blue uppercase font-mono">{compKey}</span>
+                                  <span className="text-caption-bold font-bold text-[#155DFC] uppercase font-mono">{compKey}</span>
                                   <span className="text-[9px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">Approved</span>
                                 </div>
                                 <div className="aspect-video bg-white border border-slate-100 rounded-lg flex items-center justify-center overflow-hidden">
@@ -1834,7 +1834,7 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs relative">
-                        <h2 className="font-bold text-slate-900 text-base mb-6 font-display leading-tight">Visual Layout Analysis</h2>
+                        <h2 className="font-bold text-heading-bold text-slate-900 mb-6 font-display leading-tight">Visual Layout Analysis</h2>
                         <div className="relative w-full flex items-center justify-center pt-0 px-1 pb-1">
                           <img
                             src={fullResult.preview_image}
@@ -1852,7 +1852,7 @@ export default function Home() {
                                 height: `${det.box[3] - det.box[1]}%`,
                               }}
                             >
-                              <span className="absolute -top-5 -left-0.5 bg-brand-blue text-white font-mono text-[9px] py-0.5 px-1.5 rounded-xs whitespace-nowrap shadow-xs">
+                              <span className="absolute -top-5 -left-0.5 bg-[#155DFC] text-white font-mono text-[9px] py-0.5 px-1.5 rounded-xs whitespace-nowrap shadow-xs">
                                 {det.label} ({(det.confidence * 100).toFixed(0)}%)
                               </span>
                             </div>
@@ -1862,7 +1862,7 @@ export default function Home() {
                     )}
 
                     <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs">
-                      <h3 className="font-bold text-slate-900 text-sm mb-4 font-display">
+                      <h3 className="font-bold text-subheading-bold text-slate-900 mb-4 font-display leading-tight">
                         {fullResult.is_doll_project ? "Doll Project Metadata" : "Pattern Metadata"}
                       </h3>
                       <div className="space-y-3.5">
@@ -1908,7 +1908,7 @@ export default function Home() {
                         STEP-BY-STEP SEWING FLOW
                       </h2>
                       
-                      <div className="overflow-hidden border border-slate-100 rounded-xl">
+                      <div className="overflow-hidden border border-slate-100 rounded-lg">
                         <table className="w-full text-left text-dense-regular text-slate-600 border-collapse">
                           <thead className="bg-slate-50/70 text-caption-bold font-mono text-slate-400 uppercase border-b border-slate-100">
                             <tr>
