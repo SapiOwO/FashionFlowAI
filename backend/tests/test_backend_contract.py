@@ -530,5 +530,24 @@ class TestBatchSMVScaling(unittest.TestCase):
         self.assertEqual(b["batch_total_smv_mins"], round(b["single_unit_smv_mins"] * 200, 2))
 
 
+class TestFastAPICaching(unittest.TestCase):
+    """Benchmark in-memory catalog response times and verify sub-10ms performance."""
+
+    def test_juki_catalog_in_memory_caching_performance(self):
+        """Repeated calls to get_all_juki_catalog() must return identical list within sub-10ms latency."""
+        import time
+        # Warmup cache
+        cat1 = backend_app.get_all_juki_catalog()
+        self.assertGreater(len(cat1), 0, "Catalog must not be empty")
+
+        start = time.perf_counter()
+        for _ in range(50):
+            cat2 = backend_app.get_all_juki_catalog()
+        elapsed_ms = (time.perf_counter() - start) * 1000.0 / 50.0
+
+        self.assertEqual(id(cat1), id(cat2), "Cached catalog must return identical object reference")
+        self.assertLess(elapsed_ms, 10.0, f"Average cached query latency must be < 10ms, got {elapsed_ms:.3f}ms")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

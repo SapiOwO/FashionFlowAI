@@ -388,6 +388,8 @@ def extract_visual_feature_vector(pil_img: Image.Image) -> list:
 _JUKI_DB: list[dict] = []
 _MACHINE_ALIASES: dict = {}
 _DINO_MODEL = None  # Meta DINOv2 Small (dinov2_vits14) — 384-dim visual encoder
+_JUKI_CATALOG_CACHE: list = []
+_KNOWLEDGE_CACHE: dict = {}
 
 def _load_static_data() -> None:
     """
@@ -396,7 +398,9 @@ def _load_static_data() -> None:
     DINOv2 is loaded here (not per-request) to ensure sub-10ms inference
     latency on the critical /api/predict hot path.
     """
-    global _JUKI_DB, _MACHINE_ALIASES, _DINO_MODEL
+    global _JUKI_DB, _MACHINE_ALIASES, _DINO_MODEL, _JUKI_CATALOG_CACHE, _KNOWLEDGE_CACHE
+    _JUKI_CATALOG_CACHE = []
+    _KNOWLEDGE_CACHE = {}
 
     csv_path = os.path.join(DATA_DIR, "juki_master_catalog.csv")
     if os.path.exists(csv_path):
@@ -613,7 +617,11 @@ def normalize_garment_key(raw_garment_type: str) -> str:
 
 
 def get_all_juki_catalog() -> list:
-    """Return complete deduplicated JUKI machinery catalog for All Sewing Tools view."""
+    """Return complete deduplicated JUKI machinery catalog for All Sewing Tools view (In-Memory Cached)."""
+    global _JUKI_CATALOG_CACHE
+    if _JUKI_CATALOG_CACHE:
+        return _JUKI_CATALOG_CACHE
+
     seen: set = set()
     catalog: list = []
     for row in _JUKI_DB:
@@ -625,6 +633,7 @@ def get_all_juki_catalog() -> list:
                 "file": clean_image_filename(model),
                 "desc": row.get("description", ""),
             })
+    _JUKI_CATALOG_CACHE = catalog
     return catalog
 
 

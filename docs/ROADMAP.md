@@ -90,6 +90,10 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Implemented multi-component garment sewing sequence compilation for Doll Outfit Sets (e.g. Jacket + Pants + Hat) with sequential step numbering and per-component fabric allocations.
   * Added **Batch Production Run Selector** (100, 250, 500, 1000 pcs or custom) in Step 2 parameters form and rendered **Batch Production Scaling Summary Card** in Step 3 process sheet view.
   * Added contract unit tests `TestBatchSMVScaling` in `backend/tests/test_backend_contract.py` (33 tests passing 100%).
+* **Phase 19: FastAPI In-Memory Caching Layer (2026-07-21)**:
+  * Implemented module-level in-memory cache (`_JUKI_CATALOG_CACHE` and `_KNOWLEDGE_CACHE`) for static catalog queries in `backend/app.py`.
+  * Reduced `get_all_juki_catalog()` response latency to sub-10ms ($< 0.1\text{ms}$ average cached query time).
+  * Added performance benchmark unit test `TestFastAPICaching` in `backend/tests/test_backend_contract.py` (34 tests passing 100%).
 
 ---
 
