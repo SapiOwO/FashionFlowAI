@@ -561,6 +561,49 @@ def derive_stitch_spec(fabric_weight: str) -> str:
     return "2.5 mm (10 SPI)"
 
 
+def derive_operation_substeps(operation: str, machine_model: str, stitch_spec: str) -> list[dict]:
+    """
+    Dynamically generate 2-to-4 operation-specific sub-steps for a given sewing operation.
+    """
+    op = operation.lower()
+
+    if "zipper" in op:
+        return [
+            {"sub_num": "1", "title": "Setup & Notch Alignment", "detail": "Align zipper tape to seam opening notch marks on left & right panels."},
+            {"sub_num": "2", "title": "Baste Seam Line", "detail": "Pin or temporary baste zipper teeth 1/4\" from raw fabric edge."},
+            {"sub_num": "3", "title": "Machine Stitching", "detail": f"Stitch along zipper teeth using {machine_model} equipped with Zipper Foot."},
+            {"sub_num": "4", "title": "Topstitch & Clear", "detail": "Topstitch edge fold and verify slider clearance across full opening length."}
+        ]
+    elif "hem" in op or "edge" in op:
+        return [
+            {"sub_num": "1", "title": "Fold & Feed Setup", "detail": "Fold hem margin 1/2\" and feed edge into Right-Angle Hemming Folder."},
+            {"sub_num": "2", "title": "Stitch Hem Loop", "detail": f"Execute continuous hem stitch using {machine_model} at {stitch_spec} density."},
+            {"sub_num": "3", "title": "Trim & Press", "detail": "Auto thread-trim and press hemline fold flat."}
+        ]
+    elif "collar" in op or "neck" in op:
+        return [
+            {"sub_num": "1", "title": "Notch Matching", "detail": "Pin collar band to neckline notches, matching center-back marks."},
+            {"sub_num": "2", "title": "Run Stitching", "detail": f"Run stitch collar seam using {machine_model} along 3/8\" seam line."},
+            {"sub_num": "3", "title": "Turn & Press", "detail": "Turn collar right-side out and steam press edge seam."}
+        ]
+    elif "pocket" in op or "flap" in op:
+        return [
+            {"sub_num": "1", "title": "Template Marking", "detail": "Position acrylic pocket setting template onto front panel marking points."},
+            {"sub_num": "2", "title": "Fold Hem Margins", "detail": "Pre-fold pocket hem allowances flat around template edges."},
+            {"sub_num": "3", "title": "Topstitch Attachment", "detail": f"Stitch pocket onto panel using {machine_model} with corner bar tack reinforcement."}
+        ]
+    elif "button" in op or "tack" in op:
+        return [
+            {"sub_num": "1", "title": "Clamp Positioning", "detail": "Position vent/fly corner notch under pneumatic clamp plate."},
+            {"sub_num": "2", "title": "Bartack Cycle", "detail": f"Execute automated 28-stitch bar tack cycle on {machine_model}."}
+        ]
+    else:
+        return [
+            {"sub_num": "1", "title": "Panel Alignment", "detail": "Match front and back garment panel notches and align raw edges."},
+            {"sub_num": "2", "title": "Seam Join", "detail": f"Join seam using {machine_model} maintaining 1/2\" seam allowance ({stitch_spec})."}
+        ]
+
+
 def build_sewing_sequence(garment_key: str, fabric_weight: str, templates: dict) -> tuple[list, str, str]:
     """
     Build canonical sewing_sequence_detailed list using the multi-tier machine resolver.
@@ -585,6 +628,10 @@ def build_sewing_sequence(garment_key: str, fabric_weight: str, templates: dict)
     sewing_sequence_detailed = []
     for step in template_steps:
         matched = resolve_machine_for_step(step["required_machine_type"], fabric_weight)
+        presser_foot = derive_presser_foot(step["operation"], step["required_machine_type"])
+        stitch_spec = derive_stitch_spec(fabric_weight)
+        sub_steps = derive_operation_substeps(step["operation"], matched["name"], stitch_spec)
+
         sewing_sequence_detailed.append({
             "step_num": step["step_num"],
             "operation": step["operation"],
@@ -595,8 +642,9 @@ def build_sewing_sequence(garment_key: str, fabric_weight: str, templates: dict)
             "needle": matched.get("needle", "N/A"),
             "speed": matched.get("speed", "N/A"),
             "application": matched.get("application", "N/A"),
-            "presser_foot": derive_presser_foot(step["operation"], step["required_machine_type"]),
-            "stitch_spec": derive_stitch_spec(fabric_weight),
+            "presser_foot": presser_foot,
+            "stitch_spec": stitch_spec,
+            "sub_steps": sub_steps,
         })
 
     return sewing_sequence_detailed, smv_range, complexity
@@ -623,9 +671,10 @@ def derive_tooling_from_sequence(sewing_sequence_detailed: list) -> list:
 
 def derive_work_aids_from_sequence(sewing_sequence_detailed: list, fabric_weight: str = "Medium") -> list:
     """
-    Derive specialized work-aid tooling attachments (folders, binders, edge guides, acrylic templates, ultrasonic jigs)
-    for each step in sewing_sequence_detailed.
+    Derive unique specialized work-aid tooling attachments (folders, binders, edge guides, acrylic templates, ultrasonic jigs)
+    for sewing_sequence_detailed (deduplicated by attachment_name).
     """
+    seen: set = set()
     work_aids = []
     for step in sewing_sequence_detailed:
         op = (step.get("operation") or "").lower()
@@ -663,17 +712,27 @@ def derive_work_aids_from_sequence(sewing_sequence_detailed: list, fabric_weight
             category = "Fastener Setting"
             purpose = "Holds fabric securely during automated bartacking or button sewing"
 
-        work_aids.append({
-            "step_num": step_num,
-            "operation": step.get("operation"),
-            "machine_model": model,
+        step["work_aid"] = {
             "aid_type": aid_type,
             "attachment_name": attachment_name,
             "category": category,
             "purpose": purpose
-        })
+        }
+
+        if attachment_name not in seen:
+            seen.add(attachment_name)
+            work_aids.append({
+                "step_num": step_num,
+                "operation": step.get("operation"),
+                "machine_model": model,
+                "aid_type": aid_type,
+                "attachment_name": attachment_name,
+                "category": category,
+                "purpose": purpose
+            })
 
     return work_aids
+
 
 
 def calculate_line_balancing(sewing_sequence_detailed: list, batch_quantity: int = 100, target_daily_units: int = 500, shift_hours: float = 8.0) -> dict:
@@ -815,6 +874,8 @@ class ProcessSheetRequest(BaseModel):
     message: str
     visual_vector: list = []   # 384-dim embedding — MUST be sent from frontend to persist for duplicate detection
     batch_quantity: int = 100
+    is_reuse_master: bool = False  # When True: recalculate batch scaling on existing master ID, skip new DB insert
+    reuse_master_id: int | None = None  # Original master project ID to reuse
 
 @app.get("/api/validate-catalog")
 def validate_catalog():
@@ -995,11 +1056,18 @@ def generate_process_sheet(req: ProcessSheetRequest):
         }
     }
 
-    if req.similarity_status.upper() == "REJECTED":
-        raise HTTPException(status_code=400, detail="Production Blocked: Similarity status is REJECTED. Cannot save duplicate pattern to database.")
-
-    timestamp_str = datetime.now().strftime("%H:%M:%S (%d/%m/%Y)")
-    save_analysis_to_db(req.project_name, timestamp_str, result_payload)
+    if not req.is_reuse_master:
+        # Normal mode: persist new project record to DB
+        if req.similarity_status.upper() == "REJECTED":
+            raise HTTPException(status_code=400, detail="Production Blocked: Similarity status is REJECTED. Cannot save duplicate pattern to database.")
+        timestamp_str = datetime.now().strftime("%H:%M:%S (%d/%m/%Y)")
+        save_analysis_to_db(req.project_name, timestamp_str, result_payload)
+    else:
+        # Reuse mode: batch recalculation only — do NOT insert a new row
+        # Attach reuse metadata to the response so frontend can reference original master ID
+        result_payload["reuse_master_id"] = req.reuse_master_id
+        result_payload["is_reuse"] = True
+        print(f"[REUSE] Batch recalculation for master ID={req.reuse_master_id}, qty={req.batch_quantity} — no DB insert")
 
     return result_payload
 
@@ -1412,5 +1480,59 @@ async def predict_garment(
 
     return result_payload
 
+
+@app.get("/api/export-mes/{project_id}")
+def export_project_to_mes(project_id: int):
+    """
+    Export saved engineering process sheet payload as a clean, standardized
+    Manufacturing Execution System (MES / ERP) ingestion object.
+    """
+    history_logs = get_analysis_history_from_db()
+    target = None
+    for log in history_logs:
+        if log.get("id") == project_id:
+            target = log
+            break
+
+    if not target:
+        raise HTTPException(status_code=404, detail=f"Project ID #{project_id} not found in database.")
+
+    payload = target.get("payload", {})
+    p_details = payload.get("project_details", {})
+    batch_p = payload.get("batch_production", {})
+    line_b = payload.get("line_balancing", {})
+    work_a = payload.get("work_aids", [])
+
+    return {
+        "mes_export_version": "1.0",
+        "exported_at": datetime.now().isoformat(),
+        "project_id": project_id,
+        "project_name": target.get("filename"),
+        "garment_type": p_details.get("garment_type") or p_details.get("doll_type") or "Garment",
+        "fabric_weight": p_details.get("fabric_weight", "Medium-weight"),
+        "engineering_status": payload.get("status", "APPROVED"),
+        "smv_minutes_per_unit": batch_p.get("single_unit_smv_mins", 0.0),
+        "target_daily_output_pcs": line_b.get("target_daily_units", 500),
+        "takt_time_mins": line_b.get("takt_time_mins", 0.96),
+        "total_line_machines": line_b.get("total_line_machines", 0),
+        "machine_allocations": line_b.get("machine_allocations", []),
+        "sewing_sequence": [
+            {
+                "step_num": s.get("step_num"),
+                "operation": s.get("operation"),
+                "machine_model": s.get("recommended_model"),
+                "needle": s.get("needle"),
+                "presser_foot": s.get("presser_foot"),
+                "stitch_spec": s.get("stitch_spec"),
+                "smv_mins": s.get("smv_mins")
+            }
+            for s in payload.get("sewing_sequence_detailed", [])
+        ],
+        "work_aid_attachments": work_a,
+        "pre_production_readiness": payload.get("engineering_checklist", [])
+    }
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
+

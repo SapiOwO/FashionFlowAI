@@ -98,24 +98,25 @@ FashionFlow features a zero-retraining visual similarity and duplication detecti
 * Vector embeddings are stored in a **dedicated native `visual_vector vector(384)` column** in `analysis_history`, backed by an HNSW index (`idx_hnsw_analysis_cosine`) for O(log n) retrieval. The JSON blob (`result`) also retains the vector for backward compatibility.
 * MD5 hashes of preview images are stored in a dedicated `image_md5 TEXT` column for O(1) exact-match fast-path queries.
 
-### 2. Multi-Tier Similarity & Duplication Hierarchy
+### 2. Multi-Tier Similarity & Master Spec Reuse Hierarchy
 During image verification (`/api/predict`), the backend evaluates in order:
-1. **MD5 Exact Hash Match** (O(1) column scan): Hashes the base64 payload against the `image_md5` column. Matches trigger `99.8%` similarity (`REJECTED`).
+1. **MD5 Exact Hash Match** (O(1) column scan): Hashes base64 payload against `image_md5`. Matches return `99.8%` similarity (`HISTORICAL_MATCH_FOUND`).
 2. **Project Name SQL Match**: SQL `LOWER(filename) = LOWER(input)` check — no Python iteration needed.
-3. **pgvector Native Cosine Similarity** (O(log n) HNSW): `SELECT ... ORDER BY visual_vector <=> query::vector LIMIT 1`. If $\cos(\theta) \ge 0.90$, triggers `REJECTED`. SQLite environments fall back to Python-loop cosine math.
+3. **pgvector Native Cosine Similarity** (O(log n) HNSW): `SELECT ... ORDER BY visual_vector <=> query::vector LIMIT 1`. If $\cos(\theta) \ge 0.90$, triggers Catalog Reuse Prompt (`HISTORICAL_MATCH_FOUND`). SQLite environments fall back to Python-loop cosine math.
+4. **Master Spec Reuse Mode (`is_reuse_master=True`)**: When a high-similarity match is detected, the frontend presents an interactive **Catalog Reuse Prompt Card**. Reusing an existing spec calculates batch scaling and takt-time line allocations for the new run size (e.g. 500 pcs vs 1000 pcs) without inserting redundant database rows.
 
 ### 3. Concurrency & Transactional Safety (1,000 Concurrent Users)
 * **ACID Transaction Isolation**: PostgreSQL (`pgvector`) uses row-level locks and auto-incrementing primary key sequences. Concurrent submissions receive distinct primary key IDs without race conditions or overwrites.
 * **HNSW Vector Index Scale**: Vector searches use **HNSW (Hierarchical Navigable Small World)** graphs on the native `visual_vector` column, maintaining $O(\log N)$ logarithmic query latency ($5-15\text{ms}$) at any database scale.
-* **Atomic De-duplication (`UPDATE` vs `INSERT`)**: When re-submitting an existing project name, `save_analysis_to_db` executes an atomic `UPDATE` on the existing primary key ID instead of appending redundant duplicate rows.
+* **Atomic De-duplication (`is_reuse_master`)**: Reusing a master spec bypasses database inserts entirely, preserving master spec primary key IDs while calculating batch duration and SMV scaling on demand.
 
 ### 4. Edge Case Mitigation Matrix
 
 | Edge Case Scenario | System Behavior & Mitigation Mechanism | Result |
 | :--- | :--- | :--- |
-| **User uploads identical sketch image under a different project name** | Caught by PyTorch Visual Vector Cosine Similarity ($\ge 92\%$) and MD5 hash match against `analysis_history` records. | `REJECTED (99.8%)` & Production Blocked |
+| **User uploads existing/repeat pattern for next year's run** | Caught by PyTorch Visual Vector Cosine Similarity ($\ge 90\%$) or MD5 hash match against catalog records. | Interactive **Master Spec Reuse Prompt Card** rendered. 1-click recalculation of new batch quantities without duplicate DB entries. |
 | **User submits identical project name with a modified sketch** | Caught by project name string normalization check in `save_analysis_to_db`. | Atomic `UPDATE` on existing ID (No Duplicate Rows) |
-| **1,000 users upload identical sketch simultaneously** | Transaction 1 commits first (ID #1). Transactions 2-1000 running milliseconds later perform real-time vector search, detect ID #1, and reject remaining submissions. | 1 Saved Project + 999 `REJECTED` Block Alerts |
+| **1,000 users upload identical sketch simultaneously** | Transaction 1 commits first (ID #1). Transactions 2-1000 running milliseconds later perform real-time vector search and offer ID #1 master spec reuse. | 1 Master Spec + 999 1-Click Spec Reuse Opportunities |
 | **DINOv2 cosine similarity yields negative value (anti-parallel vectors)** | Raw cosine values below 0.0 are clamped to `max(0.0, ...)` in `db.py`, `app.py`, and `page.tsx` display layer. | `0.00%` displayed — `APPROVED` |
 
 ---
@@ -128,8 +129,14 @@ The Create Process Sheet view uses a **2-phase studio layout**:
 * **Section 1 (Pattern Sketch & Originality)**: Live DINOv2 scan triggers immediately upon image upload — no second button press required.
   * Displays an inline **Top Matched Projects in Catalog** list (up to 5 entries) with thumbnail, project ID, name, garment category, and per-project similarity badge.
   * Similarity scores are clamped to `≥ 0.00%` and displayed as `X.X% match`.
-  * If any match scores `≥ 90%`, the Workflow Status panel changes to an amber **"Locked (Duplicate Pattern Detected)"** state and the Generate Process Sheet button is disabled.
-* **Section 2 (Engineering Specifications)**: Project name, garment category, and fabric weight inputs. Workflow Status badge reflects real-time lock state.
+  * **Originality & IP Risk Scale**: Preserves the official `A+` (0-30%), `A` (30-50%), `B` (50-70%), `C` (70-90%), and `F` (90-100%) grading scale.
+* **Section 2 (Interactive Catalog Reuse Prompt & Specs)**:
+  * When similarity $\ge 90\%$, an interactive **Catalog Reuse Prompt Card** is rendered with a unified Cobalt Blue (`#155DFC`) theme:
+    * **`REUSE MASTER SPEC (ID #X)`**: Recalculates batch size and SMV scaling on existing master spec with zero manual typing.
+    * **`CREATE NEW VARIANT`**: Opens custom project name input for explicit branch creation.
+* **Stationary Sewing Flow Table Layout**: Locked column percentages (`w-[12%]`, `w-[40%]`, `w-[10%]`, `w-[38%]`) with `table-fixed` CSS prevent horizontal layout shift on row expansion.
+* **Explicit SMV Units**: Step timing badges explicitly declare `1.5 mins` to prevent ambiguity with meters.
+* **Light-Mode 2D Pattern CAD Blueprint SVGs**: Sub-step technical drawers render clean 2D CAD blueprint vector diagrams on light canvas (`bg-white border-slate-200`) with solid dark cut lines (`#334155`), dashed blue 1cm seam allowance lines (`#155DFC`), grainlines, and notch markers.
 
 ### Phase 2: Generated Output
 * Displays the compiled process sheet with sewing sequence, machine allocations, SMV estimates, and historical context.

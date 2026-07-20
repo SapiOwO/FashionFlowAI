@@ -637,6 +637,40 @@ class TestPhase3AdvancedEngineering(unittest.TestCase):
         self.assertIn("machine_allocations", res["line_balancing"])
 
 
+class TestMESExportConnector(unittest.TestCase):
+    """Validate GET /api/export-mes/{project_id} MES ingestion endpoint."""
+
+    def test_mes_export_endpoint(self):
+        """Saved analysis history must be exportable as a standardized MES object."""
+        # 1. Create a process sheet
+        req = backend_app.ProcessSheetRequest(
+            project_name="Test MES Hand-off Project",
+            garment_type="Shirt",
+            fabric_weight="Medium-weight",
+            preview_image="globe.svg",
+            similarity_percentage=100.0,
+            similarity_status="APPROVED",
+            classification_name="Shirt",
+            message="MES hand-off test",
+            batch_quantity=500,
+        )
+        res = backend_app.generate_process_sheet(req)
+
+        # 2. Get history log to retrieve project_id
+        logs = backend_app.get_history_logs()
+        self.assertGreater(len(logs.get("history", [])), 0)
+        proj_id = logs["history"][0]["id"]
+
+        # 3. Call MES export endpoint
+        mes_data = backend_app.export_project_to_mes(proj_id)
+        self.assertEqual(mes_data["mes_export_version"], "1.0")
+        self.assertIn("sewing_sequence", mes_data)
+        self.assertIn("machine_allocations", mes_data)
+        self.assertIn("work_aid_attachments", mes_data)
+        self.assertIn("takt_time_mins", mes_data)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
 

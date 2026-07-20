@@ -145,6 +145,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [showModelDetails, setShowModelDetails] = useState(false);
+  const [showTechPackModal, setShowTechPackModal] = useState(false);
+  const [activeTechPackData, setActiveTechPackData] = useState<any>(null);
+  const [expandedSteps, setExpandedSteps] = useState<Record<number, boolean>>({});
+
+  const toggleStep = (stepNum: number) => {
+    setExpandedSteps(prev => ({ ...prev, [stepNum]: !prev[stepNum] }));
+  };
 
   // Production Quiz Workspace States
   const [projectMode, setProjectMode] = useState<"single" | "doll">("doll");
@@ -166,6 +173,10 @@ export default function Home() {
   const [batchQuantity, setBatchQuantity] = useState(100);
   const [isQuizSubmitted, setIsQuizSubmitted] = useState(false);
   const [fullResult, setFullResult] = useState<any | null>(null);
+
+  // Catalog Reuse Prompt State — shown when DINOv2 detects >= 90% similarity match
+  const [showReusePrompt, setShowReusePrompt] = useState(false);
+  const [reuseMode, setReuseMode] = useState<"reuse" | "new" | null>(null);
 
   // Multi-step wizard stepper state (1: Upload & Originality, 2: Engineering Parameters, 3: Process Sheet)
   const [currentStep, setCurrentStep] = useState(1);
@@ -457,28 +468,26 @@ export default function Home() {
   // Handle dynamic process sheet compilation quiz submission (Single Garment Mode)
   const handleGenerateProcessSheet = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!quizName.trim()) {
-      alert("Please enter a project name.");
-      return;
-    }
-
     let activeResult = result;
     if (!activeResult && imageFile) {
       await runAnalysisForFile(imageFile);
     }
     
-    if (result && ["REJECTED", "HISTORICAL_MATCH_FOUND"].includes((result.status || "").toUpperCase())) {
-      alert("Duplicate pattern match detected. Process sheet creation is locked for duplicate patterns.");
-      return;
-    }
-    
     const targetResult = result || activeResult;
     if (!targetResult) return;
+
+    // Resolve project name: user input > matched catalog title > classification > fallback
+    const topMatch = targetResult?.top_3_saved_projects?.[0];
+    const isReuse = reuseMode === "reuse";
+    const resolvedProjectName = quizName.trim()
+      || (isReuse && topMatch?.title ? topMatch.title : "")
+      || targetResult?.classification?.[0]?.class_name
+      || "New Pattern Project";
 
     setIsLoading(true);
     try {
       const payload = {
-        project_name: quizName.trim(),
+        project_name: resolvedProjectName,
         garment_type: quizGarment,
         fabric_weight: quizFabric,
         preview_image: targetResult.preview_image,
@@ -489,6 +498,9 @@ export default function Home() {
         // CRITICAL: send visual_vector so backend can persist it for future cosine-similarity duplicate detection
         visual_vector: targetResult.visual_vector || [],
         batch_quantity: batchQuantity,
+        // Reuse flag: when true backend skips inserting a new DB row and recalculates on existing master ID
+        is_reuse_master: isReuse,
+        reuse_master_id: isReuse && topMatch?.id ? topMatch.id : null,
       };
 
       const res = await fetch("http://127.0.0.1:8000/api/generate-sheet", {
@@ -512,11 +524,10 @@ export default function Home() {
           console.warn("Failed to refresh history.", err);
         }
       } else {
-        alert("Failed to generate process sheet.");
+        console.error("Failed to generate process sheet.");
       }
     } catch (err) {
       console.error("Error generating process sheet:", err);
-      alert("Database connection failed.");
     } finally {
       setIsLoading(false);
     }
@@ -533,6 +544,8 @@ export default function Home() {
     setQuizFabric("Medium-weight");
     setIsQuizSubmitted(false);
     setCurrentStep(1);
+    setShowReusePrompt(false);
+    setReuseMode(null);
     setComponentsState({
       jacket: { fabricWeight: "Denim (Heavy-weight)", imageFile: null, previewUrl: null, result: null },
       pants: { fabricWeight: "Katun (Medium-weight)", imageFile: null, previewUrl: null, result: null },
@@ -549,6 +562,8 @@ export default function Home() {
     setQuizName("");
     setQuizGarment("Shirt");
     setQuizFabric("Medium-weight");
+    setShowReusePrompt(false);
+    setReuseMode(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     setComponentsState({
       jacket: { fabricWeight: "Denim (Heavy-weight)", imageFile: null, previewUrl: null, result: null },
@@ -745,7 +760,17 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
         setResult(data);
-        
+
+        // Show reuse prompt if catalog match >= 90%, otherwise clear prompt
+        const sim = data.similarity_percentage || 0;
+        if (sim >= 90 && data.top_3_saved_projects?.[0]) {
+          setShowReusePrompt(true);
+          setReuseMode(null); // reset to force user to choose
+        } else {
+          setShowReusePrompt(false);
+          setReuseMode(null);
+        }
+
         try {
           const historyRes = await fetch("http://127.0.0.1:8000/api/history");
           if (historyRes.ok) {
@@ -862,6 +887,153 @@ export default function Home() {
       <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
+    );
+  };
+
+  // Render 2D Technical Apparel CAD Pattern Blueprint SVG Diagram
+  const renderSeamTechnicalDiagram = (opText: string) => {
+    const text = (opText || "").toLowerCase();
+
+    if (text.includes("zipper")) {
+      return (
+        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+          <svg className="w-full h-32" viewBox="0 0 400 110">
+            {/* Background Pattern Grid */}
+            <defs>
+              <pattern id="cadGridZipper" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#F1F5F9" strokeWidth="0.8" />
+              </pattern>
+            </defs>
+            <rect width="400" height="110" fill="url(#cadGridZipper)" rx="6" />
+
+            {/* Left Front CAD Pattern Piece */}
+            <path d="M 20 15 L 180 15 L 180 95 L 20 95 Z" fill="#F8FAFC" stroke="#334155" strokeWidth="1.5" />
+            <path d="M 30 25 L 170 25 L 170 85 L 30 85 Z" fill="none" stroke="#155DFC" strokeWidth="1" strokeDasharray="3 3" />
+            <text x="35" y="40" fill="#0F172A" fontSize="9" fontFamily="monospace" fontWeight="bold">LEFT FRONT — CUT 1</text>
+            
+            {/* Right Front CAD Pattern Piece */}
+            <path d="M 220 15 L 380 15 L 380 95 L 220 95 Z" fill="#F8FAFC" stroke="#334155" strokeWidth="1.5" />
+            <path d="M 230 25 L 370 25 L 370 85 L 230 85 Z" fill="none" stroke="#155DFC" strokeWidth="1" strokeDasharray="3 3" />
+            <text x="235" y="40" fill="#0F172A" fontSize="9" fontFamily="monospace" fontWeight="bold">RIGHT FRONT — CUT 1</text>
+
+            {/* Zipper Center Seam Line & Notches */}
+            <line x1="200" y1="10" x2="200" y2="100" stroke="#0EA5E9" strokeWidth="1.5" strokeDasharray="6 3" />
+            <polygon points="175,55 185,55 180,50" fill="#059669" />
+            <polygon points="215,55 225,55 220,50" fill="#059669" />
+
+            {/* Grainline & Seam Callouts */}
+            <line x1="90" y1="50" x2="90" y2="80" stroke="#64748B" strokeWidth="1" />
+            <polygon points="90,46 87,52 93,52" fill="#64748B" />
+            <polygon points="90,84 87,78 93,78" fill="#64748B" />
+            <text x="96" y="68" fill="#64748B" fontSize="8" fontFamily="monospace">GRAINLINE ↓</text>
+
+            <text x="145" y="105" fill="#155DFC" fontSize="9" fontFamily="monospace" fontWeight="bold">CUT LINE — 1CM SEAM ALLOWANCE (ZIPPER SEAM)</text>
+          </svg>
+        </div>
+      );
+    }
+
+    if (text.includes("hem") || text.includes("edge")) {
+      return (
+        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+          <svg className="w-full h-32" viewBox="0 0 400 110">
+            <defs>
+              <pattern id="cadGridHem" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#F1F5F9" strokeWidth="0.8" />
+              </pattern>
+            </defs>
+            <rect width="400" height="110" fill="url(#cadGridHem)" rx="6" />
+
+            {/* Bottom Hem Garment CAD Outline */}
+            <path d="M 30 15 L 370 15 L 370 75 C 270 80 130 80 30 75 Z" fill="#F8FAFC" stroke="#334155" strokeWidth="1.5" />
+            <line x1="30" y1="55" x2="370" y2="55" stroke="#155DFC" strokeWidth="1.2" strokeDasharray="4 3" />
+            <line x1="30" y1="65" x2="370" y2="65" stroke="#059669" strokeWidth="1.5" strokeDasharray="2 2" />
+
+            <text x="40" y="35" fill="#0F172A" fontSize="9" fontFamily="monospace" fontWeight="bold">GARMENT BOTTOM HEM PANEL — CUT 1</text>
+            <text x="40" y="50" fill="#64748B" fontSize="8" fontFamily="monospace">FOLD LINE — 2CM DOUBLE FOLD MARGIN</text>
+            <text x="210" y="98" fill="#059669" fontSize="9" fontFamily="monospace" fontWeight="bold">STITCH PATH (10 SPI LOCKSTITCH)</text>
+
+            {/* Grainline Arrow */}
+            <line x1="200" y1="20" x2="200" y2="45" stroke="#64748B" strokeWidth="1" />
+            <polygon points="200,16 197,22 203,22" fill="#64748B" />
+            <polygon points="200,49 197,43 203,43" fill="#64748B" />
+            <text x="206" y="36" fill="#64748B" fontSize="8" fontFamily="monospace">GRAINLINE ↑↓</text>
+          </svg>
+        </div>
+      );
+    }
+
+    if (text.includes("pocket") || text.includes("flap")) {
+      return (
+        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+          <svg className="w-full h-32" viewBox="0 0 400 110">
+            <defs>
+              <pattern id="cadGridPocket" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#F1F5F9" strokeWidth="0.8" />
+              </pattern>
+            </defs>
+            <rect width="400" height="110" fill="url(#cadGridPocket)" rx="6" />
+
+            {/* Main Garment Front Body CAD */}
+            <rect x="20" y="15" width="220" height="85" fill="#F8FAFC" stroke="#334155" strokeWidth="1.5" rx="4" />
+            <text x="30" y="32" fill="#64748B" fontSize="8" fontFamily="monospace">FRONT PANEL OVERLAY</text>
+
+            {/* Pocket CAD Pattern Piece */}
+            <path d="M 270 15 L 370 15 L 370 75 L 320 95 L 270 75 Z" fill="#FFFFFF" stroke="#0F172A" strokeWidth="1.5" />
+            <path d="M 278 23 L 362 23 L 362 70 L 320 86 L 278 70 Z" fill="none" stroke="#155DFC" strokeWidth="1" strokeDasharray="3 3" />
+            
+            {/* Bartack Reinforcement Markers */}
+            <circle cx="270" cy="15" r="3" fill="#D97706" />
+            <circle cx="370" cy="15" r="3" fill="#D97706" />
+
+            <text x="280" y="40" fill="#0F172A" fontSize="9" fontFamily="monospace" fontWeight="bold">POCKET — CUT 1</text>
+            <text x="280" y="55" fill="#D97706" fontSize="8" fontFamily="monospace">▲ BARTACK NOTCH</text>
+            <text x="50" y="105" fill="#155DFC" fontSize="9" fontFamily="monospace" fontWeight="bold">ALIGNMENT MARKS &amp; 1CM SEAM ALLOWANCE</text>
+          </svg>
+        </div>
+      );
+    }
+
+    // Default: Front & Back Garment Pattern CAD Pieces
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+        <svg className="w-full h-32" viewBox="0 0 400 110">
+          <defs>
+            <pattern id="cadGridDefault" width="10" height="10" patternUnits="userSpaceOnUse">
+              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#F1F5F9" strokeWidth="0.8" />
+            </pattern>
+          </defs>
+          <rect width="400" height="110" fill="url(#cadGridDefault)" rx="6" />
+
+          {/* Front Body CAD Piece */}
+          <path d="M 20 15 L 170 15 L 170 95 L 20 95 Z" fill="#F8FAFC" stroke="#334155" strokeWidth="1.5" />
+          <path d="M 30 23 L 160 23 L 160 87 L 30 87 Z" fill="none" stroke="#155DFC" strokeWidth="1" strokeDasharray="3 3" />
+          <text x="35" y="38" fill="#0F172A" fontSize="9" fontFamily="monospace" fontWeight="bold">FRONT BODY — CUT 1 ON FOLD</text>
+
+          {/* Back Body CAD Piece */}
+          <path d="M 230 15 L 380 15 L 380 95 L 230 95 Z" fill="#F8FAFC" stroke="#334155" strokeWidth="1.5" />
+          <path d="M 240 23 L 370 23 L 370 87 L 240 87 Z" fill="none" stroke="#155DFC" strokeWidth="1" strokeDasharray="3 3" />
+          <text x="245" y="38" fill="#0F172A" fontSize="9" fontFamily="monospace" fontWeight="bold">BACK BODY — CUT 1 ON FOLD</text>
+
+          {/* Seam Join Notches */}
+          <polygon points="170,55 180,50 180,60" fill="#0EA5E9" />
+          <polygon points="230,55 220,50 220,60" fill="#0EA5E9" />
+          <text x="185" y="58" fill="#0EA5E9" fontSize="8" fontFamily="monospace" fontWeight="bold">A↔A NOTCH</text>
+
+          {/* Grainline Arrows */}
+          <line x1="95" y1="48" x2="95" y2="78" stroke="#64748B" strokeWidth="1" />
+          <polygon points="95,44 92,50 98,50" fill="#64748B" />
+          <polygon points="95,82 92,76 98,76" fill="#64748B" />
+          <text x="100" y="66" fill="#64748B" fontSize="8" fontFamily="monospace">GRAINLINE ↑↓</text>
+
+          <line x1="305" y1="48" x2="305" y2="78" stroke="#64748B" strokeWidth="1" />
+          <polygon points="305,44 302,50 308,50" fill="#64748B" />
+          <polygon points="305,82 302,76 308,76" fill="#64748B" />
+          <text x="310" y="66" fill="#64748B" fontSize="8" fontFamily="monospace">GRAINLINE ↑↓</text>
+
+          <text x="115" y="105" fill="#155DFC" fontSize="9" fontFamily="monospace" fontWeight="bold">CAD SEAM ALLOWANCE: 1CM (SOLID = CUT LINE, DASHED = SEAM LINE)</text>
+        </svg>
+      </div>
     );
   };
 
@@ -1166,7 +1338,7 @@ export default function Home() {
           const simPct = Math.max(0, result?.similarity_percentage || 0);
           const getGrade = (pct: number) => {
             if (!result) return null;
-            if (pct >= 90) return { letter: "F", label: "Duplicate Detected",     bg: "bg-red-600",    text: "text-white",       cardBorder: "border-red-200",    cardBg: "bg-red-50/60",    rowBg: "bg-red-100",    rowText: "text-red-800" };
+            if (pct >= 90) return { letter: "F", label: "Duplicate Pattern Match", bg: "bg-red-600",    text: "text-white",       cardBorder: "border-red-200",    cardBg: "bg-red-50/60",    rowBg: "bg-red-100",    rowText: "text-red-800" };
             if (pct >= 70) return { letter: "C", label: "High Overlap — Review",  bg: "bg-orange-500", text: "text-white",       cardBorder: "border-orange-200", cardBg: "bg-orange-50/60", rowBg: "bg-orange-100", rowText: "text-orange-800" };
             if (pct >= 50) return { letter: "B", label: "Notable Overlap",        bg: "bg-amber-400",  text: "text-amber-950",   cardBorder: "border-amber-200",  cardBg: "bg-amber-50/60",  rowBg: "bg-amber-100",  rowText: "text-amber-800" };
             if (pct >= 30) return { letter: "A", label: "Original",               bg: "bg-emerald-500",text: "text-white",       cardBorder: "border-emerald-200",cardBg: "bg-emerald-50/60",rowBg: "bg-emerald-100",rowText: "text-emerald-800" };
@@ -1418,7 +1590,7 @@ export default function Home() {
                                         {isLoading
                                           ? "Querying pgvector for visual duplicates..."
                                           : result
-                                          ? `Catalog similarity: ${simPct.toFixed(1)}% — ${grade?.letter === "F" ? "Duplicate detected. Locked." : grade?.letter === "C" ? "High overlap. Review before proceeding." : grade?.letter === "B" ? "Some overlap. Proceed with caution." : "Pattern uniqueness verified."}`
+                                          ? `Catalog similarity: ${simPct.toFixed(1)}% — ${grade?.letter === "F" ? "Duplicate pattern matched in catalog. Ready to reuse spec." : grade?.letter === "C" ? "High overlap. Review before proceeding." : grade?.letter === "B" ? "Some overlap. Proceed with caution." : "Pattern uniqueness verified."}`
                                           : "Upload a sketch to begin scan."}
                                       </span>
                                     </div>
@@ -1495,17 +1667,112 @@ export default function Home() {
                       <div className="flex flex-col gap-5 lg:pl-6">
                         <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">ENGINEERING SPECIFICATIONS</h2>
                         <form id="process-sheet-form" onSubmit={projectMode === "doll" ? handleGenerateDollProcessSheet : handleGenerateProcessSheet} className="flex flex-col gap-5 flex-1">
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Project / Batch Name *</label>
-                            <input
-                              type="text"
-                              value={quizName}
-                              onChange={(e) => setQuizName(e.target.value)}
-                              placeholder="e.g. Autumn Casual Jacket Batch #01"
-                              required
-                              className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
-                            />
-                          </div>
+                          
+                          {/* ── CATALOG REUSE PROMPT — shown when DINOv2 similarity >= 90% ── */}
+                          {showReusePrompt && result && projectMode === "single" && (() => {
+                            const topMatch = result.top_3_saved_projects?.[0];
+                            return (
+                              <div className="border border-[#155DFC]/30 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50/80 to-indigo-50/60 shadow-sm">
+                                {/* Header */}
+                                <div className="flex items-center gap-3 px-4 py-3 bg-[#155DFC] text-white">
+                                  <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-[11px] uppercase tracking-widest text-blue-100">Existing Master Pattern Found in Catalog</p>
+                                    <p className="font-semibold text-sm text-white truncate">ID #{topMatch?.id} — {topMatch?.title || "Matched Pattern"}</p>
+                                  </div>
+                                  <span className="text-xs font-mono font-bold bg-white/20 px-2 py-1 rounded-lg flex-shrink-0">{(result.similarity_percentage || 0).toFixed(1)}%</span>
+                                </div>
+
+                                {/* Matched project preview */}
+                                <div className="flex items-center gap-3 px-4 py-3 border-b border-blue-100/60">
+                                  {topMatch?.preview_image ? (
+                                    <img src={topMatch.preview_image} alt={topMatch.title} className="w-12 h-12 object-contain rounded-xl border border-blue-200 bg-white flex-shrink-0" />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-xl border border-blue-200 bg-blue-100 flex items-center justify-center text-blue-400 flex-shrink-0">
+                                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-bold text-[#155DFC]">{topMatch?.garment_type || topMatch?.title}</p>
+                                    <p className="text-[10px] text-slate-500 mt-0.5">Do you want to reuse this existing master engineering data? Reusing this spec keeps the original master ID intact while letting you recalculate batch size for a new production run.</p>
+                                  </div>
+                                </div>
+
+                                {/* 2 action buttons */}
+                                <div className="flex flex-col gap-2 p-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setReuseMode("reuse");
+                                      setQuizName(topMatch?.title || "");
+                                    }}
+                                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 cursor-pointer ${
+                                      reuseMode === "reuse"
+                                        ? "bg-[#155DFC] text-white border-[#155DFC] shadow-md"
+                                        : "bg-white text-[#155DFC] border-[#155DFC]/40 hover:border-[#155DFC] hover:bg-blue-50"
+                                    }`}
+                                  >
+                                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                    </svg>
+                                    <span className="flex-1 text-left">REUSE MASTER SPEC (ID #{topMatch?.id}) — Recalculate Batch Only</span>
+                                    {reuseMode === "reuse" && <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setReuseMode("new");
+                                      setQuizName("");
+                                    }}
+                                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 cursor-pointer ${
+                                      reuseMode === "new"
+                                        ? "bg-slate-800 text-white border-slate-800 shadow-md"
+                                        : "bg-white text-slate-700 border-slate-200 hover:border-slate-400 hover:bg-slate-50"
+                                    }`}
+                                  >
+                                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="flex-1 text-left">CREATE NEW VARIANT — Enter a different project name</span>
+                                    {reuseMode === "new" && <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>}
+                                  </button>
+                                </div>
+
+                                {/* Conditional name input — only show for NEW variant mode */}
+                                {reuseMode === "new" && (
+                                  <div className="px-3 pb-3">
+                                    <input
+                                      type="text"
+                                      value={quizName}
+                                      onChange={(e) => setQuizName(e.target.value)}
+                                      placeholder="e.g. Autumn Casual Jacket Batch #02 — 2026"
+                                      className="bg-white border border-slate-200/90 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                                      autoFocus
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Standard project name input — only when NO catalog match (no reuse prompt) or doll mode */}
+                          {(!showReusePrompt || projectMode === "doll") && (
+                            <div className="flex flex-col gap-1.5">
+                              <label className="text-xs font-semibold text-slate-700">Project / Batch Name *</label>
+                              <input
+                                type="text"
+                                value={quizName}
+                                onChange={(e) => setQuizName(e.target.value)}
+                                placeholder="e.g. Autumn Casual Jacket Batch #01"
+                                className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                              />
+                            </div>
+                          )}
+
                           {projectMode === "single" ? (
                             <>
                               <div className="flex flex-col gap-1.5">
@@ -1595,26 +1862,27 @@ export default function Home() {
                               />
                             </div>
                           </div>
-                          {/* Workflow Status — SecurityHeaders banner style */}
+                          
+                          {/* Workflow Status — shown only when no reuse prompt is active */}
+                          {!showReusePrompt && (
                           <div className={`border rounded-xl overflow-hidden mt-auto transition-all ${
-                            grade?.letter === "F" ? "border-red-200" : grade?.letter === "C" ? "border-orange-200" : grade?.letter === "B" ? "border-amber-200" : grade ? "border-emerald-200" : "border-slate-200"
+                            grade?.letter === "C" ? "border-orange-200" : grade?.letter === "B" ? "border-amber-200" : grade ? "border-emerald-200" : "border-slate-200"
                           }`}>
                             <div className={`flex items-center justify-between px-4 py-2.5 text-xs ${wfBg} ${wfTxt}`}>
                               <span className="font-semibold">Workflow Status</span>
                               <span className="font-bold">
-                                {grade?.letter === "F" ? "Locked — Duplicate Pattern Detected" : grade ? "Ready for Compilation" : "Awaiting Pattern Scan"}
+                                {grade ? "Ready for Compilation" : "Awaiting Pattern Scan"}
                               </span>
                             </div>
                             <p className={`text-[11px] px-4 py-2.5 leading-relaxed ${
-                              grade?.letter === "F" ? "bg-red-50 text-red-800" : grade?.letter === "C" ? "bg-orange-50 text-orange-800" : grade?.letter === "B" ? "bg-amber-50 text-amber-800" : grade ? "bg-emerald-50 text-emerald-800" : "bg-slate-50 text-slate-500"
+                              grade?.letter === "C" ? "bg-orange-50 text-orange-800" : grade?.letter === "B" ? "bg-amber-50 text-amber-800" : grade ? "bg-emerald-50 text-emerald-800" : "bg-slate-50 text-slate-500"
                             }`}>
-                              {grade?.letter === "F"
-                                ? "Duplicate pattern detected in catalog. Process sheet generation is locked."
-                                : grade
+                              {grade
                                 ? "Pattern passed originality check. Fill in the project details and click Generate Process Sheet."
                                 : "Upload a garment sketch to run the DINOv2 originality scan before proceeding."}
                             </p>
                           </div>
+                          )}
                         </form>
                       </div>
                     </div>
@@ -1643,8 +1911,16 @@ export default function Home() {
                         <button
                           type="submit"
                           form="process-sheet-form"
-                          disabled={isLoading || !quizName.trim() || Boolean(isPatternRejected) || (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))}
-                          className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+                          disabled={
+                            isLoading ||
+                            // In reuse prompt mode: must choose reuse or new (and if new, must have a name)
+                            (showReusePrompt && projectMode === "single" && (reuseMode === null || (reuseMode === "new" && !quizName.trim()))) ||
+                            // In normal mode (no reuse prompt): must have a project name
+                            (!showReusePrompt && !quizName.trim()) ||
+                            // Must have a sketch loaded
+                            (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))
+                          }
+                          className="px-8 py-3 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98 bg-[#155DFC] hover:bg-[#1249cc]"
                         >
                           {isLoading ? (
                             <>
@@ -1656,7 +1932,7 @@ export default function Home() {
                             </>
                           ) : (
                             <>
-                              <span>Continue / Generate</span>
+                              <span>{reuseMode === "reuse" ? "GENERATE BATCH (REUSE MASTER SPEC)" : "Continue / Generate"}</span>
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                               </svg>
@@ -1909,65 +2185,139 @@ export default function Home() {
                       </h2>
                       
                       <div className="overflow-hidden border border-slate-100 rounded-xl">
-                        <table className="w-full text-left text-sm text-slate-600 border-collapse">
+                        <table className="w-full table-fixed text-left text-sm text-slate-600 border-collapse">
                           <thead className="bg-slate-50/70 text-[11px] font-mono text-slate-400 uppercase border-b border-slate-100">
                             <tr>
-                              <th className="py-4 px-6 font-bold w-16">Step</th>
-                              <th className="py-4 px-4 font-bold">Action / Step Flow</th>
-                              <th className="py-4 px-4 font-bold text-center w-16">Part</th>
-                              <th className="py-4 px-6 font-bold">Recommended Machine &amp; Technical Specs</th>
+                              <th className="py-4 px-4 font-bold w-[12%]">Step</th>
+                              <th className="py-4 px-4 font-bold w-[40%]">Action / Step Flow</th>
+                              <th className="py-4 px-4 font-bold text-center w-[10%]">Part</th>
+                              <th className="py-4 px-4 font-bold w-[38%]">Recommended Machine &amp; Technical Specs</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 bg-white">
                             {fullResult.sewing_sequence_detailed && fullResult.sewing_sequence_detailed.length > 0 ? (
-                              fullResult.sewing_sequence_detailed.map((step: any, idx: number) => (
-                                <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="py-4 px-6 font-semibold text-slate-900 font-mono">{step.step_num}</td>
-                                  <td className="py-4 px-4 font-medium text-slate-700">
-                                    {step.component && (
-                                      <span className="inline-flex items-center text-[9px] uppercase font-mono font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 text-[#155DFC] rounded-md mr-2 align-middle">
-                                        {step.component}
-                                      </span>
+                              fullResult.sewing_sequence_detailed.map((step: any, idx: number) => {
+                                const stepKey = step.step_num || idx + 1;
+                                const isExpanded = expandedSteps[stepKey];
+
+                                return (
+                                  <React.Fragment key={idx}>
+                                    <tr 
+                                      onClick={() => toggleStep(stepKey)}
+                                      className="hover:bg-blue-50/30 cursor-pointer transition-colors group border-b border-slate-100"
+                                    >
+                                      <td className="py-4 px-4 font-semibold text-slate-900 font-mono">
+                                        <div className="flex items-center gap-1.5">
+                                          <svg 
+                                            className={`w-4 h-4 text-slate-400 group-hover:text-[#155DFC] transition-transform duration-200 ${isExpanded ? 'rotate-180 text-[#155DFC]' : ''}`}
+                                            fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
+                                          >
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                          <span>{step.step_num}</span>
+                                        </div>
+                                      </td>
+                                      <td className="py-4 px-4 font-medium text-slate-700 truncate">
+                                        {step.component && (
+                                          <span className="inline-flex items-center text-[9px] uppercase font-mono font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 text-[#155DFC] rounded-md mr-2 align-middle">
+                                            {step.component}
+                                          </span>
+                                        )}
+                                        <span className="align-middle group-hover:text-[#155DFC] transition-colors">{step.operation}</span>
+                                      </td>
+                                      <td className="py-4 px-4 flex justify-center">{getPartIcon(step.operation)}</td>
+                                      <td className="py-4 px-4">
+                                        <div className="flex items-center justify-between gap-2">
+                                          <div className="flex flex-col gap-0.5 min-w-0">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                              <span className="font-bold text-slate-900 text-xs">{step.recommended_model}</span>
+                                              {step.needle && step.needle !== "N/A" && (
+                                                <span className="text-[10px] font-mono text-[#155DFC] bg-blue-50 border border-blue-200/80 px-1.5 py-0.5 rounded font-medium">
+                                                  Needle: {step.needle}
+                                                </span>
+                                              )}
+                                            </div>
+                                            <span className="text-[10px] text-slate-400 font-mono truncate">{step.machine_type}</span>
+                                          </div>
+                                          <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md shrink-0 whitespace-nowrap">
+                                            {step.smv_mins || "1.5"} mins
+                                          </span>
+                                        </div>
+                                      </td>
+                                    </tr>
+
+                                    {/* Expanded Sub-Step & Technical Detail Drawer */}
+                                    {isExpanded && (
+                                      <tr className="bg-slate-50/80 border-b border-blue-100">
+                                        <td colSpan={4} className="p-5">
+                                          <div className="flex flex-col gap-5 font-sans text-xs">
+                                            {/* Dynamic Sub-steps 1.1, 1.2, 1.3... */}
+                                            {step.sub_steps && step.sub_steps.length > 0 && (
+                                              <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                  <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">
+                                                    Operation Process Steps ({step.sub_steps.length} Sub-Steps)
+                                                  </span>
+                                                  <span className="text-[10px] font-mono text-[#155DFC] font-semibold">
+                                                    Target Speed: {step.speed || "3,000 sti/min"}
+                                                  </span>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                                                  {step.sub_steps.map((sub: any, sIdx: number) => (
+                                                    <div key={sIdx} className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+                                                      <span className="font-mono text-blue-600 font-bold block text-[11px] mb-1">
+                                                        Step {stepKey}.{sub.sub_num || sIdx + 1} — {sub.title}
+                                                      </span>
+                                                      <span className="text-slate-600 text-[11px] leading-relaxed block">
+                                                        {sub.detail}
+                                                      </span>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            )}
+
+                                            {/* Visual Technical Seam Diagram (SVG) */}
+                                            <div>
+                                              <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider block mb-2">
+                                                Technical Seam &amp; Stitch Path Diagram
+                                              </span>
+                                              {renderSeamTechnicalDiagram(step.operation)}
+                                            </div>
+
+                                            {/* Workstation Technical Specs & Work-Aid Attachment */}
+                                            <div className="flex flex-col sm:flex-row gap-4 justify-between bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                                              <div>
+                                                <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block mb-1">Workstation Technical Specs</span>
+                                                <div className="flex items-center gap-2 flex-wrap text-[11px] font-mono text-slate-700">
+                                                  <span>Model: <strong className="text-slate-900">{step.recommended_model}</strong></span>
+                                                  <span>•</span>
+                                                  <span>Needle: <strong>{step.needle || "DBx1 (#11)"}</strong></span>
+                                                  <span>•</span>
+                                                  <span>Foot: <strong>{step.presser_foot || "Standard Foot"}</strong></span>
+                                                  <span>•</span>
+                                                  <span>Stitch: <strong>{step.stitch_spec || "2.5mm (10 SPI)"}</strong></span>
+                                                </div>
+                                              </div>
+
+                                              {step.work_aid && (
+                                                <div className="border-t sm:border-t-0 sm:border-l border-slate-200 pt-2 sm:pt-0 sm:pl-4">
+                                                  <span className="text-[10px] font-mono text-emerald-600 font-bold uppercase block mb-1">Assigned Work-Aid Attachment</span>
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-slate-900 text-xs">{step.work_aid.attachment_name}</span>
+                                                    <span className="text-[9px] font-mono uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">{step.work_aid.aid_type}</span>
+                                                  </div>
+                                                  <p className="text-[10px] text-slate-500 font-sans mt-0.5">{step.work_aid.purpose}</p>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </td>
+                                      </tr>
                                     )}
-                                    <span className="align-middle">{step.operation}</span>
-                                  </td>
-                                  <td className="py-4 px-4 flex justify-center">{getPartIcon(step.operation)}</td>
-                                  <td className="py-4 px-6">
-                                    <div className="flex flex-col gap-1.5">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-semibold text-slate-900 text-xs">{step.recommended_model}</span>
-                                        {step.needle && step.needle !== "N/A" && (
-                                          <span className="text-[10px] font-mono text-[#155DFC] bg-blue-50 border border-blue-200/80 px-1.5 py-0.5 rounded font-medium">
-                                            Needle: {step.needle}
-                                          </span>
-                                        )}
-                                        {step.stitch_spec && (
-                                          <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded font-medium">
-                                            Stitch: {step.stitch_spec}
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono flex-wrap">
-                                        <span>{step.machine_type}</span>
-                                        {step.presser_foot && (
-                                          <>
-                                            <span>•</span>
-                                            <span className="text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">
-                                              {step.presser_foot}
-                                            </span>
-                                          </>
-                                        )}
-                                        {step.speed && step.speed !== "N/A" && (
-                                          <>
-                                            <span>•</span>
-                                            <span className="text-slate-500 font-semibold">{step.speed}</span>
-                                          </>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))
+                                  </React.Fragment>
+                                );
+                              })
                             ) : (
                               <tr>
                                 <td colSpan={4} className="py-16 px-6 text-center text-slate-400 font-medium">
@@ -2050,9 +2400,6 @@ export default function Home() {
                                 Run Size: <strong className="font-mono text-slate-900">{fullResult.batch_production.batch_quantity} pcs</strong>
                               </span>
                             </div>
-                            <span className="text-xs font-mono text-slate-500 font-medium">
-                              Single Unit: <strong className="text-slate-900">{fullResult.batch_production.single_unit_smv_mins} mins</strong>
-                            </span>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
@@ -2104,25 +2451,6 @@ export default function Home() {
                           </div>
                         </div>
                       )}
-
-                      {fullResult.work_aids && fullResult.work_aids.length > 0 && (
-                        <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
-                          <span className="text-[10px] font-mono text-emerald-600 font-bold uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 w-fit">
-                            Work-Aid Tooling Attachments & Jigs
-                          </span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {fullResult.work_aids.map((aid: any, i: number) => (
-                              <div key={i} className="bg-emerald-50/30 border border-emerald-100 rounded-xl p-3">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-xs font-bold text-slate-900">{aid.attachment_name}</span>
-                                  <span className="text-[9px] font-mono uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">{aid.aid_type}</span>
-                                </div>
-                                <p className="text-[11px] text-slate-500 leading-snug">{aid.purpose}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -2148,6 +2476,18 @@ export default function Home() {
 
                   {/* Top action buttons matching photo */}
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setActiveTechPackData(fullResult);
+                        setShowTechPackModal(true);
+                      }}
+                      className="px-4 py-2.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      EXPORT TECH PACK
+                    </button>
                     <button className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-blue-600 text-white shadow-xs">FRONT</button>
                     <button className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700">BACK</button>
                     <button className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1">
@@ -2871,6 +3211,160 @@ export default function Home() {
                 >
                   Yes, Return to Step 1
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enterprise Tech Pack Printable Modal */}
+        {showTechPackModal && activeTechPackData && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden my-8 border border-slate-200 print:shadow-none print:border-none print:m-0 print:w-full print:max-w-none">
+              {/* Action Bar (Hidden on print) */}
+              <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between print:hidden">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                  <span className="text-xs font-mono font-bold tracking-wider uppercase text-slate-300">Enterprise Engineering Tech Pack</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-[#155DFC] hover:bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Print / Save PDF
+                  </button>
+                  <button
+                    onClick={() => setShowTechPackModal(false)}
+                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+
+              {/* Printable Tech Pack Body */}
+              <div className="p-8 sm:p-10 space-y-8 print:p-0 print:space-y-6 text-slate-900 font-sans">
+                {/* Header */}
+                <div className="border-b-2 border-slate-900 pb-6 flex items-start justify-between">
+                  <div>
+                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">FashionFlow AI — Industrial Engineering Specification Sheet</span>
+                    <h1 className="text-3xl font-display font-extrabold text-slate-900 mt-1">
+                      {activeTechPackData?.project_details?.name || activeTechPackData?.classification?.[0]?.class_name || "Garment Production Specification"}
+                    </h1>
+                    <div className="flex items-center gap-3 mt-2 text-xs font-mono text-slate-600">
+                      <span>Category: <strong>{activeTechPackData?.project_details?.garment_type || activeTechPackData?.project_details?.doll_type || "Garment"}</strong></span>
+                      <span>•</span>
+                      <span>Fabric: <strong>{activeTechPackData?.project_details?.fabric_weight || "Medium-weight"}</strong></span>
+                      <span>•</span>
+                      <span>Date: <strong>{new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</strong></span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-300">
+                      APPROVED (Pre-Production)
+                    </span>
+                    <span className="block text-[10px] font-mono text-slate-400 mt-2">DINOv2 Hash Verified</span>
+                  </div>
+                </div>
+
+                {/* Section 1: Pre-Production Readiness Checklist */}
+                <div>
+                  <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">1. FexQMS Pre-Production Readiness Checklist</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    {(activeTechPackData?.engineering_checklist || []).map((item: any) => (
+                      <div key={item.id} className="flex items-center gap-2 text-xs">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span className="font-semibold text-slate-800">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Section 2: Step-by-Step Sewing Flow Table */}
+                <div>
+                  <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">2. Step-by-Step Sewing Sequence &amp; Machinery Specs</h3>
+                  <div className="border border-slate-200 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-100 border-b border-slate-200 text-[10px] font-mono uppercase text-slate-600">
+                          <th className="py-2.5 px-3">Step</th>
+                          <th className="py-2.5 px-3">Operation</th>
+                          <th className="py-2.5 px-3">JUKI Machine Model</th>
+                          <th className="py-2.5 px-3">Needle</th>
+                          <th className="py-2.5 px-3">Presser Foot</th>
+                          <th className="py-2.5 px-3">Stitch Spec</th>
+                          <th className="py-2.5 px-3 text-right">SMV</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-mono">
+                        {(activeTechPackData?.sewing_sequence_detailed || []).map((step: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50/50">
+                            <td className="py-2.5 px-3 font-bold text-slate-900">#{step.step_num || i + 1}</td>
+                            <td className="py-2.5 px-3 font-sans font-medium text-slate-800">{step.operation}</td>
+                            <td className="py-2.5 px-3 font-bold text-blue-700">{step.recommended_model}</td>
+                            <td className="py-2.5 px-3 text-slate-600">{step.needle || "DBx1 (#11)"}</td>
+                            <td className="py-2.5 px-3 text-slate-600">{step.presser_foot || "Standard Foot"}</td>
+                            <td className="py-2.5 px-3 text-slate-600">{step.stitch_spec || "2.5mm/10 SPI"}</td>
+                            <td className="py-2.5 px-3 text-right font-bold text-slate-900">{step.smv_mins || "1.5"}m</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Section 3: Factory Line Balancing & Work-Aids */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">3. Line Balancing Machine Unit Allocations</h3>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                      <div className="flex justify-between text-xs font-mono border-b border-slate-200 pb-2 mb-2">
+                        <span className="text-slate-500">Target Volume:</span>
+                        <strong className="text-slate-900">{activeTechPackData?.line_balancing?.target_daily_units || 500} pcs/day</strong>
+                      </div>
+                      <div className="flex justify-between text-xs font-mono border-b border-slate-200 pb-2 mb-2">
+                        <span className="text-slate-500">Takt Time:</span>
+                        <strong className="text-slate-900">{activeTechPackData?.line_balancing?.takt_time_mins || 0.96} mins/unit</strong>
+                      </div>
+                      {(activeTechPackData?.line_balancing?.machine_allocations || []).map((m: any, i: number) => (
+                        <div key={i} className="flex justify-between text-xs font-mono">
+                          <span className="text-slate-700">{m.machine_model}</span>
+                          <strong className="text-blue-700">{m.required_units} Units ({m.utilization_pct}%)</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">4. Work-Aid Tooling Attachments &amp; Jigs</h3>
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                      {(activeTechPackData?.work_aids || []).map((aid: any, i: number) => (
+                        <div key={i} className="border-b border-slate-200/60 pb-2 last:border-0 last:pb-0 text-xs">
+                          <div className="flex justify-between font-semibold text-slate-900">
+                            <span>{aid.attachment_name}</span>
+                            <span className="text-[10px] font-mono bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">{aid.aid_type}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 font-sans leading-tight mt-0.5">{aid.purpose}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sign-off Block */}
+                <div className="border-t-2 border-slate-900 pt-6 flex items-center justify-between text-xs font-mono">
+                  <div>
+                    <span className="text-slate-400 block uppercase text-[10px]">Prepared By</span>
+                    <strong className="text-slate-900">FashionFlow AI Engineering Copilot</strong>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-slate-400 block uppercase text-[10px]">Lead Production Engineer Sign-off</span>
+                    <span className="inline-block border-b border-slate-400 w-48 mt-4 text-center text-slate-300 font-sans italic">Approved for Factory Hand-off</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
