@@ -141,12 +141,19 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        if (tagQuery.trim()) {
+          const cleanTag = tagQuery.trim();
+          if (!selectedTags.includes(cleanTag)) {
+            onChange([...selectedTags, cleanTag]);
+          }
+          setTagQuery("");
+        }
         setIsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [tagQuery, selectedTags, onChange]);
 
   const filteredTags = availableTags.filter(t => t.toLowerCase().includes(tagQuery.toLowerCase()));
   const showCreateOption = tagQuery.trim().length > 0 && !availableTags.some(t => t.toLowerCase() === tagQuery.trim().toLowerCase());
@@ -209,6 +216,11 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
               type="text"
               value={tagQuery}
               onChange={(e) => setTagQuery(e.target.value)}
+              onBlur={() => {
+                if (tagQuery.trim()) {
+                  handleCreateTag();
+                }
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();

@@ -1104,6 +1104,12 @@ def generate_process_sheet(req: ProcessSheetRequest):
 @app.post("/api/generate-doll-sheet")
 def generate_doll_process_sheet(req: DollSheetRequest):
     """Compile a unified doll outfit process sheet with multiple garment components (multi-fabric)."""
+    # Sanitize and truncate string inputs against HTML/SQL injection and DB bloat
+    req.project_name = (req.project_name or "").strip()[:100]
+    req.designer_notes = (req.designer_notes or "").strip()[:1000]
+    req.tags = [(t or "").strip()[:40] for t in req.tags if t and isinstance(t, str)]
+    req.batch_quantity = max(1, min(1000000, req.batch_quantity))
+
     templates_path = os.path.join(DATA_DIR, "sewing_templates.json")
     if not os.path.exists(templates_path):
         raise HTTPException(status_code=500, detail="sewing_templates.json not found")
