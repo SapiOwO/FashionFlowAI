@@ -726,6 +726,45 @@ class TestTagsAndDesignerNotes(unittest.TestCase):
         self.assertEqual(len(history), 1)
         self.assertEqual(str(history[0]["id"]), "1")
 
+    def test_non_image_upload_rejection_mp4(self):
+        """Uploading non-image files such as MP4 video or binary payloads must be cleanly rejected with 400."""
+        import io
+        from fastapi import UploadFile, HTTPException
+        import asyncio
+
+        fake_mp4_bytes = b"\x00\x00\x00\x20ftypisom\x00\x00\x02\x00isomiso2avc1mp41"
+        fake_file = UploadFile(filename="exploit_video.mp4", file=io.BytesIO(fake_mp4_bytes), headers={"content-type": "video/mp4"})
+        
+        loop = asyncio.get_event_loop()
+        with self.assertRaises(HTTPException) as ctx:
+            loop.run_until_complete(backend_app.predict_garment(image=fake_file, model_name="../../etc/passwd", use_ensemble=False))
+        self.assertEqual(ctx.exception.status_code, 400)
+        self.assertIn("Unsupported file format", ctx.exception.detail)
+
+    def test_sql_injection_payload_safety(self):
+        """SQL injection characters in project names, tags, and notes must be safely parameterized without syntax errors."""
+        sql_inj_name = "Shirt' OR '1'='1'; DROP TABLE analysis_history; --"
+        sql_inj_tag = "Tag'; DELETE FROM analysis_history; --"
+        req = backend_app.ProcessSheetRequest(
+            project_name=sql_inj_name,
+            garment_type="Shirt",
+            fabric_weight="Medium-weight",
+            preview_image="globe.svg",
+            similarity_percentage=100.0,
+            similarity_status="APPROVED",
+            classification_name="Shirt",
+            message="SQL injection test",
+            batch_quantity=100,
+            tags=[sql_inj_tag],
+            designer_notes="Notes'; --"
+        )
+        res = backend_app.generate_process_sheet(req)
+        self.assertIn("Shirt' OR '1'='1'", res["project_details"]["name"])
+
+        # Confirm DB was not dropped and queries operate normally
+        tags_res = backend_app.get_tags()
+        self.assertIn("tags", tags_res)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

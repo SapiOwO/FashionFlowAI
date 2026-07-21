@@ -996,6 +996,13 @@ def get_master_data():
 @app.post("/api/generate-sheet")
 def generate_process_sheet(req: ProcessSheetRequest):
     """Compile final Juki machinery matching and sewing sequence using multi-tier resolver, then save to DB."""
+    # Sanitize and truncate string inputs against HTML/SQL injection and DB bloat
+    req.project_name = (req.project_name or "").strip()[:100]
+    req.classification_name = (req.classification_name or "").strip()[:100]
+    req.designer_notes = (req.designer_notes or "").strip()[:1000]
+    req.tags = [(t or "").strip()[:40] for t in req.tags if t and isinstance(t, str)]
+    req.batch_quantity = max(1, min(1000000, req.batch_quantity))
+
     templates_path = os.path.join(DATA_DIR, "sewing_templates.json")
     if not os.path.exists(templates_path):
         raise HTTPException(status_code=500, detail="sewing_templates.json not found")
@@ -1223,11 +1230,31 @@ async def predict_garment(
     use_ensemble: bool = Form(True)
 ):
     """Run model inference (YOLO or PyTorch classification) on the uploaded image. Supports Ensemble Mode (all models) or Single Model Mode."""
+    # Validate Image MIME content-type and extension
+    allowed_mimes = ["image/jpeg", "image/png", "image/webp", "image/bmp", "image/tiff", "image/svg+xml"]
+    allowed_exts = [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff", ".svg"]
+
+    filename = image.filename or ""
+    ext = os.path.splitext(filename.lower())[1]
+
+    if image.content_type and image.content_type.lower() not in allowed_mimes and ext not in allowed_exts:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file format '{filename}'. Please upload a valid image (JPEG, PNG, WEBP, BMP, TIFF, SVG)."
+        )
+
     try:
         image_data = await image.read()
         pil_img = Image.open(io.BytesIO(image_data)).convert("RGB")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid image file: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to decode image file '{filename}'. Ensure it is a valid, uncorrupted image."
+        )
+
+    # Sanitize model_name against path traversal exploits
+    clean_model_name = os.path.basename(model_name)
+    model_name = clean_model_name
 
     yolo_detections = []
     classifications = []

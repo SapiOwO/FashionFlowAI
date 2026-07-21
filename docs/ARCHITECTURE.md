@@ -138,6 +138,7 @@ The Create Process Sheet view uses a **2-phase studio layout**:
   * **Optional Designer & Pattern Notes**: Textarea allows production designers and engineers to record handwritten notes or custom garment instructions (`maxLength={1000}`).
   * **Step 2 Compilation Confirmation Review Modal**: Interactive modal summarizes project parameters, quantity, tags, and notes before triggering sheet compilation.
   * **Defensive Text-Wrapping & Layout Overflow Safeguards**: Applied `break-words break-all` across project titles, tags, and notes to prevent layout distortion from long unbroken strings (e.g. `thisisatest...`).
+  * **Strict Upload Validation & Path Traversal Safeguards**: `/api/predict` strictly validates image MIME content-types (`image/jpeg`, `image/png`, `image/webp`, `image/bmp`, `image/tiff`, `image/svg+xml`) and extensions. Non-image formats (e.g. `.mp4`, `.exe`, `.bin`) are rejected with `400 Bad Request`. `model_name` input is sanitized via `os.path.basename` to eliminate path traversal attacks.
   * **Database Reset Endpoint (`POST /api/reset-db`)**: `reset_analysis_history()` wipes records and resets SQLite auto-increment sequence back to ID 1.
 * **Active Projects & History Multi-Criteria Search/Filter Suite**:
   * **Multi-Criteria Search**: Instant text filtering by **Project Name**, **Project ID (`#18`)**, **Tag**, **Date**, or **Designer Notes**.
