@@ -94,7 +94,23 @@ fashionflowrework/
 
 Choose your preferred deployment method below:
 
-### Method A: Local Virtualenv Setup (Recommended for Development)
+### Quick Start with Docker 🐳 (Pre-built GHCR Images — Zero Setup Needed)
+
+Run FashionFlow AI instantly via GitHub Container Registry (GHCR) without downloading or building source code:
+
+```bash
+# 1. Run Backend API
+docker run -d -p 8000:8000 --name fashionflow-backend ghcr.io/sapiowo/fashionflow-backend:latest
+
+# 2. Run Next.js Frontend UI
+docker run -d -p 3000:3000 --name fashionflow-frontend -e NEXT_PUBLIC_API_URL=http://localhost:8000 ghcr.io/sapiowo/fashionflow-frontend:latest
+```
+- **Frontend Dashboard**: `http://localhost:3000`
+- **FastAPI Backend**: `http://localhost:8000`
+
+---
+
+### Method A: Local Virtualenv Setup (Development)
 
 ```bash
 # 1. Create and activate virtual environment
@@ -109,13 +125,10 @@ cd frontend && npm install && cd ..
 # 3. Launch unified dev environment (FastAPI + Next.js)
 python main.py
 ```
-- **Frontend Dashboard**: `http://localhost:3000`
-- **FastAPI Backend**: `http://127.0.0.1:8000`
-- **Catalog Diagnostics**: `http://127.0.0.1:8000/api/validate-catalog`
 
 ---
 
-### Method B: Docker & Docker Compose Container Deployment
+### Method B: Local Docker Compose Deployment (Source Code)
 
 ```bash
 # Build and start all services (Backend API + Next.js Frontend + Optional pgvector DB)
@@ -123,11 +136,7 @@ docker-compose up --build -d
 
 # Check running container status
 docker-compose ps
-
-# View live container logs
-docker-compose logs -f
 ```
-- Containers run synchronously: `fashionflow-backend` (Port 8000) & `fashionflow-frontend` (Port 3000).
 
 ---
 
