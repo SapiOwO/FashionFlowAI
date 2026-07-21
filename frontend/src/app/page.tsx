@@ -67,6 +67,8 @@ interface SavedAnalysis {
   result: AnalysisResult;
   timestamp?: string;
   created_at?: string;
+  designerNotes?: string;
+  designer_notes?: string;
 }
 
 const formatActivityDate = (item: any): string => {

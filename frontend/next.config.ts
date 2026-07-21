@@ -2,10 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  devIndicators: {
-    appIsrStatus: false,
-    buildActivity: false,
-  },
   async headers() {
     return [
       {
