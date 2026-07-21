@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 
 // Definitions
 interface YoloDetection {
@@ -506,6 +506,150 @@ export default function Home() {
 
   // Upload History log state (Persisted in Postgres/SQLite database)
   const [analysisHistory, setAnalysisHistory] = useState<SavedAnalysis[]>([]);
+
+  // Dashboard Filter & Date Range States (QOL Features)
+  const [dashPreset, setDashPreset] = useState<"all" | "today" | "7days" | "30days" | "custom">("all");
+  const [dashStartDate, setDashStartDate] = useState("");
+  const [dashEndDate, setDashEndDate] = useState("");
+  const [dashStatusFilter, setDashStatusFilter] = useState<"all" | "approved" | "matches">("all");
+  const [dashSearchQuery, setDashSearchQuery] = useState("");
+
+  // Calendar Popover & Date Range Picker States
+  const [showCalendarPopover, setShowCalendarPopover] = useState(false);
+  const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
+  const [calYear, setCalYear] = useState(() => new Date().getFullYear());
+  const [calSelStart, setCalSelStart] = useState<string | null>(null);
+  const [calSelEnd, setCalSelEnd] = useState<string | null>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+        setShowCalendarPopover(false);
+      }
+    };
+    if (showCalendarPopover) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showCalendarPopover]);
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  const handleCalendarDayClick = (day: number) => {
+    const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    if (!calSelStart || (calSelStart && calSelEnd)) {
+      setCalSelStart(dateStr);
+      setCalSelEnd(null);
+    } else {
+      if (new Date(dateStr) < new Date(calSelStart)) {
+        setCalSelStart(dateStr);
+        setCalSelEnd(null);
+      } else {
+        setCalSelEnd(dateStr);
+      }
+    }
+  };
+
+  const applyCalendarCustomRange = () => {
+    if (calSelStart && calSelEnd) {
+      setDashStartDate(calSelStart);
+      setDashEndDate(calSelEnd);
+      setDashPreset("custom");
+    } else if (calSelStart) {
+      setDashStartDate(calSelStart);
+      setDashEndDate(calSelStart);
+      setDashPreset("custom");
+    }
+    setShowCalendarPopover(false);
+  };
+
+  const getDateDisplayLabel = () => {
+    if (dashPreset === "all") return "Date: All Time";
+    if (dashPreset === "today") return "Date: Today";
+    if (dashPreset === "7days") return "Date: Last 7 Days";
+    if (dashPreset === "30days") return "Date: Last 30 Days";
+    if (dashPreset === "custom" && dashStartDate) {
+      const formatDateStr = (s: string) => {
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? s : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      };
+      if (dashEndDate && dashEndDate !== dashStartDate) {
+        return `Date: ${formatDateStr(dashStartDate)} - ${formatDateStr(dashEndDate)}`;
+      }
+      return `Date: ${formatDateStr(dashStartDate)}`;
+    }
+    return "Date Range";
+  };
+
+  const filteredDashboardHistory = useMemo(() => {
+    return (analysisHistory || []).filter(item => {
+      // 1. Status Filter
+      const s = (item.result?.status || "").toUpperCase();
+      const isApproved = s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
+      if (dashStatusFilter === "approved" && !isApproved) return false;
+      if (dashStatusFilter === "matches" && isApproved) return false;
+
+      // 2. Date Range Filter
+      if (dashPreset !== "all") {
+        const rawDate = item.timestamp || item.created_at;
+        const itemDate = rawDate ? new Date(rawDate) : null;
+        if (itemDate && !isNaN(itemDate.getTime())) {
+          const now = new Date();
+          if (dashPreset === "today") {
+            if (itemDate.toDateString() !== now.toDateString()) return false;
+          } else if (dashPreset === "7days") {
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            if (itemDate < sevenDaysAgo) return false;
+          } else if (dashPreset === "30days") {
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            if (itemDate < thirtyDaysAgo) return false;
+          } else if (dashPreset === "custom") {
+            if (dashStartDate) {
+              const start = new Date(dashStartDate);
+              if (itemDate < start) return false;
+            }
+            if (dashEndDate) {
+              const end = new Date(dashEndDate);
+              end.setHours(23, 59, 59, 999);
+              if (itemDate > end) return false;
+            }
+          }
+        }
+      }
+
+      // 3. Search Query Filter
+      if (dashSearchQuery.trim()) {
+        const q = dashSearchQuery.toLowerCase();
+        const name = (item.fileName || item.result?.classification?.[0]?.class_name || "").toLowerCase();
+        const notes = (item.designerNotes || "").toLowerCase();
+        const tags = (item.result?.tags || []).join(" ").toLowerCase();
+        if (!name.includes(q) && !notes.includes(q) && !tags.includes(q)) return false;
+      }
+
+      return true;
+    });
+  }, [analysisHistory, dashPreset, dashStartDate, dashEndDate, dashStatusFilter, dashSearchQuery]);
+
+  const exportDashboardCSV = () => {
+    if (filteredDashboardHistory.length === 0) return;
+    const headers = ["Timestamp", "Garment/File Name", "Status", "Originality %", "Est. SMV"];
+    const rows = filteredDashboardHistory.map(item => [
+      `"${item.timestamp || item.created_at || ""}"`,
+      `"${(item.fileName || item.result?.classification?.[0]?.class_name || "Untitled").replace(/"/g, '""')}"`,
+      `"${item.result?.status || "APPROVED"}"`,
+      `"${item.result?.similarity_percentage || 0}%"`,
+      `"${item.result?.smv_range || "N/A"}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `fashionflow_dashboard_report_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Drag over states
   const [isDragOver, setIsDragOver] = useState(false);
@@ -1631,14 +1775,14 @@ export default function Home() {
         className={`fixed inset-y-0 left-0 z-50 md:relative md:z-auto h-full flex flex-col py-6 md:py-8 flex-shrink-0 transition-all duration-300 border-r border-slate-200 overflow-hidden bg-white print:hidden ${
           isMobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0"
         } ${
-          isCollapsed ? "w-[85vw] max-w-[320px] md:w-[52px] px-5 md:px-2" : "w-[85vw] max-w-[320px] md:w-[280px] px-5"
+          isCollapsed ? "w-[85vw] max-w-[320px] md:w-[52px] px-5 md:px-2" : "w-[85vw] max-w-[320px] md:w-[280px] px-5 md:px-3"
         }`}
       >
-        <div className={`flex items-center mb-6 md:mb-8 h-9 overflow-hidden ${isCollapsed ? "md:justify-center px-0" : "justify-between pl-1 pr-1"}`}>
-          <div className="flex items-center">
+        <div className="flex items-center justify-between mb-6 md:mb-8 h-9 overflow-hidden">
+          <div className="flex items-center w-full">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden md:flex w-9 h-9 text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer rounded-md hover:bg-slate-100 transition-colors items-center justify-center flex-shrink-0 mx-auto"
+              className="hidden md:flex w-9 h-9 text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer rounded-md hover:bg-slate-100 transition-colors items-center justify-center flex-shrink-0"
               aria-label="Toggle Sidebar"
             >
               <svg
@@ -1652,7 +1796,7 @@ export default function Home() {
               </svg>
             </button>
             <span className={`font-display font-bold text-xl text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
-              isCollapsed ? "md:hidden" : "max-w-[200px] opacity-100 ml-3"
+              isCollapsed ? "md:max-w-0 md:opacity-0 md:ml-0" : "max-w-[200px] opacity-100 ml-2.5"
             }`}>
               FashionFlow <span className="bg-[#155DFC] text-white text-xs uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
             </span>
@@ -1682,41 +1826,39 @@ export default function Home() {
                   setIsMobileOpen(false);
                 }}
                 title={isCollapsed ? item.label : undefined}
-                className={`flex items-center rounded-md font-medium text-sm transition-all duration-300 cursor-pointer overflow-hidden ${
-                  isCollapsed
-                    ? "md:w-9 md:h-9 md:justify-center md:px-0 md:mx-auto py-2.5 px-3.5 w-full"
-                    : "w-full py-2.5 px-3.5"
-                } ${
+                className={`flex items-center h-9 w-full rounded-md font-medium text-sm transition-colors duration-150 cursor-pointer overflow-hidden p-0 ${
                   isActive
                     ? "bg-[#155DFC] text-white font-semibold shadow-xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
-                <svg
-                  className="w-5 h-5 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  {item.id === "dashboard-view" ? (
-                    <>
+                <div className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-5 h-5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    {item.id === "dashboard-view" ? (
+                      <>
+                        <path d={item.icon}></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                      </>
+                    ) : item.id === "history-view" || item.id === "design-input-view" || item.id === "sewing-sequence-view" || item.id === "tooling-view" || item.id === "smv-view" || item.id === "knowledge-view" || item.id === "projects-view" || item.id === "settings-view" ? (
                       <path d={item.icon}></path>
-                      <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                    </>
-                  ) : item.id === "history-view" || item.id === "design-input-view" || item.id === "sewing-sequence-view" || item.id === "tooling-view" || item.id === "smv-view" || item.id === "knowledge-view" || item.id === "projects-view" || item.id === "settings-view" ? (
-                    <path d={item.icon}></path>
-                  ) : (
-                    <>
-                      <rect x="3" y="3" width="7" height="9" rx="1" />
-                      <rect x="14" y="3" width="7" height="5" rx="1" />
-                      <rect x="14" y="12" width="7" height="9" rx="1" />
-                      <rect x="3" y="16" width="7" height="5" rx="1" />
-                    </>
-                  )}
-                </svg>
-                <span className={`whitespace-nowrap truncate overflow-hidden transition-all duration-300 ${
-                  isCollapsed ? "md:hidden" : "max-w-[180px] opacity-100 ml-3"
+                    ) : (
+                      <>
+                        <rect x="3" y="3" width="7" height="9" rx="1" />
+                        <rect x="14" y="3" width="7" height="5" rx="1" />
+                        <rect x="14" y="12" width="7" height="9" rx="1" />
+                        <rect x="3" y="16" width="7" height="5" rx="1" />
+                      </>
+                    )}
+                  </svg>
+                </div>
+                <span className={`whitespace-nowrap truncate transition-[max-width,opacity,margin] duration-300 ${
+                  isCollapsed ? "md:max-w-0 md:opacity-0 md:ml-0" : "max-w-[180px] opacity-100 ml-1.5"
                 }`}>
                   {item.label}
                 </span>
@@ -1741,6 +1883,201 @@ export default function Home() {
               </p>
             </header>
 
+            {/* Dashboard QOL Filter & Custom Calendar Date Range Bar — GitHub Primer Standard */}
+            <div className="mb-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Keyword Search — Synced h-8 rounded-md */}
+                <div className="relative flex-1 min-w-[180px] sm:min-w-[220px]">
+                  <input
+                    type="text"
+                    value={dashSearchQuery}
+                    onChange={(e) => setDashSearchQuery(e.target.value)}
+                    placeholder="Filter by keyword..."
+                    className="w-full h-8 bg-white border border-slate-200 rounded-md pl-8 pr-3 text-xs text-slate-800 focus:border-[#155DFC] focus:outline-none transition-colors"
+                  />
+                  <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                </div>
+
+                {/* Custom Interactive Calendar Date Range Popover Button — Synced h-8 rounded-md */}
+                <div className="relative" ref={calendarRef}>
+                  <button
+                    onClick={() => setShowCalendarPopover(!showCalendarPopover)}
+                    className="h-8 px-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
+                  >
+                    <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
+                    </svg>
+                    <span>{getDateDisplayLabel()}</span>
+                    <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </button>
+
+                  {/* Calendar Popover Dialog */}
+                  {showCalendarPopover && (
+                    <div className="absolute top-full left-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-4 w-72 sm:w-80 animate-in fade-in duration-150">
+                      {/* Presets Row */}
+                      <div className="flex flex-wrap gap-1 mb-3 pb-3 border-b border-slate-100">
+                        <button
+                          onClick={() => { setDashPreset("all"); setShowCalendarPopover(false); }}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "all" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          All Time
+                        </button>
+                        <button
+                          onClick={() => { setDashPreset("today"); setShowCalendarPopover(false); }}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "today" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          Today
+                        </button>
+                        <button
+                          onClick={() => { setDashPreset("7days"); setShowCalendarPopover(false); }}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "7days" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          Last 7 Days
+                        </button>
+                        <button
+                          onClick={() => { setDashPreset("30days"); setShowCalendarPopover(false); }}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "30days" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          Last 30 Days
+                        </button>
+                      </div>
+
+                      {/* Month & Year Navigation Header */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-bold text-slate-900">
+                          {monthNames[calMonth]} {calYear}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+                              else { setCalMonth(m => m - 1); }
+                            }}
+                            className="p-1 text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+                              else { setCalMonth(m => m + 1); }
+                            }}
+                            className="p-1 text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Weekday Labels */}
+                      <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 uppercase mb-1">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                      </div>
+
+                      {/* Month Grid Days */}
+                      <div className="grid grid-cols-7 gap-1 text-center mb-3">
+                        {Array.from({ length: new Date(calYear, calMonth, 1).getDay() }).map((_, i) => (
+                          <div key={`empty-${i}`} className="h-7" />
+                        ))}
+                        {Array.from({ length: new Date(calYear, calMonth + 1, 0).getDate() }).map((_, i) => {
+                          const day = i + 1;
+                          const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                          const isStart = calSelStart === dateStr;
+                          const isEnd = calSelEnd === dateStr;
+                          const isInRange = calSelStart && calSelEnd && new Date(dateStr) > new Date(calSelStart) && new Date(dateStr) < new Date(calSelEnd);
+
+                          let dayClass = "text-slate-700 hover:bg-slate-100 rounded-md";
+                          if (isStart || isEnd) dayClass = "bg-[#155DFC] text-white font-bold rounded-md shadow-2xs";
+                          else if (isInRange) dayClass = "bg-blue-50 text-blue-700 font-semibold rounded-none";
+
+                          return (
+                            <button
+                              key={`day-${day}`}
+                              onClick={() => handleCalendarDayClick(day)}
+                              className={`h-7 text-xs flex items-center justify-center cursor-pointer transition-colors ${dayClass}`}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Selection Summary & Action Footer */}
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                        <span className="text-[11px] font-mono text-slate-500 truncate max-w-[150px]">
+                          {calSelStart ? (calSelEnd ? `${calSelStart} → ${calSelEnd}` : `Start: ${calSelStart}`) : "Click dates"}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => { setCalSelStart(null); setCalSelEnd(null); }}
+                            className="px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                          <button
+                            onClick={applyCalendarCustomRange}
+                            disabled={!calSelStart}
+                            className="px-2.5 py-1 text-[11px] font-semibold bg-[#155DFC] hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 cursor-pointer"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Status Filter Selector — Synced h-8 rounded-md */}
+                <select
+                  value={dashStatusFilter}
+                  onChange={(e) => setDashStatusFilter(e.target.value as any)}
+                  className="h-8 bg-white border border-slate-200 rounded-md px-3 text-xs font-medium text-slate-700 focus:border-[#155DFC] focus:outline-none cursor-pointer"
+                >
+                  <option value="all">Status: All</option>
+                  <option value="approved">Status: Approved</option>
+                  <option value="matches">Status: Matches</option>
+                </select>
+              </div>
+
+              {/* Right: Reset & Export CSV Action — Synced h-8 rounded-md */}
+              <div className="flex items-center gap-2 self-end md:self-auto">
+                {(dashPreset !== "all" || dashStatusFilter !== "all" || dashSearchQuery || dashStartDate || dashEndDate) && (
+                  <button
+                    onClick={() => {
+                      setDashPreset("all");
+                      setDashStatusFilter("all");
+                      setDashSearchQuery("");
+                      setDashStartDate("");
+                      setDashEndDate("");
+                      setCalSelStart(null);
+                      setCalSelEnd(null);
+                    }}
+                    className="h-8 px-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-md transition-colors cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                )}
+                <button
+                  onClick={exportDashboardCSV}
+                  disabled={filteredDashboardHistory.length === 0}
+                  className="h-8 px-3 bg-[#155DFC] hover:bg-blue-700 text-white text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-2xs"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Export CSV
+                </button>
+              </div>
+            </div>
+
             {/* Engineering KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
               <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
@@ -1752,7 +2089,7 @@ export default function Home() {
                     </svg>
                   </div>
                 </div>
-                <p className="font-display font-bold text-3xl text-slate-900">{analysisHistory.length}</p>
+                <p className="font-display font-bold text-3xl text-slate-900">{filteredDashboardHistory.length}</p>
                 <p className="text-xs text-slate-400 mt-1">Engineering runs logged</p>
               </div>
 
@@ -1766,7 +2103,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="font-display font-bold text-3xl text-slate-900">
-                  {analysisHistory.filter(a => {
+                  {filteredDashboardHistory.filter(a => {
                     const s = (a.result?.status || "").toUpperCase();
                     return s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
                   }).length}
@@ -1784,7 +2121,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="font-display font-bold text-3xl text-slate-900">
-                  {analysisHistory.filter(a => {
+                  {filteredDashboardHistory.filter(a => {
                     const s = (a.result?.status || "").toUpperCase();
                     return s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND" || (a.result?.similarity_percentage || 0) >= 90;
                   }).length}
@@ -1802,9 +2139,9 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="font-display font-bold text-3xl text-slate-900 font-mono">
-                  {analysisHistory.length > 0
+                  {filteredDashboardHistory.length > 0
                     ? (() => {
-                        const smvValues = analysisHistory
+                        const smvValues = filteredDashboardHistory
                           .map(a => parseFloat((a.result?.smv_range || "0").split("-")[0]))
                           .filter(v => !isNaN(v) && v > 0);
                         if (smvValues.length === 0) return "N/A";
@@ -1830,27 +2167,27 @@ export default function Home() {
                   </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-2 p-5 border border-blue-100 rounded-xl bg-blue-50/40">
-                    <div className="w-8 h-8 rounded-full bg-[#155DFC] text-white flex items-center justify-center font-bold text-sm">1</div>
+                  <div className="flex flex-col gap-2 p-5 border border-slate-200/80 rounded-xl bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-slate-200/80 text-slate-800 flex items-center justify-center font-bold text-xs font-mono">1</div>
                     <h3 className="font-bold text-slate-900 text-sm mt-1 font-display">Upload &amp; Originality</h3>
                     <p className="text-xs text-slate-500 leading-relaxed">Upload garment sketch. DINOv2 vector engine verifies originality against database records with 95% threshold.</p>
                   </div>
-                  <div className="flex flex-col gap-2 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
-                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">2</div>
+                  <div className="flex flex-col gap-2 p-5 border border-slate-200/80 rounded-xl bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-slate-200/80 text-slate-800 flex items-center justify-center font-bold text-xs font-mono">2</div>
                     <h3 className="font-bold text-slate-900 text-sm mt-1 font-display">Engineering Parameters</h3>
                     <p className="text-xs text-slate-500 leading-relaxed">Define project parameters — garment type, fabric weight, component breakdown, and production specifications.</p>
                   </div>
-                  <div className="flex flex-col gap-2 p-5 border border-slate-100 rounded-xl bg-slate-50/40">
-                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">3</div>
+                  <div className="flex flex-col gap-2 p-5 border border-slate-200/80 rounded-xl bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-slate-200/80 text-slate-800 flex items-center justify-center font-bold text-xs font-mono">3</div>
                     <h3 className="font-bold text-slate-900 text-sm mt-1 font-display">Process Sheet &amp; SMV</h3>
                     <p className="text-xs text-slate-500 leading-relaxed">AI generates the sewing sequence, machine tooling recommendations, and estimated SMV for production planning.</p>
                   </div>
                 </div>
 
                 {/* Originality ratio visual bar */}
-                {analysisHistory.length > 0 && (() => {
-                  const total = analysisHistory.length;
-                  const approved = analysisHistory.filter(a => {
+                {filteredDashboardHistory.length > 0 && (() => {
+                  const total = filteredDashboardHistory.length;
+                  const approved = filteredDashboardHistory.filter(a => {
                     const s = (a.result?.status || "").toUpperCase();
                     return s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
                   }).length;
@@ -1883,16 +2220,16 @@ export default function Home() {
                   <h2 className="font-display font-bold text-lg text-slate-900">Activity Feed</h2>
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 animate-pulse" title="Live"></span>
                 </div>
-                {analysisHistory.length === 0 ? (
+                {filteredDashboardHistory.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 text-center my-auto">
                     <svg className="w-8 h-8 text-slate-300 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-xs text-slate-400">No activity yet. Run your first analysis to see the feed.</p>
+                    <p className="text-xs text-slate-400">No matching activities found for active filters.</p>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-0">
-                    {analysisHistory.slice(0, 8).map((item, idx) => {
+                    {filteredDashboardHistory.slice(0, 8).map((item, idx) => {
                       const s = (item.result?.status || "").toUpperCase();
                       const isRejected = s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND";
                       const formattedTime = formatActivityDate(item);
@@ -1900,7 +2237,7 @@ export default function Home() {
                         <div key={idx} className="flex gap-3 py-3 border-b border-slate-100 last:border-0 items-start">
                           <div className="flex flex-col items-center gap-1 pt-1">
                             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isRejected ? "bg-amber-400" : "bg-[#155DFC]"}`} />
-                            {idx < analysisHistory.slice(0, 8).length - 1 && (
+                            {idx < filteredDashboardHistory.slice(0, 8).length - 1 && (
                               <div className="w-px flex-1 bg-slate-100 min-h-[16px]" />
                             )}
                           </div>
@@ -1914,12 +2251,12 @@ export default function Home() {
                         </div>
                       );
                     })}
-                    {analysisHistory.length > 8 && (
+                    {filteredDashboardHistory.length > 8 && (
                       <button
                         onClick={() => setActiveTab("projects-view")}
                         className="mt-3 text-xs font-semibold text-[#155DFC] hover:text-[#1249cc] text-left cursor-pointer"
                       >
-                        View all {analysisHistory.length} projects →
+                        View all {filteredDashboardHistory.length} projects →
                       </button>
                     )}
                   </div>
