@@ -542,7 +542,31 @@ def get_analysis_history_from_db():
         conn.close()
         return history
     except Exception as e:
-        print(f"[DB-ERR] Failed to retrieve analysis history: {str(e)}")
+        print(f"[DB-ERR] Failed to load analysis history: {str(e)}")
+        return []
+
+def get_all_unique_tags() -> list[str]:
+    """Retrieve all unique project tag strings across analysis_history database records."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT result FROM analysis_history;")
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        tags_set = set()
+        for r in rows:
+            try:
+                data = json.loads(r[0]) if isinstance(r[0], str) else r[0]
+                for t in data.get("tags", []):
+                    if t and isinstance(t, str) and t.strip():
+                        tags_set.add(t.strip())
+            except Exception:
+                continue
+        return sorted(list(tags_set))
+    except Exception as e:
+        print(f"[DB-ERR] Failed to fetch unique tags: {str(e)}")
         return []
 
 def get_mock_embedding(text: str) -> list:

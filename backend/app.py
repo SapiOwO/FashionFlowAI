@@ -876,6 +876,15 @@ class ProcessSheetRequest(BaseModel):
     batch_quantity: int = 100
     is_reuse_master: bool = False  # When True: recalculate batch scaling on existing master ID, skip new DB insert
     reuse_master_id: int | None = None  # Original master project ID to reuse
+    tags: list[str] = []   # Project tags (e.g. SS26-Core, v1.0-master)
+    designer_notes: str = ""  # Optional designer/pattern notes
+
+@app.get("/api/tags")
+def get_tags():
+    """Retrieve all unique project tags from the database for autocompletion."""
+    from db import get_all_unique_tags
+    unique_tags = get_all_unique_tags()
+    return {"tags": unique_tags}
 
 @app.get("/api/validate-catalog")
 def validate_catalog():
@@ -1046,6 +1055,8 @@ def generate_process_sheet(req: ProcessSheetRequest):
         "similarity_percentage": req.similarity_percentage,
         "status": req.similarity_status,
         "message": req.message,
+        "tags": req.tags,
+        "designer_notes": req.designer_notes,
         # CRITICAL: visual_vector MUST be stored so future uploads can detect this as duplicate via cosine similarity
         "visual_vector": req.visual_vector if hasattr(req, "visual_vector") and req.visual_vector else [],
         "project_details": {

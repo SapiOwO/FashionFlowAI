@@ -57,6 +57,8 @@ interface AnalysisResult {
   status: string;
   message: string;
   visual_vector?: number[];
+  tags?: string[];
+  designer_notes?: string;
 }
 
 interface SavedAnalysis {
@@ -124,6 +126,136 @@ const DOLL_TYPES: Record<string, string[]> = {
   "Casual Doll": ["tshirt", "skirt"]
 };
 
+interface TagSelectorProps {
+  selectedTags: string[];
+  onChange: (tags: string[]) => void;
+  availableTags: string[];
+  onAddCustomTag?: (tag: string) => void;
+}
+
+const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, availableTags, onAddCustomTag }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [tagQuery, setTagQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredTags = availableTags.filter(t => t.toLowerCase().includes(tagQuery.toLowerCase()));
+  const showCreateOption = tagQuery.trim().length > 0 && !availableTags.some(t => t.toLowerCase() === tagQuery.trim().toLowerCase());
+
+  const handleToggleTag = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      onChange(selectedTags.filter(t => t !== tag));
+    } else {
+      onChange([...selectedTags, tag]);
+    }
+  };
+
+  const handleCreateTag = () => {
+    const cleanTag = tagQuery.trim();
+    if (!cleanTag) return;
+    if (!selectedTags.includes(cleanTag)) {
+      onChange([...selectedTags, cleanTag]);
+    }
+    if (onAddCustomTag) onAddCustomTag(cleanTag);
+    setTagQuery("");
+  };
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Project Tags (Optional)</label>
+      
+      {/* Selected Tag Pills + Trigger Input */}
+      <div 
+        onClick={() => setIsOpen(true)}
+        className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-2 px-3 min-h-[44px] flex flex-wrap items-center gap-1.5 cursor-pointer focus-within:bg-white focus-within:border-[#155DFC] focus-within:ring-1 focus-within:ring-[#155DFC] transition-colors"
+      >
+        {selectedTags.map(tag => (
+          <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-[#155DFC] border border-blue-200/60 shadow-2xs">
+            <span>🏷️ {tag}</span>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleToggleTag(tag); }}
+              className="text-blue-400 hover:text-[#155DFC] font-bold text-xs leading-none"
+            >✕</button>
+          </span>
+        ))}
+
+        <button
+          type="button"
+          className="text-xs font-semibold text-slate-400 hover:text-[#155DFC] flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50/50 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          {selectedTags.length === 0 ? "Select or create tags..." : "Add Tag"}
+        </button>
+      </div>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 space-y-2 animate-in fade-in duration-150">
+          <div className="relative">
+            <input
+              type="text"
+              value={tagQuery}
+              onChange={(e) => setTagQuery(e.target.value)}
+              placeholder="Search or create a tag..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-8 pr-3 text-xs text-slate-800 focus:bg-white focus:border-[#155DFC] focus:outline-none"
+              autoFocus
+            />
+            <svg className="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+          </div>
+
+          <div className="max-h-40 overflow-y-auto space-y-1">
+            {filteredTags.length === 0 && !showCreateOption && (
+              <div className="text-[11px] text-slate-400 p-2 text-center">No matching tags found</div>
+            )}
+            {filteredTags.map(tag => {
+              const isSelected = selectedTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => handleToggleTag(tag)}
+                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    isSelected ? "bg-blue-50 text-[#155DFC]" : "hover:bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-slate-400">🏷️</span>
+                    {tag}
+                  </span>
+                  {isSelected && (
+                    <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {showCreateOption && (
+            <button
+              type="button"
+              onClick={handleCreateTag}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#155DFC] bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer border border-blue-200/60"
+            >
+              <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              <span>Create new tag &quot;<strong>{tagQuery.trim()}</strong>&quot;</span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function Home() {
   // Sidebar collapsed state
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -177,6 +309,16 @@ export default function Home() {
   // Catalog Reuse Prompt State — shown when DINOv2 detects >= 90% similarity match
   const [showReusePrompt, setShowReusePrompt] = useState(false);
   const [reuseMode, setReuseMode] = useState<"reuse" | "new" | null>(null);
+
+  // Tags & Designer Notes States
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [designerNotes, setDesignerNotes] = useState<string>("");
+  const [availableTags, setAvailableTags] = useState<string[]>(["SS26-Collection", "Core-Outerwear", "Sample-Proto", "v1.0-master"]);
+
+  // Active Projects & History Search/Filter States
+  const [historySearchQuery, setHistorySearchQuery] = useState<string>("");
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<string>("ALL");
+  const [historyTagFilter, setHistoryTagFilter] = useState<string>("ALL");
 
   // Multi-step wizard stepper state (1: Upload & Originality, 2: Engineering Parameters, 3: Process Sheet)
   const [currentStep, setCurrentStep] = useState(1);
@@ -265,6 +407,18 @@ export default function Home() {
         }
       } catch (err) {
         console.warn("Failed to load ingested knowledge base records.", err);
+      }
+
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/tags");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.tags && data.tags.length > 0) {
+            setAvailableTags(prev => Array.from(new Set([...prev, ...data.tags])));
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load unique tags.", err);
       }
     }
     fetchInitialData();
@@ -501,6 +655,8 @@ export default function Home() {
         // Reuse flag: when true backend skips inserting a new DB row and recalculates on existing master ID
         is_reuse_master: isReuse,
         reuse_master_id: isReuse && topMatch?.id ? topMatch.id : null,
+        tags: selectedTags,
+        designer_notes: designerNotes,
       };
 
       const res = await fetch("http://127.0.0.1:8000/api/generate-sheet", {
@@ -1862,6 +2018,26 @@ export default function Home() {
                               />
                             </div>
                           </div>
+
+                          {/* Tag Management System */}
+                          <TagSelector
+                            selectedTags={selectedTags}
+                            onChange={setSelectedTags}
+                            availableTags={availableTags}
+                            onAddCustomTag={(newTag) => setAvailableTags(prev => Array.from(new Set([...prev, newTag])))}
+                          />
+
+                          {/* Optional Designer / Pattern Notes */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-slate-700">Designer &amp; Pattern Notes (Optional)</label>
+                            <textarea
+                              value={designerNotes}
+                              onChange={(e) => setDesignerNotes(e.target.value)}
+                              placeholder="e.g. Hand-sewn collar detail, 1cm seam allowance on armholes, customer request for extra reinforced bartacking..."
+                              rows={3}
+                              className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 px-3.5 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full resize-none leading-relaxed"
+                            />
+                          </div>
                           
                           {/* Workflow Status — shown only when no reuse prompt is active */}
                           {!showReusePrompt && (
@@ -1974,15 +2150,21 @@ export default function Home() {
                         <div className="col-span-3 border border-slate-300 rounded-lg p-3 bg-white flex flex-col justify-between">
                           <span className="text-[10px] font-bold font-mono text-slate-500 uppercase mb-2">Engineering &amp; Originality Parameters</span>
                           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                            <div><span className="text-slate-500">Garment Type:</span> <strong className="text-slate-900">{quizGarment}</strong></div>
-                            <div><span className="text-slate-500">Fabric Weight:</span> <strong className="text-slate-900">{quizFabric}</strong></div>
-                            <div><span className="text-slate-500">Classified Motif:</span> <strong className="text-slate-900">{fullResult?.classification?.[0]?.class_name || "Original Sketch"}</strong></div>
+                            <div><span className="text-slate-500">Project Tags:</span> <strong className="text-blue-700">{fullResult?.tags && fullResult.tags.length > 0 ? fullResult.tags.map((t: string) => `🏷️ ${t}`).join(", ") : "Standard Production"}</strong></div>
                             <div><span className="text-slate-500">DINOv2 Score:</span> <strong className="text-emerald-700">{fullResult.similarity_percentage}% (Original)</strong></div>
                             <div><span className="text-slate-500">Target Line Efficiency:</span> <strong className="text-slate-900">85%</strong></div>
                             <div><span className="text-slate-500">Standard Operator Rate:</span> <strong className="text-slate-900">60 Pcs / Hr</strong></div>
                           </div>
                         </div>
                       </div>
+
+                      {/* Optional Designer & Engineering Notes Card in Print Sheet */}
+                      {fullResult?.designer_notes && (
+                        <div className="border border-slate-300 rounded-lg p-3 bg-white">
+                          <span className="text-[10px] font-bold font-mono text-slate-500 uppercase mb-1 block">Designer &amp; Engineering Notes</span>
+                          <p className="text-xs text-slate-800 font-mono leading-relaxed italic">&quot;{fullResult.designer_notes}&quot;</p>
+                        </div>
+                      )}
 
                       {/* Bento Card 3: Industrial Sewing Sequence Table */}
                       <div className="border border-slate-300 rounded-lg p-3 bg-white">
@@ -3027,33 +3209,176 @@ export default function Home() {
               </p>
             </header>
 
-            <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs">
-              <h2 className="font-display font-bold text-base text-slate-900 mb-6">Saved Projects Database</h2>
-              <div className="border border-slate-100 rounded-xl">
+            <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-display font-bold text-base text-slate-900">Saved Projects Database</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Filter by Name, ID (#), Tags, Date, or Status with live record counts.</p>
+                </div>
+
+                {/* Status Dropdown with Dynamic Count Badges */}
+                {(() => {
+                  const totalCount = analysisHistory.length;
+                  const approvedCount = analysisHistory.filter(item => {
+                    const s = (item.result?.status || "").toUpperCase();
+                    return s !== "REJECTED" && s !== "HISTORICAL_MATCH_FOUND";
+                  }).length;
+                  const duplicateCount = totalCount - approvedCount;
+
+                  return (
+                    <div className="flex items-center gap-3">
+                      <select
+                        value={historyStatusFilter}
+                        onChange={(e) => setHistoryStatusFilter(e.target.value)}
+                        className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
+                      >
+                        <option value="ALL">All Statuses ({totalCount})</option>
+                        <option value="APPROVED">Approved ({approvedCount})</option>
+                        <option value="DUPLICATE">Duplicate Locked ({duplicateCount})</option>
+                      </select>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Search Bar & Tag Filter Pills */}
+              <div className="flex flex-col gap-3">
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    value={historySearchQuery}
+                    onChange={(e) => setHistorySearchQuery(e.target.value)}
+                    placeholder="Search by project name, ID (#18), tag (SS26), designer notes, or date..."
+                    className="w-full bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:outline-none transition-colors"
+                  />
+                  <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  {historySearchQuery && (
+                    <button
+                      onClick={() => setHistorySearchQuery("")}
+                      className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-700 font-bold"
+                    >✕</button>
+                  )}
+                </div>
+
+                {/* Quick Tag Pills Bar */}
+                {availableTags.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Filter by Tag:</span>
+                    <button
+                      type="button"
+                      onClick={() => setHistoryTagFilter("ALL")}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        historyTagFilter === "ALL"
+                          ? "bg-[#155DFC] text-white shadow-2xs"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      All Tags
+                    </button>
+                    {availableTags.map(t => {
+                      const isSel = historyTagFilter === t;
+                      const count = analysisHistory.filter(h => (h.result?.tags || []).includes(t)).length;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setHistoryTagFilter(isSel ? "ALL" : t)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            isSel
+                              ? "bg-[#155DFC] text-white shadow-2xs"
+                              : "bg-blue-50 text-[#155DFC] border border-blue-200/60 hover:bg-blue-100"
+                          }`}
+                        >
+                          <span>🏷️ {t}</span>
+                          <span className="opacity-75 font-mono text-[10px]">({count})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="border border-slate-100 rounded-xl overflow-hidden">
                  <table className="w-full text-left text-xs text-slate-600 border-collapse">
                   <thead className="bg-slate-50/70 font-mono text-[11px] text-slate-400 uppercase border-b border-slate-100">
                     <tr>
                       <th className="py-4 px-6 font-bold w-16">ID</th>
-                      <th className="py-4 px-6 font-bold">Project Name</th>
+                      <th className="py-4 px-6 font-bold">Project Name &amp; Tags</th>
                       <th className="py-4 px-6 font-bold">Date Created</th>
                       <th className="py-4 px-6 font-bold">Status</th>
                       <th className="py-4 px-6 font-bold text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white">
-                    {analysisHistory.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">No active projects found. Upload sketches in Create Process Sheet to populate database.</td>
-                      </tr>
-                    ) : (
-                      analysisHistory.map((item, idx) => {
+                    {(() => {
+                      const filteredHistory = analysisHistory.filter(item => {
+                        const s = (item.result?.status || "").toUpperCase();
+                        const isRejected = s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND";
+                        
+                        if (historyStatusFilter === "APPROVED" && isRejected) return false;
+                        if (historyStatusFilter === "DUPLICATE" && !isRejected) return false;
+
+                        const itemTags: string[] = item.result?.tags || [];
+                        if (historyTagFilter !== "ALL" && !itemTags.includes(historyTagFilter)) return false;
+
+                        if (historySearchQuery.trim()) {
+                          const q = historySearchQuery.toLowerCase().trim();
+                          const idStr = item.id.toString().toLowerCase();
+                          const nameStr = (item.fileName || item?.result?.classification?.[0]?.class_name || "").toLowerCase();
+                          const dateStr = (item.timestamp || "").toLowerCase();
+                          const notesStr = (item.result?.designer_notes || "").toLowerCase();
+                          const tagsStr = itemTags.join(" ").toLowerCase();
+
+                          const matches = idStr.includes(q) ||
+                            nameStr.includes(q) ||
+                            dateStr.includes(q) ||
+                            notesStr.includes(q) ||
+                            tagsStr.includes(q) ||
+                            `#${idStr}`.includes(q);
+
+                          if (!matches) return false;
+                        }
+
+                        return true;
+                      });
+
+                      if (filteredHistory.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                              {analysisHistory.length === 0 
+                                ? "No active projects found. Upload sketches in Create Process Sheet to populate database."
+                                : "No projects match your search query and filters."}
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return filteredHistory.map((item, idx) => {
                         const s = (item.result?.status || "").toUpperCase();
                         const isRejected = s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND";
                         const formattedDate = formatActivityDate(item);
+                        const itemTags: string[] = item.result?.tags || [];
+                        const notes: string = item.result?.designer_notes || "";
+
                         return (
                           <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="py-4 px-6 font-semibold font-mono text-slate-900">{item.id}</td>
-                            <td className="py-4 px-6 font-semibold text-slate-900">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</td>
+                            <td className="py-4 px-6 font-semibold font-mono text-slate-900">#{item.id}</td>
+                            <td className="py-4 px-6">
+                              <span className="font-semibold text-slate-900 block">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</span>
+                              {itemTags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {itemTags.map(t => (
+                                    <span key={t} className="text-[10px] font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">🏷️ {t}</span>
+                                  ))}
+                                </div>
+                              )}
+                              {notes && (
+                                <p className="text-[10px] text-slate-400 truncate max-w-xs mt-1 font-mono italic">📝 &quot;{notes}&quot;</p>
+                              )}
+                            </td>
                             <td className="py-4 px-6 font-mono text-slate-500">{formattedDate}</td>
                             <td className="py-4 px-6">
                               {isRejected ? (
@@ -3136,8 +3461,8 @@ export default function Home() {
                             </td>
                           </tr>
                         );
-                      })
-                    )}
+                      });
+                    })()}
                   </tbody>
                 </table>
               </div>

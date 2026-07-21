@@ -670,6 +670,34 @@ class TestMESExportConnector(unittest.TestCase):
         self.assertIn("takt_time_mins", mes_data)
 
 
+class TestTagsAndDesignerNotes(unittest.TestCase):
+    """Validate project tags and designer notes persistence & autocompletion endpoints."""
+
+    def test_tags_and_notes_persistence(self):
+        """Process sheet generation must persist tags list and designer notes."""
+        req = backend_app.ProcessSheetRequest(
+            project_name="Test Tagged Project #99",
+            garment_type="Jacket",
+            fabric_weight="Heavy-weight",
+            preview_image="globe.svg",
+            similarity_percentage=100.0,
+            similarity_status="APPROVED",
+            classification_name="Jacket",
+            message="Tag test",
+            batch_quantity=250,
+            tags=["SS26-Collection", "Core-Outerwear"],
+            designer_notes="Hand-sewn collar detail with reinforced armhole bartacking."
+        )
+        res = backend_app.generate_process_sheet(req)
+        self.assertEqual(res["tags"], ["SS26-Collection", "Core-Outerwear"])
+        self.assertEqual(res["designer_notes"], "Hand-sewn collar detail with reinforced armhole bartacking.")
+
+        # Verify tags API endpoint returns autocompletion tags
+        tag_res = backend_app.get_tags()
+        self.assertIn("tags", tag_res)
+        self.assertIn("SS26-Collection", tag_res["tags"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
