@@ -207,6 +207,17 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
               type="text"
               value={tagQuery}
               onChange={(e) => setTagQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (showCreateOption) {
+                    handleCreateTag();
+                  } else if (filteredTags.length > 0) {
+                    handleToggleTag(filteredTags[0]);
+                  }
+                }
+              }}
               placeholder="Search or create a tag..."
               className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-8 pr-3 text-xs text-slate-800 focus:bg-white focus:border-[#155DFC] focus:outline-none"
               autoFocus
@@ -315,6 +326,7 @@ export default function Home() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [designerNotes, setDesignerNotes] = useState<string>("");
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [showProcessSheetConfirmModal, setShowProcessSheetConfirmModal] = useState(false);
 
   // Active Projects & History Search/Filter States
   const [historySearchQuery, setHistorySearchQuery] = useState<string>("");
@@ -623,6 +635,14 @@ export default function Home() {
   // Handle dynamic process sheet compilation quiz submission (Single Garment Mode)
   const handleGenerateProcessSheet = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!showProcessSheetConfirmModal) {
+      setShowProcessSheetConfirmModal(true);
+      return;
+    }
+    await executeCompilation();
+  };
+
+  const executeCompilation = async () => {
     let activeResult = result;
     if (!activeResult && imageFile) {
       await runAnalysisForFile(imageFile);
@@ -2338,9 +2358,20 @@ export default function Home() {
                           </>
                         ) : (
                           <>
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-slate-400 font-medium">Classified Motif:</span>
-                              <span className="font-semibold text-slate-900">{fullResult?.classification?.[0]?.class_name || "Original Sketch Pattern"}</span>
+                            <div className="flex justify-between items-start text-xs gap-2">
+                              <span className="text-slate-400 font-medium pt-0.5">Project Tags:</span>
+                              <div className="flex flex-wrap gap-1 justify-end">
+                                {fullResult?.tags && fullResult.tags.length > 0 ? (
+                                  fullResult.tags.map((t: string) => (
+                                    <span key={t} className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
+                                      <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+                                      {t}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="font-semibold text-slate-500">Standard Production</span>
+                                )}
+                              </div>
                             </div>
                             <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
                               <span className="text-slate-400 font-medium">Similarity Score:</span>
@@ -2358,6 +2389,19 @@ export default function Home() {
                         )}
                       </div>
                     </div>
+
+                    {/* Step 3 Designer & Engineering Notes Card */}
+                    {fullResult?.designer_notes && (
+                      <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs">
+                        <h3 className="font-bold text-slate-900 text-sm mb-2 font-display flex items-center gap-2">
+                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                          Designer &amp; Pattern Notes
+                        </h3>
+                        <p className="text-xs text-slate-700 font-sans leading-relaxed italic bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                          &quot;{fullResult.designer_notes}&quot;
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Right Column: Step-by-Step Sewing Flow Table & Tooling */}
@@ -3129,7 +3173,7 @@ export default function Home() {
               </div>
             </header>
 
-            <div className="space-y-6 max-w-4xl">
+            <div className="w-full">
               {knowledgeBase.length === 0 ? (
                 <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500 text-sm shadow-2xs">
                   Loading corporate reference guides and sewing parameters from database...
@@ -3154,43 +3198,49 @@ export default function Home() {
                     );
                   }
 
-                  return filtered.map((k: any, idx: number) => (
-                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
-                        <div>
-                          <h2 className="font-display font-bold text-lg text-slate-900">{k.title}</h2>
-                          <p className="text-xs text-slate-400 font-mono mt-0.5">{k.ref}</p>
-                        </div>
-                        {k.smv && k.smv !== "N/A" && (
-                          <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-xs font-mono font-bold text-[#155DFC]">
-                            SMV: <span>{k.smv}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-600 leading-relaxed mb-4">
-                        {k.features && (
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {filtered.map((k: any, idx: number) => (
+                        <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300 flex flex-col justify-between">
                           <div>
-                            <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">Key Features / Material Specs</strong>
-                            <p className="text-slate-700">{k.features}</p>
-                          </div>
-                        )}
-                        {k.tooling && (
-                          <div>
-                            <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">Tooling Recommendations</strong>
-                            <p className="text-slate-700">{k.tooling}</p>
-                          </div>
-                        )}
-                      </div>
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
+                              <div>
+                                <h2 className="font-display font-bold text-lg text-slate-900">{k.title}</h2>
+                                <p className="text-xs text-slate-400 font-mono mt-0.5">{k.ref}</p>
+                              </div>
+                              {k.smv && k.smv !== "N/A" && (
+                                <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-xs font-mono font-bold text-[#155DFC]">
+                                  SMV: <span>{k.smv}</span>
+                                </div>
+                              )}
+                            </div>
 
-                      {k.learnings && (
-                        <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 text-xs text-slate-700 leading-relaxed">
-                          <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1.5">Guidelines &amp; Manufacturing Learnings</strong>
-                          {k.learnings}
+                            <div className="grid grid-cols-1 gap-4 text-xs text-slate-600 leading-relaxed mb-4">
+                              {k.features && (
+                                <div>
+                                  <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">Key Features / Material Specs</strong>
+                                  <p className="text-slate-700">{k.features}</p>
+                                </div>
+                              )}
+                              {k.tooling && (
+                                <div>
+                                  <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">Tooling Recommendations</strong>
+                                  <p className="text-slate-700">{k.tooling}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {k.learnings && (
+                            <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 text-xs text-slate-700 leading-relaxed mt-auto">
+                              <strong className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1.5">Guidelines &amp; Manufacturing Learnings</strong>
+                              {k.learnings}
+                            </div>
+                          )}
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ));
+                  );
                 })()
               )}
             </div>
@@ -3698,6 +3748,58 @@ export default function Home() {
                     <span className="inline-block border-b border-slate-400 w-48 mt-4 text-center text-slate-300 font-sans italic">Approved for Factory Hand-off</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2 Process Sheet Compilation Confirmation Review Modal */}
+        {showProcessSheetConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-5">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#155DFC] flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-base text-slate-900">Compile Process Sheet?</h3>
+                  <p className="text-xs text-slate-500">Please review engineering parameters before compiling final sheet.</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 text-xs">
+                <div className="flex justify-between items-center"><span className="text-slate-500">Project / Batch Name:</span><strong className="text-slate-900 font-bold">{quizName.trim() || result?.top_3_saved_projects?.[0]?.title || "New Pattern Project"}</strong></div>
+                <div className="flex justify-between items-center"><span className="text-slate-500">Garment Category:</span><strong className="text-slate-900 font-semibold">{quizGarment}</strong></div>
+                <div className="flex justify-between items-center"><span className="text-slate-500">Fabric Application:</span><strong className="text-slate-900 font-semibold">{quizFabric}</strong></div>
+                <div className="flex justify-between items-center"><span className="text-slate-500">Production Run Quantity:</span><strong className="text-[#155DFC] font-mono font-bold">{batchQuantity} pcs</strong></div>
+                <div className="flex justify-between items-start"><span className="text-slate-500">Project Tags:</span><span className="font-semibold text-slate-800 text-right">{selectedTags.length > 0 ? selectedTags.join(", ") : "None"}</span></div>
+                {designerNotes && (
+                  <div className="border-t border-slate-200/60 pt-2.5 mt-2">
+                    <span className="text-slate-500 block mb-1">Designer Notes:</span>
+                    <p className="text-slate-700 italic font-sans bg-white p-2 rounded-lg border border-slate-200/60">&quot;{designerNotes}&quot;</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowProcessSheetConfirmModal(false)}
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  Back to Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProcessSheetConfirmModal(false);
+                    executeCompilation();
+                  }}
+                  className="px-6 py-2.5 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm flex items-center gap-2"
+                >
+                  <span>Confirm &amp; Compile Sheet</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                </button>
               </div>
             </div>
           </div>

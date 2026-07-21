@@ -134,18 +134,20 @@ The Create Process Sheet view uses a **2-phase studio layout**:
   * When similarity $\ge 90\%$, an interactive **Catalog Reuse Prompt Card** is rendered with a unified Cobalt Blue (`#155DFC`) theme:
     * **`REUSE MASTER SPEC (ID #X)`**: Recalculates batch size and SMV scaling on existing master spec with zero manual typing.
     * **`CREATE NEW VARIANT`**: Opens custom project name input for explicit branch creation.
-  * **GitHub-Style Dynamic Tag Selector (`TagSelector`)**: Enables selecting existing database tags (e.g. `SS26-Collection`, `v1.0-master`) or creating new custom tags on the fly.
+  * **GitHub-Style Dynamic Tag Selector (`TagSelector`)**: Enables selecting existing database tags or creating new custom tags on the fly (<kbd>Enter</kbd> key handling prevents form submission).
   * **Optional Designer & Pattern Notes**: Textarea allows production designers and engineers to record handwritten notes or custom garment instructions.
+  * **Step 2 Compilation Confirmation Review Modal**: Interactive modal summarizes project parameters, quantity, tags, and notes before triggering sheet compilation.
 * **Active Projects & History Multi-Criteria Search/Filter Suite**:
   * **Multi-Criteria Search**: Instant text filtering by **Project Name**, **Project ID (`#18`)**, **Tag**, **Date**, or **Designer Notes**.
   * **Status Dropdown with Live Count Badges**: Displays real-time category counts (`All Statuses (11)`, `Approved (10)`, `Duplicate Locked (1)`).
   * **Quick Tag Filter Pills**: Filter projects with 1 click using tag pills.
+* **Manufacturing Knowledge Base 2-Column Responsive Grid**: SOP reference cards lay out in a clean 2-column responsive grid (`grid grid-cols-1 md:grid-cols-2 gap-6`) for optimal desktop screen utilization.
 * **Stationary Sewing Flow Table Layout**: Locked column percentages (`w-[12%]`, `w-[40%]`, `w-[10%]`, `w-[38%]`) with `table-fixed` CSS prevent horizontal layout shift on row expansion.
 * **Explicit SMV Units**: Step timing badges explicitly declare `1.5 mins` to prevent ambiguity with meters.
 * **Light-Mode 2D Pattern CAD Blueprint SVGs**: Sub-step technical drawers render clean 2D CAD blueprint vector diagrams on light canvas (`bg-white border-slate-200`) with solid dark cut lines (`#334155`), dashed blue 1cm seam allowance lines (`#155DFC`), grainlines, and notch markers.
 
 ### Phase 2: Generated Output
-* Displays the compiled process sheet with sewing sequence, machine allocations, SMV estimates, project tags, designer notes, and historical context.
+* Displays the compiled process sheet with sewing sequence, machine allocations, SMV estimates, project tags (replacing legacy motif classification text), designer & engineering notes card, and historical context.
 
 ### garment_type Resolution in Top-K Inspector
 When reading matched projects from `analysis_history` in `get_top_k_similar_history_records`, `garment_type` is resolved via a three-tier fallback:
