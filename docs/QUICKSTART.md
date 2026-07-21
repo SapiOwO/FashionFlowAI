@@ -1,18 +1,49 @@
 # Quickstart Guide
 
-This guide walks you through setting up and running the FashionFlow decoupled application locally.
-
-## Prerequisites
-
-* **Python 3.12.6** (Mandatory `.venv` virtual environment for AST parsing, PyTorch, and DINOv2 embeddings)
-* **Node.js 18.x / 20.x** (Required for Next.js 16 frontend)
-* **PostgreSQL** (Optional - with `pgvector` extension for production HNSW search; defaults to SQLite for local dev)
+This guide walks you through setting up and running the FashionFlow AI application using your preferred installation pathway.
 
 ---
 
-## 1. Setup & Installation
+## 🚀 Choose Your Installation Pathway
 
-### A. Python Backend (Virtual Environment)
+### Option 1: Docker Compose (Recommended for Production & Local Evaluation)
+
+*Best for users who want PostgreSQL with native `pgvector` HNSW vector search out of the box.*
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/SapiOwO/FashionFlowAI.git
+cd FashionFlowAI
+
+# 2. Launch App + PostgreSQL (pgvector) in detached mode
+docker compose up --build -d
+```
+- **Frontend Dashboard**: `http://localhost:3000`
+- **FastAPI Backend API**: `http://localhost:8000`
+- **PostgreSQL Database**: `localhost:5432` (`DB_NAME=fashionflow_db`)
+
+---
+
+### Option 2: All-In-One Single Docker Container (Recommended for Cloud & VPS)
+
+*Best for deploying to single-instance VPS servers (AWS EC2, DigitalOcean, Hetzner, GCP).*
+
+```bash
+# Pull stable release from GitHub Container Registry
+docker run -d -p 3000:3000 -p 8000:8000 -v fashionflow-data:/app/data --name fashionflowai --restart always ghcr.io/sapiowo/fashionflowai:latest
+```
+
+---
+
+### Option 3: Local Developer Setup (Python Virtualenv + Next.js)
+
+*Best for active developers modifying FastAPI backend endpoints or Next.js frontend components.*
+
+#### Prerequisites
+* **Python 3.12.6** (Mandatory `.venv` virtual environment for AST parsing, PyTorch, and DINOv2 embeddings)
+* **Node.js 18.x / 20.x** (Required for Next.js 16 frontend)
+
+#### Setup Steps:
 1. In the project root, create a Python virtual environment:
    ```bash
    python -m venv .venv
@@ -30,73 +61,24 @@ This guide walks you through setting up and running the FashionFlow decoupled ap
    ```bash
    pip install -r requirements.txt
    ```
-4. Place your Google Colab model weight files (such as `best.pt`, `mobilenet_textiles.pth` or `.h5` files) into the `models/` directory.
-
-### B. Next.js Frontend
-1. Navigate to the frontend folder:
+4. Install Frontend dependencies:
    ```bash
-   cd frontend
+   cd frontend && npm install && cd ..
    ```
-2. Install the Node.js packages:
+5. Launch both servers concurrently:
    ```bash
-   npm install
-   ```
-3. Return to the root folder:
-   ```bash
-   cd ..
+   python main.py
    ```
 
 ---
 
-## 2. Database Modes & Configuration
+## 🧪 Running Automated Unit Tests
 
-Copy the example environment template `.env.example` at the root folder to `.env`:
-
-```env
-DB_TYPE=sqlite
-```
-
-### Option A: SQLite (Default)
-* Under SQLite mode (`DB_TYPE=sqlite`), the backend automatically creates `fashionflow.db` locally. No additional installations are required.
-
-### Option B: PostgreSQL (with pgvector)
-* Change `DB_TYPE` to `postgres` and configure credentials (`DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`).
-* Ensure `pgvector` is installed. The backend will automatically create the database and compile HNSW indexes on startup.
-
----
-
-## 3. Importing JUKI Machine Catalogs & Data Seeding
-
-1. To load Juki sewing machines knowledge, make sure your PDF catalogs are in the `data/` directory and run the cleanup pipeline:
-   ```bash
-   # Already run in current setup to output clean CSVs
-   ```
-2. To load your historical garment process sheets into the database:
-   * Place your CSV data file at `data/historical_products.csv`.
-   * Run the importer tool:
-     ```bash
-     python import_csv.py
-     ```
-
----
-
-## 4. Running Both Servers Concurrently
-
-To start both the FastAPI backend (port 8000) and the Next.js frontend (port 3000) concurrently with unified logging and clean Ctrl+C exits, run:
-```bash
-python main.py
-```
-
-Press `Ctrl+C` in the terminal to stop both servers at the same time.
-
----
-
-## 5. Running Automated Contract Unit Tests
-
-To run the full suite of **40 automated integration & contract tests** covering DINOv2 vector extraction, machine resolver logic, work-aid tooling attachments, batch SMV scaling, and line balancing allocations:
+To run the full suite of **55 automated integration & contract tests** covering DINOv2 vector extraction, machine resolver logic, security headers middleware, work-aid tooling attachments, batch SMV scaling, and line balancing allocations:
 
 ```powershell
-.venv\Scripts\python.exe -m unittest backend/tests/test_backend_contract.py
+.\.venv\Scripts\pytest backend/tests/
 ```
+*Result: 55 passed in ~12.5s (100% pass rate).*
 
 

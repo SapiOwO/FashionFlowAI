@@ -1,9 +1,9 @@
 # FashionFlow AI — Garment Production Intelligence System
 
 > **Intelligent pattern recognition, original sketch verification, and automated process sheet compilation for garment manufacturing.**  
-> Upload a garment or doll outfit sketch → AI checks design originality via Meta DINOv2 visual embeddings → Configure engineering parameters → Receive a complete production specification sheet with step-by-step sewing flows, Juki machine model recommendations, presser foot & needle specifications, batch SMV scaling, and historical baselines.
+> Upload a garment or doll outfit sketch → AI checks design originality via Meta DINOv2 visual embeddings → Configure engineering parameters → Receive a complete production specification sheet with step-by-step sewing flows, Juki machine model recommendations, presser foot & needle specifications, batch SMV scaling, factory line balancing, and historical baselines.
 
-*Last Updated: 2026-07-21 (Phase 20: Operation Detail Expansion & Fast In-Memory Caching)*
+*Last Updated: 2026-07-21 (Phase 23: GitHub Primer Tokens, Outer/Inner Radius Standardization, Date Picker Integration & A+ Security Headers)*
 
 ---
 
@@ -33,14 +33,14 @@ FashionFlow AI utilizes **Meta DINOv2 Small (`dinov2_vits14`)**, a self-supervis
 
 The table below demonstrates real DINOv2 pairwise cosine similarity scores evaluated across sample test images:
 
-| Query / Reference | <img src="docs/assets/eval_matrix/wallpaper.jpg" width="90" alt="Wallpaper" /><br />**Wallpaper** | <img src="docs/assets/eval_matrix/wallpaper_2xupscaled.jpg" width="90" alt="Wallpaper 2x" /><br />**Wallpaper 2x** | <img src="docs/assets/eval_matrix/doll.jpg" width="90" alt="Doll" /><br />**Doll** | <img src="docs/assets/eval_matrix/doll_blackandwhite.jpg" width="90" alt="Doll B&W" /><br />**Doll B&W** | <img src="docs/assets/eval_matrix/batik1.jpg" width="90" alt="Batik 1" /><br />**Batik 1** | <img src="docs/assets/eval_matrix/batik2.jpg" width="90" alt="Batik 2" /><br />**Batik 2** |
+| Query / Reference | Wallpaper | Wallpaper 2x | Doll | Doll B&W | Batik 1 | Batik 2 |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| <img src="docs/assets/eval_matrix/wallpaper.jpg" width="90" alt="Wallpaper" /><br />**Wallpaper** | **1.0000000** | **0.9963874** | 0.3777580 | 0.3280388 | -0.0770774 | 0.0269208 |
-| <img src="docs/assets/eval_matrix/wallpaper_2xupscaled.jpg" width="90" alt="Wallpaper 2x" /><br />**Wallpaper 2x** | **0.9963874** | **1.0000000** | 0.3831076 | 0.3341874 | -0.0792709 | 0.0249313 |
-| <img src="docs/assets/eval_matrix/doll.jpg" width="90" alt="Doll" /><br />**Doll** | 0.3777580 | 0.3831076 | **1.0000000** | **0.8980661** | -0.0893405 | -0.0364631 |
-| <img src="docs/assets/eval_matrix/doll_blackandwhite.jpg" width="90" alt="Doll B&W" /><br />**Doll B&W** | 0.3280388 | 0.3341874 | **0.8980661** | **1.0000000** | -0.0498432 | -0.0650231 |
-| <img src="docs/assets/eval_matrix/batik1.jpg" width="90" alt="Batik 1" /><br />**Batik 1** | -0.0770774 | -0.0792709 | -0.0893405 | -0.0498432 | **1.0000000** | 0.4234626 |
-| <img src="docs/assets/eval_matrix/batik2.jpg" width="90" alt="Batik 2" /><br />**Batik 2** | 0.0269208 | 0.0249313 | -0.0364631 | -0.0650231 | 0.4234626 | **1.0000000** |
+| **Wallpaper** | **1.0000000** | **0.9963874** | 0.3777580 | 0.3280388 | -0.0770774 | 0.0269208 |
+| **Wallpaper 2x** | **0.9963874** | **1.0000000** | 0.3831076 | 0.3341874 | -0.0792709 | 0.0249313 |
+| **Doll** | 0.3777580 | 0.3831076 | **1.0000000** | **0.8980661** | -0.0893405 | -0.0364631 |
+| **Doll B&W** | 0.3280388 | 0.3341874 | **0.8980661** | **1.0000000** | -0.0498432 | -0.0650231 |
+| **Batik 1** | -0.0770774 | -0.0792709 | -0.0893405 | -0.0498432 | **1.0000000** | 0.4234626 |
+| **Batik 2** | 0.0269208 | 0.0249313 | -0.0364631 | -0.0650231 | 0.4234626 | **1.0000000** |
 
 ### Key Benchmark Insights
 
@@ -67,12 +67,14 @@ The table below demonstrates real DINOv2 pairwise cosine similarity scores evalu
 ```text
 fashionflowrework/
 ├── backend/
-│   ├── app.py                      <-- FastAPI application & machine resolver engine
+│   ├── app.py                      <-- FastAPI application, security headers & machine resolver engine
 │   ├── db.py                       <-- Dual metastore (PostgreSQL + pgvector HNSW / SQLite)
 │   └── tests/
-│       ├── test_backend_contract.py <-- 35 automated integration & performance tests
+│       ├── test_backend_contract.py <-- 55 automated integration & performance tests
 │       └── test_example_folder.py   <-- Integration tests on sample datasets
 ├── frontend/
+│   ├── next.config.ts              <-- Next.js A+ security headers configuration
+│   ├── src/app/globals.css         <-- GitHub Primer tokens & Mona Sans font setup
 │   └── src/app/page.tsx            <-- Next.js 16 (Turbopack) dashboard UI
 ├── data/
 │   ├── machine_aliases.json        <-- Machine category mapping & resolver rules
@@ -80,87 +82,108 @@ fashionflowrework/
 │   └── sewing_templates.json       <-- Step-by-step sewing templates
 ├── docs/
 │   ├── ARCHITECTURE.md             <-- System architecture & pipeline details
-│   ├── ROADMAP.md                  <-- Milestone roadmap (Phases 1-20 completed)
-│   ├── QUICKSTART.md               <-- Environment setup guide
-│   └── assets/eval_matrix/        <-- Thumbnail assets for DINOv2 evaluation matrix
+│   ├── CASE_STUDIES.md             <-- 5W+1H Diagnostic Case Studies (Case Study #12)
+│   ├── ROADMAP.md                  <-- Milestone roadmap (Phases 1-23 completed)
+│   └── QUICKSTART.md               <-- Environment setup guide
 ├── use_this_example/               <-- Empirical test images & benchmark dataset
 ├── main.py                         <-- Unified process launcher (starts FastAPI + Next.js)
+├── docker-compose.yml              <-- Multi-container orchestrator (App + PostgreSQL pgvector)
+├── Dockerfile                      <-- All-In-One Production Container Specification
 └── requirements.txt
 ```
 
 ---
 
-## How to Install
+## 🚀 Choose Your Installation Method
 
-### Quick Start with Docker (Single All-In-One Container)
+Choose the installation pathway that best matches your deployment target:
+
+### Option 1: Docker Compose (Recommended for Production & Local Evaluation)
+
+*Best for users who want PostgreSQL with native `pgvector` HNSW vector search out of the box.*
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/SapiOwO/FashionFlowAI.git
+cd FashionFlowAI
+
+# 2. Launch App + PostgreSQL (pgvector) in detached mode
+docker compose up --build -d
+```
+- **Frontend Dashboard**: `http://localhost:3000`
+- **FastAPI Backend API**: `http://localhost:8000`
+- **PostgreSQL Database**: `localhost:5432` (`DB_NAME=fashionflow_db`)
+
+---
+
+### Option 2: All-In-One Single Docker Container (Recommended for Cloud & VPS)
+
+*Best for deploying to single-instance VPS servers (AWS EC2, DigitalOcean, Hetzner, GCP).*
 
 > **Note**: Mount `-v fashionflow-data:/app/data` to ensure your database and uploaded assets are persisted across container updates.
 
-#### 1. Stable Release (Main Branch)
+#### A. Stable Release Image (GitHub Container Registry)
 ```bash
 docker run -d -p 3000:3000 -p 8000:8000 -v fashionflow-data:/app/data --name fashionflowai --restart always ghcr.io/sapiowo/fashionflowai:latest
 ```
 
-#### 2. Nightly / Bleeding Edge Build (Dev Branch)
+#### B. Build Single Container Locally
 ```bash
-docker run -d -p 3000:3000 -p 8000:8000 -v fashionflow-data:/app/data --name fashionflowai-dev --restart always ghcr.io/sapiowo/fashionflowai:dev
+docker build -t fashionflowai .
+docker run -d -p 3000:3000 -p 8000:8000 -v fashionflow-data:/app/data --name fashionflowai --restart always fashionflowai
 ```
-- **Frontend Dashboard**: `http://localhost:3000`
-- **FastAPI Backend API**: `http://localhost:8000`
 
 ---
 
-### Installation via Python Virtual Environment
+### Option 3: Local Developer Setup (Python Virtualenv + Next.js)
 
-For developers modifying source code:
+*Best for active developers modifying FastAPI backend endpoints or Next.js frontend components.*
 
 ```bash
-# 1. Clone repository and create virtual environment
+# 1. Clone repository and enter folder
 git clone https://github.com/SapiOwO/FashionFlowAI.git
 cd FashionFlowAI
+
+# 2. Create and activate Python virtual environment
 python -m venv .venv
 
-# 2. Activate virtual environment
-.venv\Scripts\Activate.ps1   # Windows
-# source .venv/bin/activate  # macOS / Linux
+# PowerShell (Windows)
+.venv\Scripts\Activate.ps1
+# bash (macOS / Linux)
+# source .venv/bin/activate
 
 # 3. Install backend & frontend dependencies
 pip install -r requirements.txt
 cd frontend && npm install && cd ..
 
-# 4. Launch unified dev environment (FastAPI + Next.js)
+# 4. Launch unified dev environment (FastAPI on :8000 + Next.js on :3000)
 python main.py
 ```
 
 ---
 
-## Keeping Your Docker Installation Up-to-Date
+## 🔄 Updating Your Docker Installation
 
 How to update FashionFlow AI without losing your saved projects or database data:
 
 ```bash
 # 1. Pull the latest Docker image
-docker pull ghcr.io/sapiowo/fashionflowai:latest  # or :dev for Nightly
+docker pull ghcr.io/sapiowo/fashionflowai:latest
 
-# 2. Stop the running container
-docker stop fashionflowai
+# 2. Stop and remove the old container
+docker stop fashionflowai && docker rm fashionflowai
 
-# 3. Remove the old container
-docker rm fashionflowai
-
-# 4. Start the updated container
+# 3. Start the updated container using the existing data volume
 docker run -d -p 3000:3000 -p 8000:8000 -v fashionflow-data:/app/data --name fashionflowai --restart always ghcr.io/sapiowo/fashionflowai:latest
 ```
 
 ---
 
-## Developer Testing
+## 🧪 Automated Testing & Verification
 
-Run automated integration & contract test suite:
+Run the automated integration and contract test suite:
 
-Run automated integration & contract test suite:
-
-```bash
+```powershell
 .\.venv\Scripts\pytest backend/tests/
 ```
-- Executes **55 automated integration & contract tests** covering DINOv2 vector extraction, machine resolver rules, system info endpoints, and vector search (100% pass rate).
+- Executes **55 automated integration & contract tests** covering DINOv2 vector extraction, machine resolver rules, security headers middleware, system info endpoints, and vector search (**100% pass rate**).
