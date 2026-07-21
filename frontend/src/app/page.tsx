@@ -206,8 +206,8 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
     }
   };
 
-  const handleCreateTag = () => {
-    const cleanTag = tagQuery.trim();
+  const handleCreateTag = (customVal?: string) => {
+    const cleanTag = (customVal || tagQuery).trim();
     if (!cleanTag) return;
     if (!selectedTags.includes(cleanTag)) {
       onChange([...selectedTags, cleanTag]);
@@ -222,10 +222,10 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
         <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">Recommended</span>
       </label>
       
-      {/* Selected Tag Pills + Trigger Input */}
+      {/* Embedded Tag Pills + Direct Type Input Container */}
       <div 
         onClick={() => setIsOpen(true)}
-        className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-2 px-3 min-h-[44px] flex flex-wrap items-center gap-1.5 cursor-pointer focus-within:bg-white focus-within:border-[#155DFC] focus-within:ring-1 focus-within:ring-[#155DFC] transition-colors"
+        className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-2 px-3 min-h-[44px] flex flex-wrap items-center gap-1.5 focus-within:bg-white focus-within:border-[#155DFC] focus-within:ring-1 focus-within:ring-[#155DFC] transition-colors cursor-text"
       >
         {selectedTags.map(tag => (
           <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-[#155DFC] border border-blue-200/60 shadow-2xs">
@@ -239,47 +239,46 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
           </span>
         ))}
 
-        <button
-          type="button"
-          className="text-xs font-semibold text-slate-400 hover:text-[#155DFC] flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50/50 transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-          {selectedTags.length === 0 ? "Select or create tags..." : "Add Tag"}
-        </button>
+        <input
+          type="text"
+          value={tagQuery}
+          onChange={(e) => {
+            const val = e.target.value;
+            setIsOpen(true);
+            if (val.includes(",") || val.includes(";")) {
+              const parts = val.split(/[,;]/).map(p => p.trim()).filter(Boolean);
+              const newTags = [...selectedTags];
+              parts.forEach(p => { if (!newTags.includes(p)) newTags.push(p); });
+              onChange(newTags);
+              setTagQuery("");
+            } else {
+              setTagQuery(val);
+            }
+          }}
+          onFocus={() => setIsOpen(true)}
+          onBlur={() => {
+            if (tagQuery.trim()) {
+              handleCreateTag(tagQuery.trim());
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === "Tab") {
+              if (tagQuery.trim()) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCreateTag(tagQuery.trim());
+              }
+            }
+          }}
+          maxLength={40}
+          placeholder={selectedTags.length === 0 ? "Type tag name (press Enter or comma)..." : "Add tag..."}
+          className="flex-1 min-w-[140px] bg-transparent text-xs text-slate-800 focus:outline-none py-1 font-medium"
+        />
       </div>
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu for Available Database Tags & Create Option */}
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 space-y-2 animate-in fade-in duration-150">
-          <div className="relative">
-            <input
-              type="text"
-              value={tagQuery}
-              onChange={(e) => setTagQuery(e.target.value)}
-              onBlur={() => {
-                if (tagQuery.trim()) {
-                  handleCreateTag();
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (showCreateOption) {
-                    handleCreateTag();
-                  } else if (filteredTags.length > 0) {
-                    handleToggleTag(filteredTags[0]);
-                  }
-                }
-              }}
-              maxLength={40}
-              placeholder="Search or create a tag..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-8 pr-3 text-xs text-slate-800 focus:bg-white focus:border-[#155DFC] focus:outline-none"
-              autoFocus
-            />
-            <svg className="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-          </div>
-
           <div className="max-h-40 overflow-y-auto space-y-1">
             {filteredTags.length === 0 && !showCreateOption && (
               <div className="text-[11px] text-slate-400 p-2 text-center">No matching tags found</div>
@@ -290,7 +289,10 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
                 <button
                   key={tag}
                   type="button"
-                  onClick={() => handleToggleTag(tag)}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleToggleTag(tag);
+                  }}
                   className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     isSelected ? "bg-blue-50 text-[#155DFC]" : "hover:bg-slate-50 text-slate-700"
                   }`}
@@ -310,7 +312,10 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
           {showCreateOption && (
             <button
               type="button"
-              onClick={handleCreateTag}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleCreateTag();
+              }}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#155DFC] bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer border border-blue-200/60"
             >
               <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
@@ -870,6 +875,30 @@ export default function Home() {
         return acc;
       }, []);
     }
+
+    // Rehydrate batch_production metadata if missing or incomplete
+    if (!pResult.batch_production || typeof pResult.batch_production !== "object") {
+      const singleSmv = parseFloat(pResult.smv_range || "0") || 1.5;
+      const qty = pResult.project_details?.batch_quantity || 100;
+      const totalMins = Math.round(singleSmv * qty * 100) / 100;
+      pResult.batch_production = {
+        batch_quantity: qty,
+        single_unit_smv_mins: singleSmv,
+        batch_total_smv_mins: totalMins,
+        batch_total_hours: Math.round((totalMins / 60.0) * 100) / 100,
+        operator_daily_capacity_pcs: singleSmv > 0 ? Math.round(((8.0 * 60.0) / singleSmv) * 10) / 10 : 0,
+      };
+    } else {
+      const singleSmv = pResult.batch_production.single_unit_smv_mins || parseFloat(pResult.smv_range || "0") || 1.5;
+      const qty = pResult.batch_production.batch_quantity || 100;
+      const totalMins = pResult.batch_production.batch_total_smv_mins ?? Math.round(singleSmv * qty * 100) / 100;
+      pResult.batch_production.batch_quantity = qty;
+      pResult.batch_production.single_unit_smv_mins = singleSmv;
+      pResult.batch_production.batch_total_smv_mins = totalMins;
+      pResult.batch_production.batch_total_hours = pResult.batch_production.batch_total_hours ?? Math.round((totalMins / 60.0) * 100) / 100;
+      pResult.batch_production.operator_daily_capacity_pcs = pResult.batch_production.operator_daily_capacity_pcs ?? (singleSmv > 0 ? Math.round(((8.0 * 60.0) / singleSmv) * 10) / 10 : 0);
+    }
+
     return pResult;
   };
 
@@ -2712,7 +2741,7 @@ export default function Home() {
                                 Batch Production Scaling
                               </span>
                               <span className="text-xs font-semibold text-slate-700">
-                                Run Size: <strong className="font-mono text-slate-900">{fullResult.batch_production.batch_quantity} pcs</strong>
+                                Run Size: <strong className="font-mono text-slate-900">{fullResult.batch_production.batch_quantity ?? 100} pcs</strong>
                               </span>
                             </div>
                           </div>
@@ -2721,19 +2750,19 @@ export default function Home() {
                             <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
                               <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Total Run SMV</span>
                               <span className="font-display font-bold text-xl text-slate-900 font-mono">
-                                {fullResult.batch_production.batch_total_smv_mins.toLocaleString()} <span className="text-xs font-normal text-slate-400">mins</span>
+                                {(fullResult.batch_production.batch_total_smv_mins ?? 0).toLocaleString()} <span className="text-xs font-normal text-slate-400">mins</span>
                               </span>
                             </div>
                             <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
                               <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Est. Production Duration</span>
                               <span className="font-display font-bold text-xl text-[#155DFC] font-mono">
-                                {fullResult.batch_production.batch_total_hours} <span className="text-xs font-normal text-slate-400">hrs</span>
+                                {fullResult.batch_production.batch_total_hours ?? 0} <span className="text-xs font-normal text-slate-400">hrs</span>
                               </span>
                             </div>
                             <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-3">
                               <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">Daily Capacity / Operator</span>
                               <span className="font-display font-bold text-xl text-emerald-600 font-mono">
-                                {fullResult.batch_production.operator_daily_capacity_pcs} <span className="text-xs font-normal text-slate-400">pcs/day</span>
+                                {fullResult.batch_production.operator_daily_capacity_pcs ?? 0} <span className="text-xs font-normal text-slate-400">pcs/day</span>
                               </span>
                             </div>
                           </div>
