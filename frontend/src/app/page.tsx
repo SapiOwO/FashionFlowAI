@@ -433,8 +433,9 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
 };
 
 export default function Home() {
-  // Sidebar collapsed state
+  // Sidebar collapsed and mobile drawer states
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard-view");
 
   // Model selection states
@@ -1597,34 +1598,79 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-white text-slate-800 print:h-auto print:w-full print:overflow-visible print:bg-white print:p-0 print:m-0">
-      {/* Sidebar Navigation */}
-      <aside
-        className={`h-full flex flex-col py-8 flex-shrink-0 transition-all duration-300 border-r border-slate-100 overflow-hidden print:hidden ${
-          isCollapsed ? "w-[78px] px-3.5 bg-transparent" : "w-[280px] px-5 bg-[#FFFFFF]"
-        }`}
-      >
-        <div className="flex items-center mb-10 h-8 pl-2 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen w-screen overflow-hidden bg-white text-slate-800 print:h-auto print:w-full print:overflow-visible print:bg-white print:p-0 print:m-0">
+      {/* Mobile Top Navigation Header (Only visible on small screens) */}
+      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100 sticky top-0 z-30 print:hidden">
+        <div className="flex items-center gap-2.5">
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer p-1 rounded-lg hover:bg-slate-100/50 transition-colors flex items-center justify-center flex-shrink-0"
-            aria-label="Toggle Sidebar"
+            onClick={() => setIsMobileOpen(!isMobileOpen)}
+            className="p-2 text-slate-700 hover:text-[#155DFC] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            aria-label="Open Navigation Drawer"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
-          <span className={`font-display font-bold text-xl text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
-            isCollapsed ? "max-w-0 opacity-0 ml-0" : "max-w-[200px] opacity-100 ml-3.5"
-          }`}>
+          <span className="font-display font-bold text-lg text-slate-900 flex items-center gap-1.5">
             FashionFlow <span className="bg-[#155DFC] text-white text-xs uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
           </span>
+        </div>
+        <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
+          Mobile Mode
+        </span>
+      </header>
+
+      {/* Mobile Backdrop Overlay (Zero reflow for main content) */}
+      {isMobileOpen && (
+        <div
+          onClick={() => setIsMobileOpen(false)}
+          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs md:hidden transition-opacity duration-300"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar Navigation — Floating Drawer on Mobile (GPU accelerated), Flex Sidebar on Desktop */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 md:relative md:z-auto h-full flex flex-col py-6 md:py-8 flex-shrink-0 transition-all duration-300 border-r border-slate-100 overflow-hidden bg-white print:hidden ${
+          isMobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0"
+        } ${
+          isCollapsed ? "md:w-[78px] md:px-3.5" : "w-[280px] px-5"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-8 md:mb-10 h-8 pl-2 pr-2 overflow-hidden">
+          <div className="flex items-center">
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden md:flex text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer p-1 rounded-lg hover:bg-slate-100 transition-colors items-center justify-center flex-shrink-0"
+              aria-label="Toggle Sidebar"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </button>
+            <span className={`font-display font-bold text-xl text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
+              isCollapsed ? "md:max-w-0 md:opacity-0 md:ml-0" : "max-w-[200px] opacity-100 ml-3.5"
+            }`}>
+              FashionFlow <span className="bg-[#155DFC] text-white text-xs uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
+            </span>
+          </div>
+
+          {/* Close Button for Mobile Drawer */}
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="md:hidden text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+            aria-label="Close Drawer"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* Navigation Items */}
@@ -1632,7 +1678,10 @@ export default function Home() {
           {sidebarItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                setIsMobileOpen(false);
+              }}
               className={`flex items-center rounded-xl font-medium text-xs py-3 px-3.5 transition-all duration-300 w-full cursor-pointer overflow-hidden ${
                 activeTab === item.id
                   ? "bg-[#155DFC] text-white shadow-xs font-semibold"
@@ -1663,7 +1712,7 @@ export default function Home() {
                 )}
               </svg>
               <span className={`whitespace-nowrap truncate overflow-hidden transition-all duration-300 ${
-                isCollapsed ? "max-w-0 opacity-0 ml-0" : "max-w-[180px] opacity-100 ml-3.5"
+                isCollapsed ? "md:max-w-0 md:opacity-0 md:ml-0" : "max-w-[180px] opacity-100 ml-3.5"
               }`}>
                 {item.label}
               </span>
@@ -1673,7 +1722,7 @@ export default function Home() {
       </aside>
 
       {/* Main Panel Content (Scrolls independently - Fluid Full Screen Layout) */}
-      <main className={`flex-grow h-full overflow-y-auto print:p-0 print:m-0 print:w-full print:h-auto print:overflow-visible print:bg-white ${activeTab === "design-input-view" ? "p-0 bg-white" : "px-10 py-6"}`}>
+      <main className={`flex-grow h-full overflow-y-auto print:p-0 print:m-0 print:w-full print:h-auto print:overflow-visible print:bg-white ${activeTab === "design-input-view" ? "p-0 bg-white" : "px-4 sm:px-6 md:px-10 py-6"}`}>
         {/* VIEW 1: Pre-Production Engineering Dashboard */}
         {activeTab === "dashboard-view" && (
           <div className="fade-in w-full">
