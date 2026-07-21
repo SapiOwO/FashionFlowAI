@@ -2,7 +2,6 @@ name: Build and Publish All-In-One Docker Image to GHCR
 
 on:
   push:
-    branches: [ "main", "dev" ]
     tags: [ "v*.*.*" ]
   release:
     types: [ published ]
@@ -38,8 +37,7 @@ jobs:
         with:
           images: ghcr.io/${{ steps.repo_owner.outputs.owner }}/fashionflowai
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=ref,event=branch
+            type=raw,value=latest
             type=semver,pattern={{version}}
 
       - name: Build and push All-In-One Image
