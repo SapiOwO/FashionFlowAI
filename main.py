@@ -42,8 +42,10 @@ def main():
     )
 
     # 2. Start Next.js Frontend Subprocess
-    # On Windows, we run npm.cmd directly to bypass cmd.exe shell wrapper and avoid Y/N prompts
-    if os.name == "nt":
+    if os.environ.get("IS_DOCKER") == "true" or os.environ.get("NODE_ENV") == "production":
+        frontend_cmd = ["npm", "run", "start"]
+        shell_val = False
+    elif os.name == "nt":
         frontend_cmd = ["npm.cmd", "run", "dev"]
         shell_val = False
     else:

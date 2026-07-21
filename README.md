@@ -94,19 +94,15 @@ fashionflowrework/
 
 Choose your preferred deployment method below:
 
-### Quick Start with Docker 🐳 (Pre-built GHCR Images — Zero Setup Needed)
+### Quick Start with Docker 🐳 (Single All-In-One Container — Zero Setup Needed)
 
-Run FashionFlow AI instantly via GitHub Container Registry (GHCR) without downloading or building source code:
+Run FashionFlow AI instantly via GitHub Container Registry (GHCR) with **1 single command**:
 
 ```bash
-# 1. Run Backend API
-docker run -d -p 8000:8000 --name fashionflow-backend ghcr.io/sapiowo/fashionflow-backend:latest
-
-# 2. Run Next.js Frontend UI
-docker run -d -p 3000:3000 --name fashionflow-frontend -e NEXT_PUBLIC_API_URL=http://localhost:8000 ghcr.io/sapiowo/fashionflow-frontend:latest
+docker run -d -p 3000:3000 -p 8000:8000 --name fashionflowai ghcr.io/sapiowo/fashionflowai:latest
 ```
 - **Frontend Dashboard**: `http://localhost:3000`
-- **FastAPI Backend**: `http://localhost:8000`
+- **FastAPI Backend API**: `http://localhost:8000`
 
 ---
 
