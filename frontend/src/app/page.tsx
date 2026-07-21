@@ -126,6 +126,46 @@ const DOLL_TYPES: Record<string, string[]> = {
   "Casual Doll": ["tshirt", "skirt"]
 };
 
+interface HighlightMatchProps {
+  text: string;
+  query: string;
+  className?: string;
+}
+
+const HighlightMatch: React.FC<HighlightMatchProps> = ({ text, query, className = "" }) => {
+  if (!text) return null;
+  if (!query || !query.trim()) {
+    return <span className={className}>{text}</span>;
+  }
+
+  const cleanQuery = query.trim();
+  const escapedQuery = cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escapedQuery})`, "gi");
+  const parts = text.split(regex);
+
+  return (
+    <span className={className}>
+      {parts.map((part, i) => {
+        if (part.toLowerCase() === cleanQuery.toLowerCase()) {
+          // Typed search words appear in regular font weight
+          return (
+            <span key={i} className="font-normal opacity-90">
+              {part}
+            </span>
+          );
+        }
+        // Matched target words appear in bold font weight
+        return (
+          <strong key={i} className="font-bold text-slate-900">
+            {part}
+          </strong>
+        );
+      })}
+    </span>
+  );
+};
+
+
 interface TagSelectorProps {
   selectedTags: string[];
   onChange: (tags: string[]) => void;
@@ -749,6 +789,8 @@ export default function Home() {
     setCurrentStep(1);
     setShowReusePrompt(false);
     setReuseMode(null);
+    setSelectedTags([]);
+    setDesignerNotes("");
     setComponentsState({
       jacket: { fabricWeight: "Denim (Heavy-weight)", imageFile: null, previewUrl: null, result: null },
       pants: { fabricWeight: "Katun (Medium-weight)", imageFile: null, previewUrl: null, result: null },
@@ -767,6 +809,8 @@ export default function Home() {
     setQuizFabric("Medium-weight");
     setShowReusePrompt(false);
     setReuseMode(null);
+    setSelectedTags([]);
+    setDesignerNotes("");
     if (fileInputRef.current) fileInputRef.current.value = "";
     setComponentsState({
       jacket: { fabricWeight: "Denim (Heavy-weight)", imageFile: null, previewUrl: null, result: null },
@@ -2384,6 +2428,21 @@ export default function Home() {
                               <span className="text-slate-400 font-medium">Total Components:</span>
                               <span className="font-semibold text-slate-900">{fullResult.project_details?.components_count || 1} Garments</span>
                             </div>
+                            <div className="flex justify-between items-start text-xs border-t border-slate-100 pt-2.5 gap-2">
+                              <span className="text-slate-400 font-medium pt-0.5">Project Tags:</span>
+                              <div className="flex flex-wrap gap-1 justify-end">
+                                {fullResult?.tags && fullResult.tags.length > 0 ? (
+                                  fullResult.tags.map((t: string) => (
+                                    <span key={t} className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
+                                      <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+                                      {t}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="font-semibold text-slate-500">Standard Production</span>
+                                )}
+                              </div>
+                            </div>
                           </>
                         ) : (
                           <>
@@ -3508,13 +3567,15 @@ export default function Home() {
                           <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                             <td className="py-4 px-6 font-semibold font-mono text-slate-900">#{item.id}</td>
                             <td className="py-4 px-6">
-                              <span className="font-semibold text-slate-900 block">{item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}</span>
+                              <span className="text-slate-900 block">
+                                <HighlightMatch text={item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"} query={historySearchQuery} />
+                              </span>
                               {itemTags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-1">
                                   {itemTags.map(t => (
                                     <span key={t} className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
                                       <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
-                                      {t}
+                                      <HighlightMatch text={t} query={historySearchQuery} />
                                     </span>
                                   ))}
                                 </div>
@@ -3538,73 +3599,75 @@ export default function Home() {
                                 </span>
                               )}
                             </td>
-                            <td className="py-4 px-6 text-right relative">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveMenuId(activeMenuId === item.id ? null : item.id);
-                                }}
-                                className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
-                                aria-label="Actions Menu"
-                              >
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                                </svg>
-                              </button>
-                              
-                              {activeMenuId === item.id && (
-                                <>
-                                  <div 
-                                    className="fixed inset-0 z-40 cursor-default" 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setActiveMenuId(null);
-                                    }} 
-                                  />
-                                  <div className={`absolute right-4 ${filteredHistory.length >= 4 && idx >= filteredHistory.length - 1 ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100`}>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleLoadProject(item);
-                                        setActiveMenuId(null);
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-xs hover:bg-blue-50 text-[#155DFC] font-semibold flex items-center gap-2 border-b border-slate-100 cursor-pointer"
-                                    >
-                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                      </svg>
-                                      Load Specs
-                                    </button>
-                                    <button
+                            <td className="py-4 px-6 text-right">
+                              <div className="relative inline-block text-right">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveMenuId(activeMenuId === item.id ? null : item.id);
+                                  }}
+                                  className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
+                                  aria-label="Actions Menu"
+                                >
+                                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                  </svg>
+                                </button>
+                                
+                                {activeMenuId === item.id && (
+                                  <>
+                                    <div 
+                                      className="fixed inset-0 z-40 cursor-default" 
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setActiveMenuId(null);
-                                        handleRenameProject(item.id, item.fileName || "");
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
-                                    >
-                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                                      </svg>
-                                      Rename
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setActiveMenuId(null);
-                                        handleDeleteProject(item.id);
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-xs hover:bg-red-50 text-red-600 flex items-center gap-2 border-t border-slate-100 cursor-pointer font-semibold"
-                                    >
-                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                      </svg>
-                                      Delete
-                                    </button>
-                                  </div>
-                                </>
-                              )}
+                                      }} 
+                                    />
+                                    <div className={`absolute right-0 ${filteredHistory.length >= 4 && idx >= filteredHistory.length - 1 ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100`}>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleLoadProject(item);
+                                          setActiveMenuId(null);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-xs hover:bg-blue-50 text-[#155DFC] font-semibold flex items-center gap-2 border-b border-slate-100 cursor-pointer"
+                                      >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        Load Specs
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActiveMenuId(null);
+                                          handleRenameProject(item.id, item.fileName || "");
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
+                                      >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                        </svg>
+                                        Rename
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActiveMenuId(null);
+                                          handleDeleteProject(item.id);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-xs hover:bg-red-50 text-red-600 flex items-center gap-2 border-t border-slate-100 cursor-pointer font-semibold"
+                                      >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );

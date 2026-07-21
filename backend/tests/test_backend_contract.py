@@ -765,8 +765,50 @@ class TestTagsAndDesignerNotes(unittest.TestCase):
         tags_res = backend_app.get_tags()
         self.assertIn("tags", tags_res)
 
+    def test_tags_and_designer_notes_persistence_both_modes(self):
+        """Verify tags and designer notes are returned in single and doll sheet endpoints."""
+        single_req = backend_app.ProcessSheetRequest(
+            project_name="Test Single Item",
+            garment_type="Shirt",
+            fabric_weight="Medium-weight",
+            preview_image="globe.svg",
+            similarity_percentage=95.0,
+            similarity_status="APPROVED",
+            classification_name="Shirt",
+            message="Single test",
+            batch_quantity=50,
+            tags=["SS26-Core", "Custom-Collar"],
+            designer_notes="1cm seam allowance on collar"
+        )
+        single_res = backend_app.generate_process_sheet(single_req)
+        self.assertEqual(single_res["tags"], ["SS26-Core", "Custom-Collar"])
+        self.assertEqual(single_res["designer_notes"], "1cm seam allowance on collar")
+
+        doll_req = backend_app.DollSheetRequest(
+            project_name="Test Doll Outfit",
+            doll_type="Classic Teddy Bear",
+            components=[
+                backend_app.GarmentComponent(
+                    garment_type="jacket",
+                    fabric_weight="Denim (Heavy-weight)",
+                    preview_image="globe.svg",
+                    classification_name="Jacket",
+                    similarity_percentage=92.0,
+                    similarity_status="APPROVED"
+                )
+            ],
+            message="Doll test",
+            batch_quantity=100,
+            tags=["Doll-Series-A", "v1.0"],
+            designer_notes="Extra bartacking on pocket seams"
+        )
+        doll_res = backend_app.generate_doll_process_sheet(doll_req)
+        self.assertEqual(doll_res["tags"], ["Doll-Series-A", "v1.0"])
+        self.assertEqual(doll_res["designer_notes"], "Extra bartacking on pocket seams")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
 
 
