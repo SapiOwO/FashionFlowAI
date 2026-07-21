@@ -135,8 +135,10 @@ The Create Process Sheet view uses a **2-phase studio layout**:
     * **`REUSE MASTER SPEC (ID #X)`**: Recalculates batch size and SMV scaling on existing master spec with zero manual typing.
     * **`CREATE NEW VARIANT`**: Opens custom project name input for explicit branch creation.
   * **GitHub-Style Dynamic Tag Selector (`TagSelector`)**: Dynamically syncs tags strictly from database records (`GET /api/tags` and `analysisHistory`). Draft custom tags exist only as active form pills until process sheet compilation; removing uncommitted tags with "✕" leaves zero leftovers in the dropdown menu. (<kbd>Enter</kbd> key intercept prevents form submission).
-  * **Optional Designer & Pattern Notes**: Textarea allows production designers and engineers to record handwritten notes or custom garment instructions.
+  * **Optional Designer & Pattern Notes**: Textarea allows production designers and engineers to record handwritten notes or custom garment instructions (`maxLength={1000}`).
   * **Step 2 Compilation Confirmation Review Modal**: Interactive modal summarizes project parameters, quantity, tags, and notes before triggering sheet compilation.
+  * **Defensive Text-Wrapping & Layout Overflow Safeguards**: Applied `break-words break-all` across project titles, tags, and notes to prevent layout distortion from long unbroken strings (e.g. `thisisatest...`).
+  * **Database Reset Endpoint (`POST /api/reset-db`)**: `reset_analysis_history()` wipes records and resets SQLite auto-increment sequence back to ID 1.
 * **Active Projects & History Multi-Criteria Search/Filter Suite**:
   * **Multi-Criteria Search**: Instant text filtering by **Project Name**, **Project ID (`#18`)**, **Tag**, **Date**, or **Designer Notes**.
   * **Status Dropdown with Live Count Badges**: Displays real-time category counts (`All Statuses (11)`, `Approved (10)`, `Duplicate Locked (1)`).

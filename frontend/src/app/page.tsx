@@ -217,6 +217,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
                   }
                 }
               }}
+              maxLength={40}
               placeholder="Search or create a tag..."
               className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-8 pr-3 text-xs text-slate-800 focus:bg-white focus:border-[#155DFC] focus:outline-none"
               autoFocus
@@ -1951,8 +1952,9 @@ export default function Home() {
                                 type="text"
                                 value={quizName}
                                 onChange={(e) => setQuizName(e.target.value)}
+                                maxLength={100}
                                 placeholder="e.g. Autumn Casual Jacket Batch #01"
-                                className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                                className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full break-words break-all"
                               />
                             </div>
                           )}
@@ -2060,9 +2062,10 @@ export default function Home() {
                             <textarea
                               value={designerNotes}
                               onChange={(e) => setDesignerNotes(e.target.value)}
+                              maxLength={1000}
                               placeholder="e.g. Hand-sewn collar detail, 1cm seam allowance on armholes, customer request for extra reinforced bartacking..."
                               rows={3}
-                              className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 px-3.5 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full resize-none leading-relaxed"
+                              className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 px-3.5 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full resize-none leading-relaxed break-words break-all"
                             />
                           </div>
                           
@@ -2398,12 +2401,12 @@ export default function Home() {
 
                     {/* Step 3 Designer & Engineering Notes Card */}
                     {fullResult?.designer_notes && (
-                      <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs">
+                      <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs overflow-hidden">
                         <h3 className="font-bold text-slate-900 text-sm mb-2 font-display flex items-center gap-2">
                           <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                           Designer &amp; Pattern Notes
                         </h3>
-                        <p className="text-xs text-slate-700 font-sans leading-relaxed italic bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                        <p className="text-xs text-slate-700 font-sans leading-relaxed italic bg-slate-50 p-3.5 rounded-xl border border-slate-200/60 break-words break-all whitespace-pre-wrap">
                           &quot;{fullResult.designer_notes}&quot;
                         </p>
                       </div>
@@ -3773,16 +3776,28 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="space-y-3 bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 text-xs">
-                <div className="flex justify-between items-center"><span className="text-slate-500">Project / Batch Name:</span><strong className="text-slate-900 font-bold">{quizName.trim() || result?.top_3_saved_projects?.[0]?.title || "New Pattern Project"}</strong></div>
+              <div className="space-y-3 bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 text-xs overflow-hidden">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-slate-500 shrink-0">Project / Batch Name:</span>
+                  <strong className="text-slate-900 font-bold break-words break-all text-right max-w-[220px]">
+                    {quizName.trim() || result?.top_3_saved_projects?.[0]?.title || "New Pattern Project"}
+                  </strong>
+                </div>
                 <div className="flex justify-between items-center"><span className="text-slate-500">Garment Category:</span><strong className="text-slate-900 font-semibold">{quizGarment}</strong></div>
                 <div className="flex justify-between items-center"><span className="text-slate-500">Fabric Application:</span><strong className="text-slate-900 font-semibold">{quizFabric}</strong></div>
                 <div className="flex justify-between items-center"><span className="text-slate-500">Production Run Quantity:</span><strong className="text-[#155DFC] font-mono font-bold">{batchQuantity} pcs</strong></div>
-                <div className="flex justify-between items-start"><span className="text-slate-500">Project Tags:</span><span className="font-semibold text-slate-800 text-right">{selectedTags.length > 0 ? selectedTags.join(", ") : "None"}</span></div>
+                <div className="flex justify-between items-start gap-2">
+                  <span className="text-slate-500 shrink-0">Project Tags:</span>
+                  <span className="font-semibold text-slate-800 text-right break-words break-all max-w-[220px]">
+                    {selectedTags.length > 0 ? selectedTags.join(", ") : "None"}
+                  </span>
+                </div>
                 {designerNotes && (
-                  <div className="border-t border-slate-200/60 pt-2.5 mt-2">
+                  <div className="border-t border-slate-200/60 pt-2.5 mt-2 overflow-hidden">
                     <span className="text-slate-500 block mb-1">Designer Notes:</span>
-                    <p className="text-slate-700 italic font-sans bg-white p-2 rounded-lg border border-slate-200/60">&quot;{designerNotes}&quot;</p>
+                    <p className="text-slate-700 italic font-sans bg-white p-2.5 rounded-lg border border-slate-200/60 break-words break-all whitespace-pre-wrap max-h-32 overflow-y-auto leading-relaxed">
+                      &quot;{designerNotes}&quot;
+                    </p>
                   </div>
                 )}
               </div>

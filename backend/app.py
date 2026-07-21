@@ -886,6 +886,15 @@ def get_tags():
     unique_tags = get_all_unique_tags()
     return {"tags": unique_tags}
 
+@app.post("/api/reset-db")
+def reset_db():
+    """Wipe database analysis history and reset ID sequence back to 1."""
+    from db import reset_analysis_history
+    success = reset_analysis_history()
+    if success:
+        return {"status": "success", "message": "Database wiped and sequence reset to ID 1."}
+    raise HTTPException(status_code=500, detail="Failed to reset database.")
+
 @app.get("/api/validate-catalog")
 def validate_catalog():
     """Diagnostic endpoint: verify every template machine type resolves to a real catalog entry."""

@@ -569,6 +569,28 @@ def get_all_unique_tags() -> list[str]:
         print(f"[DB-ERR] Failed to fetch unique tags: {str(e)}")
         return []
 
+def reset_analysis_history():
+    """Wipe all analysis history database records and reset ID sequence back to 1."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        if is_sqlite():
+            cursor.execute("DELETE FROM analysis_history;")
+            try:
+                cursor.execute("DELETE FROM sqlite_sequence WHERE name='analysis_history';")
+            except Exception:
+                pass
+        else:
+            cursor.execute("TRUNCATE TABLE analysis_history RESTART IDENTITY;")
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("[DB] Analysis history wiped and sequence reset to ID 1.")
+        return True
+    except Exception as e:
+        print(f"[DB-ERR] Failed to reset analysis history: {str(e)}")
+        return False
+
 def get_mock_embedding(text: str) -> list:
     """Generate a deterministic mock 384-dimensional vector embedding based on text hash."""
     seed = sum(ord(c) for c in text)

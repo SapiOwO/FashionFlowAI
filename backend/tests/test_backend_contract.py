@@ -697,6 +697,35 @@ class TestTagsAndDesignerNotes(unittest.TestCase):
         self.assertIn("tags", tag_res)
         self.assertIn("SS26-Collection", tag_res["tags"])
 
+    def test_database_reset_and_long_unbroken_string_payload(self):
+        """Database reset must clear records and reset sequence; long unbroken notes strings must be stored cleanly."""
+        from db import reset_analysis_history
+        reset_analysis_history()
+
+        # Generate a project with a 200-character unbroken string
+        long_notes = "thisisatest" * 20
+        req = backend_app.ProcessSheetRequest(
+            project_name="Defensive Test Project #1",
+            garment_type="Shirt",
+            fabric_weight="Medium-weight",
+            preview_image="globe.svg",
+            similarity_percentage=100.0,
+            similarity_status="APPROVED",
+            classification_name="Shirt",
+            message="Defensive test",
+            batch_quantity=100,
+            tags=["Robustness-Test"],
+            designer_notes=long_notes
+        )
+        res = backend_app.generate_process_sheet(req)
+        self.assertEqual(res["designer_notes"], long_notes)
+
+        # Verify history reset left exactly 1 record starting at ID 1
+        logs = backend_app.get_history_logs()
+        history = logs.get("history", [])
+        self.assertEqual(len(history), 1)
+        self.assertEqual(str(history[0]["id"]), "1")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
