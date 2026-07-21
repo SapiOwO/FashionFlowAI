@@ -10,16 +10,18 @@ from dotenv import load_dotenv
 # Load .env file from the root directory
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
-DB_TYPE = os.getenv("DB_TYPE", "sqlite")
+is_docker_env = os.getenv("IS_DOCKER", "false").lower() in ("true", "1")
+default_db_type = "postgresql" if is_docker_env else "sqlite"
+DB_TYPE = os.getenv("DB_TYPE", default_db_type)
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASS = os.getenv("DB_PASS", "")
+DB_PASS = os.getenv("DB_PASS", "postgres" if is_docker_env else "")
 DB_NAME = os.getenv("DB_NAME", "fashionflow_db")
 
 def is_sqlite() -> bool:
     """Check if the configured database is SQLite."""
-    return DB_TYPE.lower() == "sqlite"
+    return DB_TYPE.lower() in ("sqlite", "sqlite3")
 
 def get_connection():
     """Establish connection to PostgreSQL or SQLite. Auto-creates PostgreSQL database if it does not exist."""
