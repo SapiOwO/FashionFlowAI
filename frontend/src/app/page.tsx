@@ -135,7 +135,7 @@ interface HighlightMatchProps {
 const HighlightMatch: React.FC<HighlightMatchProps> = ({ text, query, className = "" }) => {
   if (!text) return null;
   if (!query || !query.trim()) {
-    return <span className={className}>{text}</span>;
+    return <span className={`font-normal ${className}`}>{text}</span>;
   }
 
   const cleanQuery = query.trim();
@@ -147,18 +147,18 @@ const HighlightMatch: React.FC<HighlightMatchProps> = ({ text, query, className 
     <span className={className}>
       {parts.map((part, i) => {
         if (part.toLowerCase() === cleanQuery.toLowerCase()) {
-          // Typed search words appear in regular font weight
+          // Typed search characters -> BOLD
           return (
-            <span key={i} className="font-normal opacity-90">
+            <strong key={i} className="font-bold text-slate-900 bg-blue-50/80 px-0.5 rounded">
               {part}
-            </span>
+            </strong>
           );
         }
-        // Matched target words appear in bold font weight
+        // Untyped/remaining characters -> REGULAR
         return (
-          <strong key={i} className="font-bold text-slate-900">
+          <span key={i} className="font-normal text-slate-600">
             {part}
-          </strong>
+          </span>
         );
       })}
     </span>
@@ -3596,25 +3596,35 @@ export default function Home() {
                           <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                             <td className="py-4 px-6 font-semibold font-mono text-slate-900">#{item.id}</td>
                             <td className="py-4 px-6">
-                              <span className="text-slate-900 block">
-                                <HighlightMatch text={item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"} query={historySearchQuery} />
-                              </span>
-                              {itemTags.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {itemTags.map(t => (
-                                    <span key={t} className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
-                                      <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
-                                      <HighlightMatch text={t} query={historySearchQuery} />
-                                    </span>
-                                  ))}
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={item.result?.preview_image || "globe.svg"}
+                                  alt="Thumbnail"
+                                  className="w-10 h-10 rounded-xl object-cover border border-slate-200/80 bg-slate-100 flex-shrink-0 shadow-2xs"
+                                  onError={(e) => { (e.target as HTMLElement).setAttribute("src", "globe.svg"); }}
+                                />
+                                <div className="min-w-0 flex flex-col">
+                                  <span className="text-slate-900 block truncate font-medium">
+                                    <HighlightMatch text={item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"} query={historySearchQuery} />
+                                  </span>
+                                  {itemTags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {itemTags.map(t => (
+                                        <span key={t} className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
+                                          <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+                                          <HighlightMatch text={t} query={historySearchQuery} />
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {notes && (
+                                    <p className="text-[10px] text-slate-500 truncate max-w-xs mt-1 font-sans flex items-center gap-1">
+                                      <svg className="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                                      <span className="italic truncate">&quot;{notes}&quot;</span>
+                                    </p>
+                                  )}
                                 </div>
-                              )}
-                              {notes && (
-                                <p className="text-[10px] text-slate-500 truncate max-w-xs mt-1 font-sans flex items-center gap-1">
-                                  <svg className="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                                  <span className="italic truncate">&quot;{notes}&quot;</span>
-                                </p>
-                              )}
+                              </div>
                             </td>
                             <td className="py-4 px-6 font-mono text-slate-500">{formattedDate}</td>
                             <td className="py-4 px-6">
