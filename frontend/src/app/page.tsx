@@ -135,7 +135,7 @@ interface HighlightMatchProps {
 const HighlightMatch: React.FC<HighlightMatchProps> = ({ text, query, className = "" }) => {
   if (!text) return null;
   if (!query || !query.trim()) {
-    return <span className={`font-normal ${className}`}>{text}</span>;
+    return <span className={className}>{text}</span>;
   }
 
   const cleanQuery = query.trim();
@@ -147,13 +147,11 @@ const HighlightMatch: React.FC<HighlightMatchProps> = ({ text, query, className 
     <span className={className}>
       {parts.map((part, i) =>
         part.toLowerCase() === cleanQuery.toLowerCase() ? (
-          <mark key={i} className="font-bold text-slate-900 bg-blue-100/80 p-0 m-0 rounded-2xs inline">
+          <mark key={i} style={{ background: "#DBEAFE", color: "inherit", padding: "0", margin: "0" }}>
             {part}
           </mark>
         ) : (
-          <span key={i} className="font-normal text-slate-600 p-0 m-0 inline">
-            {part}
-          </span>
+          <span key={i}>{part}</span>
         )
       )}
     </span>
