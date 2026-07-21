@@ -33,14 +33,14 @@ FashionFlow AI utilizes **Meta DINOv2 Small (`dinov2_vits14`)**, a self-supervis
 
 The table below demonstrates real DINOv2 pairwise cosine similarity scores evaluated across sample test images:
 
-| Query / Reference | Wallpaper | Wallpaper 2x | Doll | Doll B&W | Batik 1 | Batik 2 |
+| Query / Reference | <img src="use_this_example/wallpaper.jpg" width="70" alt="Wallpaper" /><br />**Wallpaper** | <img src="use_this_example/wallpaper_2xupscaled.jpg" width="70" alt="Wallpaper 2x" /><br />**Wallpaper 2x** | <img src="use_this_example/doll.jpg" width="70" alt="Doll" /><br />**Doll** | <img src="use_this_example/doll_blackandwhite.jpg" width="70" alt="Doll B&W" /><br />**Doll B&W** | <img src="use_this_example/batik1.jpg" width="70" alt="Batik 1" /><br />**Batik 1** | <img src="use_this_example/batik2.jpg" width="70" alt="Batik 2" /><br />**Batik 2** |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Wallpaper** | **1.0000000** | **0.9963874** | 0.3777580 | 0.3280388 | -0.0770774 | 0.0269208 |
-| **Wallpaper 2x** | **0.9963874** | **1.0000000** | 0.3831076 | 0.3341874 | -0.0792709 | 0.0249313 |
-| **Doll** | 0.3777580 | 0.3831076 | **1.0000000** | **0.8980661** | -0.0893405 | -0.0364631 |
-| **Doll B&W** | 0.3280388 | 0.3341874 | **0.8980661** | **1.0000000** | -0.0498432 | -0.0650231 |
-| **Batik 1** | -0.0770774 | -0.0792709 | -0.0893405 | -0.0498432 | **1.0000000** | 0.4234626 |
-| **Batik 2** | 0.0269208 | 0.0249313 | -0.0364631 | -0.0650231 | 0.4234626 | **1.0000000** |
+| <img src="use_this_example/wallpaper.jpg" width="50" alt="Wallpaper" /><br />**Wallpaper** | **1.0000000** | **0.9963874** | 0.3777580 | 0.3280388 | -0.0770774 | 0.0269208 |
+| <img src="use_this_example/wallpaper_2xupscaled.jpg" width="50" alt="Wallpaper 2x" /><br />**Wallpaper 2x** | **0.9963874** | **1.0000000** | 0.3831076 | 0.3341874 | -0.0792709 | 0.0249313 |
+| <img src="use_this_example/doll.jpg" width="50" alt="Doll" /><br />**Doll** | 0.3777580 | 0.3831076 | **1.0000000** | **0.8980661** | -0.0893405 | -0.0364631 |
+| <img src="use_this_example/doll_blackandwhite.jpg" width="50" alt="Doll B&W" /><br />**Doll B&W** | 0.3280388 | 0.3341874 | **0.8980661** | **1.0000000** | -0.0498432 | -0.0650231 |
+| <img src="use_this_example/batik1.jpg" width="50" alt="Batik 1" /><br />**Batik 1** | -0.0770774 | -0.0792709 | -0.0893405 | -0.0498432 | **1.0000000** | 0.4234626 |
+| <img src="use_this_example/batik2.jpg" width="50" alt="Batik 2" /><br />**Batik 2** | 0.0269208 | 0.0249313 | -0.0364631 | -0.0650231 | 0.4234626 | **1.0000000** |
 
 ### Key Benchmark Insights
 
