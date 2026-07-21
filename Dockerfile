@@ -49,6 +49,7 @@ COPY --from=frontend-builder /app/frontend ./frontend
 EXPOSE 3000 8000 5432
 
 ENV IS_DOCKER=true
+ENV APP_VERSION=v0.1.8
 ENV DB_TYPE=postgresql
 ENV DB_HOST=127.0.0.1
 ENV DB_PORT=5432

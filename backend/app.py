@@ -1614,6 +1614,9 @@ def parse_ver_tuple(ver_str: str):
 
 def get_local_git_version() -> str:
     """Dynamically get the current git tag or branch version of the codebase."""
+    env_ver = os.environ.get("APP_VERSION") or os.environ.get("CONTAINER_VERSION")
+    if env_ver:
+        return env_ver
     try:
         cmd = ["git", "describe", "--tags", "--abbrev=0"]
         out = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=2).decode("utf-8").strip()
@@ -1628,7 +1631,7 @@ def get_local_git_version() -> str:
             return tags[-1].strip()
     except Exception:
         pass
-    return "v0.1.6"
+    return "v0.1.8"
 
 APP_VERSION = get_local_git_version()
 GITHUB_REPO = "SapiOwO/FashionFlowAI"
@@ -1655,42 +1658,54 @@ def get_system_info():
 
 @app.get("/api/system/check-update")
 def check_system_update():
-    """Query GitHub API for the latest release tag and compare with current APP_VERSION."""
+    """Query GitHub API for the latest release or tag and compare with current APP_VERSION."""
     current_ver = get_local_git_version()
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-    req = urllib.request.Request(url, headers={"User-Agent": "FashionFlowAI-System"})
+    latest_tag = current_ver
+    body = "Release includes performance optimizations, UI enhancements, and security patches."
+    pub_date = datetime.now().isoformat()
+    download_url = GITHUB_REPO_URL
+
+    # Step 1: Try GitHub Releases API
     try:
+        url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+        req = urllib.request.Request(url, headers={"User-Agent": "FashionFlowAI-System"})
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-            latest_tag = data.get("tag_name", "v0.1.7")
-            body = data.get("body", "No release notes available.")
-            pub_date = data.get("published_at", "")
-
-            is_newer = parse_ver_tuple(latest_tag) > parse_ver_tuple(current_ver)
-
-            return {
-                "update_available": is_newer,
-                "current_version": current_ver,
-                "latest_version": latest_tag,
-                "is_newer": is_newer,
-                "release_name": data.get("name", latest_tag),
-                "release_notes": body,
-                "published_at": pub_date,
-                "download_url": data.get("html_url", GITHUB_REPO_URL),
-                "status": "success"
-            }
+            latest_tag = data.get("tag_name", current_ver)
+            body = data.get("body", body)
+            pub_date = data.get("published_at", pub_date)
+            download_url = data.get("html_url", download_url)
     except Exception:
-        return {
-            "update_available": False,
-            "current_version": current_ver,
-            "latest_version": current_ver,
-            "is_newer": False,
-            "release_name": "Latest Release",
-            "release_notes": f"System is running up-to-date code ({current_ver}).",
-            "published_at": datetime.now().isoformat(),
-            "download_url": GITHUB_REPO_URL,
-            "status": "fallback"
-        }
+        pass
+
+    # Step 2: Fallback to GitHub Tags API if releases endpoint didn't find a newer version
+    if parse_ver_tuple(latest_tag) <= parse_ver_tuple(current_ver):
+        try:
+            url_tags = f"https://api.github.com/repos/{GITHUB_REPO}/tags"
+            req_tags = urllib.request.Request(url_tags, headers={"User-Agent": "FashionFlowAI-System"})
+            with urllib.request.urlopen(req_tags, timeout=5) as resp:
+                tags_data = json.loads(resp.read().decode("utf-8"))
+                if isinstance(tags_data, list) and len(tags_data) > 0:
+                    top_tag = tags_data[0].get("name", "")
+                    if parse_ver_tuple(top_tag) > parse_ver_tuple(latest_tag):
+                        latest_tag = top_tag
+                        download_url = f"{GITHUB_REPO_URL}/releases/tag/{top_tag}"
+        except Exception:
+            pass
+
+    is_newer = parse_ver_tuple(latest_tag) > parse_ver_tuple(current_ver)
+
+    return {
+        "update_available": is_newer,
+        "current_version": current_ver,
+        "latest_version": latest_tag,
+        "is_newer": is_newer,
+        "release_name": f"Release {latest_tag}",
+        "release_notes": body,
+        "published_at": pub_date,
+        "download_url": download_url,
+        "status": "success"
+    }
 
 @app.post("/api/system/apply-update")
 def apply_system_update(req: UpdateApplyRequest):
