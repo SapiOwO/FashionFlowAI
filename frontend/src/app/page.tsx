@@ -1888,20 +1888,6 @@ export default function Home() {
             {/* Dashboard QOL Filter & Custom Calendar Date Range Bar — GitHub Primer Standard */}
             <div className="mb-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
               <div className="flex flex-wrap items-center gap-2">
-                {/* Keyword Search — Synced h-8 rounded-md */}
-                <div className="relative flex-1 min-w-[180px] sm:min-w-[220px]">
-                  <input
-                    type="text"
-                    value={dashSearchQuery}
-                    onChange={(e) => setDashSearchQuery(e.target.value)}
-                    placeholder="Filter by keyword..."
-                    className="w-full h-8 bg-white border border-slate-200 rounded-md pl-8 pr-3 text-xs text-slate-800 focus:border-[#155DFC] focus:outline-none transition-colors"
-                  />
-                  <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                  </svg>
-                </div>
-
                 {/* Custom Interactive Calendar Date Range Popover Button — Synced h-8 rounded-md */}
                 <div className="relative" ref={calendarRef}>
                   <button
@@ -1923,25 +1909,25 @@ export default function Home() {
                       {/* Presets Row */}
                       <div className="flex flex-wrap gap-1 mb-3 pb-3 border-b border-slate-100">
                         <button
-                          onClick={() => { setDashPreset("all"); setShowCalendarPopover(false); }}
+                          onClick={() => { setDashPreset("all"); setCalSelStart(null); setCalSelEnd(null); setDashStartDate(""); setDashEndDate(""); setShowCalendarPopover(false); }}
                           className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "all" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
                         >
                           All Time
                         </button>
                         <button
-                          onClick={() => { setDashPreset("today"); setShowCalendarPopover(false); }}
+                          onClick={() => { setDashPreset("today"); setCalSelStart(null); setCalSelEnd(null); setDashStartDate(""); setDashEndDate(""); setShowCalendarPopover(false); }}
                           className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "today" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
                         >
                           Today
                         </button>
                         <button
-                          onClick={() => { setDashPreset("7days"); setShowCalendarPopover(false); }}
+                          onClick={() => { setDashPreset("7days"); setCalSelStart(null); setCalSelEnd(null); setDashStartDate(""); setDashEndDate(""); setShowCalendarPopover(false); }}
                           className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "7days" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
                         >
                           Last 7 Days
                         </button>
                         <button
-                          onClick={() => { setDashPreset("30days"); setShowCalendarPopover(false); }}
+                          onClick={() => { setDashPreset("30days"); setCalSelStart(null); setCalSelEnd(null); setDashStartDate(""); setDashEndDate(""); setShowCalendarPopover(false); }}
                           className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "30days" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
                         >
                           Last 30 Days
@@ -4077,6 +4063,139 @@ export default function Home() {
                     >✕</button>
                   )}
                 </div>
+                <div className="relative shrink-0">
+                  <button
+                    onClick={() => setShowCalendarPopover(!showCalendarPopover)}
+                    className="h-10 px-3.5 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-700 transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
+                  >
+                    <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
+                    </svg>
+                    <span>{getDateDisplayLabel()}</span>
+                    <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </button>
+
+                  {/* Calendar Popover Dialog */}
+                  {showCalendarPopover && (
+                    <div className="absolute top-full right-0 sm:left-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-4 w-72 sm:w-80 animate-in fade-in duration-150">
+                      {/* Presets Row */}
+                      <div className="flex flex-wrap gap-1 mb-3 pb-3 border-b border-slate-100">
+                        <button
+                          onClick={() => { setDashPreset("all"); setCalSelStart(null); setCalSelEnd(null); setDashStartDate(""); setDashEndDate(""); setShowCalendarPopover(false); }}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "all" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          All Time
+                        </button>
+                        <button
+                          onClick={() => { setDashPreset("today"); setCalSelStart(null); setCalSelEnd(null); setDashStartDate(""); setDashEndDate(""); setShowCalendarPopover(false); }}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "today" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          Today
+                        </button>
+                        <button
+                          onClick={() => { setDashPreset("7days"); setCalSelStart(null); setCalSelEnd(null); setDashStartDate(""); setDashEndDate(""); setShowCalendarPopover(false); }}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "7days" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          Last 7 Days
+                        </button>
+                        <button
+                          onClick={() => { setDashPreset("30days"); setCalSelStart(null); setCalSelEnd(null); setDashStartDate(""); setDashEndDate(""); setShowCalendarPopover(false); }}
+                          className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors ${dashPreset === "30days" ? "bg-[#155DFC] text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          Last 30 Days
+                        </button>
+                      </div>
+
+                      {/* Month & Year Navigation Header */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-bold text-slate-900">
+                          {monthNames[calMonth]} {calYear}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+                              else { setCalMonth(m => m - 1); }
+                            }}
+                            className="p-1 text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+                              else { setCalMonth(m => m + 1); }
+                            }}
+                            className="p-1 text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Weekday Labels */}
+                      <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 uppercase mb-1">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                      </div>
+
+                      {/* Month Grid Days */}
+                      <div className="grid grid-cols-7 gap-1 text-center mb-3">
+                        {Array.from({ length: new Date(calYear, calMonth, 1).getDay() }).map((_, i) => (
+                          <div key={`empty-${i}`} className="h-7" />
+                        ))}
+                        {Array.from({ length: new Date(calYear, calMonth + 1, 0).getDate() }).map((_, i) => {
+                          const day = i + 1;
+                          const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                          const isStart = calSelStart === dateStr;
+                          const isEnd = calSelEnd === dateStr;
+                          const isInRange = calSelStart && calSelEnd && new Date(dateStr) > new Date(calSelStart) && new Date(dateStr) < new Date(calSelEnd);
+
+                          let dayClass = "text-slate-700 hover:bg-slate-100 rounded-md";
+                          if (isStart || isEnd) dayClass = "bg-[#155DFC] text-white font-bold rounded-md shadow-2xs";
+                          else if (isInRange) dayClass = "bg-blue-50 text-blue-700 font-semibold rounded-none";
+
+                          return (
+                            <button
+                              key={`day-${day}`}
+                              onClick={() => handleCalendarDayClick(day)}
+                              className={`h-7 text-xs flex items-center justify-center cursor-pointer transition-colors ${dayClass}`}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Selection Summary & Action Footer */}
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                        <span className="text-[11px] font-mono text-slate-500 truncate max-w-[150px]">
+                          {calSelStart ? (calSelEnd ? `${calSelStart} → ${calSelEnd}` : `Start: ${calSelStart}`) : "Click dates"}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => { setCalSelStart(null); setCalSelEnd(null); }}
+                            className="px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                          <button
+                            onClick={applyCalendarCustomRange}
+                            disabled={!calSelStart}
+                            className="px-2.5 py-1 text-[11px] font-semibold bg-[#155DFC] hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 cursor-pointer"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Status Filter Dropdown */}
                 {(() => {
@@ -4119,7 +4238,7 @@ export default function Home() {
               </div>
 
               <div className="border border-slate-100 rounded-xl overflow-visible">
-                 <table className="w-full text-left text-xs text-slate-600 border-collapse">
+                <table className="w-full text-left text-xs text-slate-600 border-collapse">
                   <thead className="bg-slate-50/70 font-mono text-[11px] text-slate-400 uppercase border-b border-slate-100">
                     <tr>
                       <th className="py-4 px-6 font-bold w-16">ID</th>
@@ -4140,6 +4259,34 @@ export default function Home() {
 
                         const itemTags: string[] = item.result?.tags || [];
                         if (historyTagFilter !== "ALL" && !itemTags.includes(historyTagFilter)) return false;
+
+                        // Date Range Filter for Projects
+                        if (dashPreset !== "all") {
+                          const rawDate = item.timestamp || item.created_at;
+                          const itemDate = rawDate ? new Date(rawDate) : null;
+                          if (itemDate && !isNaN(itemDate.getTime())) {
+                            const now = new Date();
+                            if (dashPreset === "today") {
+                              if (itemDate.toDateString() !== now.toDateString()) return false;
+                            } else if (dashPreset === "7days") {
+                              const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                              if (itemDate < sevenDaysAgo) return false;
+                            } else if (dashPreset === "30days") {
+                              const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                              if (itemDate < thirtyDaysAgo) return false;
+                            } else if (dashPreset === "custom") {
+                              if (dashStartDate) {
+                                const start = new Date(dashStartDate);
+                                if (itemDate < start) return false;
+                              }
+                              if (dashEndDate) {
+                                const end = new Date(dashEndDate);
+                                end.setHours(23, 59, 59, 999);
+                                if (itemDate > end) return false;
+                              }
+                            }
+                          }
+                        }
 
                         if (historySearchQuery.trim()) {
                           // Split query by commas or whitespace into tokens, filter empty
