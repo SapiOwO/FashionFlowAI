@@ -180,7 +180,8 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
       >
         {selectedTags.map(tag => (
           <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-[#155DFC] border border-blue-200/60 shadow-2xs">
-            <span>🏷️ {tag}</span>
+            <svg className="w-3 h-3 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+            <span>{tag}</span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); handleToggleTag(tag); }}
@@ -229,7 +230,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    <span className="text-slate-400">🏷️</span>
+                    <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
                     {tag}
                   </span>
                   {isSelected && (
@@ -313,7 +314,7 @@ export default function Home() {
   // Tags & Designer Notes States
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [designerNotes, setDesignerNotes] = useState<string>("");
-  const [availableTags, setAvailableTags] = useState<string[]>(["SS26-Collection", "Core-Outerwear", "Sample-Proto", "v1.0-master"]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   // Active Projects & History Search/Filter States
   const [historySearchQuery, setHistorySearchQuery] = useState<string>("");
@@ -2150,7 +2151,7 @@ export default function Home() {
                         <div className="col-span-3 border border-slate-300 rounded-lg p-3 bg-white flex flex-col justify-between">
                           <span className="text-[10px] font-bold font-mono text-slate-500 uppercase mb-2">Engineering &amp; Originality Parameters</span>
                           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                            <div><span className="text-slate-500">Project Tags:</span> <strong className="text-blue-700">{fullResult?.tags && fullResult.tags.length > 0 ? fullResult.tags.map((t: string) => `🏷️ ${t}`).join(", ") : "Standard Production"}</strong></div>
+                            <div><span className="text-slate-500">Project Tags:</span> <strong className="text-blue-700">{fullResult?.tags && fullResult.tags.length > 0 ? fullResult.tags.join(", ") : "Standard Production"}</strong></div>
                             <div><span className="text-slate-500">DINOv2 Score:</span> <strong className="text-emerald-700">{fullResult.similarity_percentage}% (Original)</strong></div>
                             <div><span className="text-slate-500">Target Line Efficiency:</span> <strong className="text-slate-900">85%</strong></div>
                             <div><span className="text-slate-500">Standard Operator Rate:</span> <strong className="text-slate-900">60 Pcs / Hr</strong></div>
@@ -3291,7 +3292,8 @@ export default function Home() {
                               : "bg-blue-50 text-[#155DFC] border border-blue-200/60 hover:bg-blue-100"
                           }`}
                         >
-                          <span>🏷️ {t}</span>
+                          <svg className={`w-3 h-3 ${isSel ? "text-white" : "text-[#155DFC]"}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+                          <span>{t}</span>
                           <span className="opacity-75 font-mono text-[10px]">({count})</span>
                         </button>
                       );
@@ -3371,12 +3373,18 @@ export default function Home() {
                               {itemTags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-1">
                                   {itemTags.map(t => (
-                                    <span key={t} className="text-[10px] font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">🏷️ {t}</span>
+                                    <span key={t} className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
+                                      <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+                                      {t}
+                                    </span>
                                   ))}
                                 </div>
                               )}
                               {notes && (
-                                <p className="text-[10px] text-slate-400 truncate max-w-xs mt-1 font-mono italic">📝 &quot;{notes}&quot;</p>
+                                <p className="text-[10px] text-slate-500 truncate max-w-xs mt-1 font-sans flex items-center gap-1">
+                                  <svg className="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                                  <span className="italic truncate">&quot;{notes}&quot;</span>
+                                </p>
                               )}
                             </td>
                             <td className="py-4 px-6 font-mono text-slate-500">{formattedDate}</td>
