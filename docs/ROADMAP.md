@@ -113,6 +113,14 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Fixed preset click reset behavior (`calSelStart = null`, `calSelEnd = null`) to clear custom date highlights on *All Time*, *Today*, *Last 7 Days*, *Last 30 Days*.
   * Removed keyword search input from `Engineering Dashboard` toolbar.
   * Passed 55/55 backend unit tests (100%).
+* **Phase 24: Single All-In-One Container Architecture, GHCR CI/CD Automation & Release Lifecycle Suite (2026-07-22)**:
+  * Built single All-In-One Docker container specification (`Dockerfile`) packaging Python 3.12, Node.js 20, FastAPI backend, Next.js 16 frontend, and PostgreSQL 16 + `pgvector` v0.7.4 into a single isolated container image.
+  * Enforced PostgreSQL `pgvector` as default database engine when running in Docker (`IS_DOCKER=true`).
+  * Implemented dual-layer version check fallback in `/api/system/check-update` (checking `/releases/latest` first, with automatic fallback to `/tags`).
+  * Repaired Next.js production build (`output: "standalone"`, removed deprecated `devIndicators` in `next.config.ts`, added `designerNotes` to `SavedAnalysis` in `page.tsx`).
+  * Fixed GHCR repository owner case sensitivity (`sapiowo`) in `.github/workflows/docker-publish.yml` and configured strict version tag release triggers (`v*.*.*`).
+  * Aligned `README.md` and `docs/QUICKSTART.md` with Open WebUI documentation standards, adding Open WebUI warning callouts, single-command launcher, update sequence, and container management runbook (`docker ps`, `docker logs -f`, `docker stop`, `docker start`).
+  * Passed 55/55 backend unit tests (100%), verified live container running on port 3000.
 
 ---
 

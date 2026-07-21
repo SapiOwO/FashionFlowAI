@@ -33,7 +33,7 @@ status: "Completed"
 | 2026-07-21 | Active Projects Live Autocomplete & Unified Toolbar Suite: converted Active Projects header toolbar into a Knowledge-Base style single horizontal bar combining search, Status dropdown, and Tags dropdown. Implemented live search autocomplete popup with project image thumbnails, ID `#1`, title, and tags matching as user types. Anchored three-dots menu directly below action button (`right-4 top-full mt-1`). 45/45 tests PASS (100%), Next.js build compiled in 1583ms. | AI Coding Agent |
 | 2026-07-21 | Tag System & Notes Sync, 3-Dots Positioning & History Search Highlight Suite: auto-committed pending typed tags prior to process sheet compilation, added `Project Tags` rendering to Step 3 Doll Metadata, reset `selectedTags` and `designerNotes` on workspace resets, fixed 3-dots actions menu positioning via relative button wrapper, built `HighlightMatch` helper component for regular query font vs bold matched words in Active Projects & History search autocomplete, and populated database with sample tagged test products. 50/50 tests PASS (100%), Next.js build compiled in 1540ms. | AI Coding Agent |
 | 2026-07-21 | GitHub Primer Tokens, Outer/Inner Radius Audit & Date Range Calendar Suite: standardized all UI elements to GitHub Primer design tokens (`--github-border-radius-base: 6px`, `--github-border-radius-large: 12px`). Enforced Outer vs Inner Corner Radius rule ($R_{\text{inner}} = R_{\text{outer}} - \text{padding}$) across all views in `page.tsx` (cards `12px`, inner buttons/badges/inputs `6px`). Integrated custom Date Range Calendar Popover into Active Projects & History, fixed preset click reset behavior (`calSelStart = null`), and removed keyword searchbox from Dashboard toolbar. 55/55 backend tests PASS (100%). | AI Coding Agent |
-
+| 2026-07-22 | Single All-In-One Container Architecture, GHCR CI/CD Automation, Tag-Based Release Lifecycle & Docker Management Suite: configured single All-In-One Docker image (Python 3.12 + Node 20 + Postgres 16 + pgvector v0.7.4), added automatic GHCR lowercase owner workflow (`docker-publish.yml`), enforced PostgreSQL pgvector as default database mode in Docker (`IS_DOCKER=true`), added dual-layer version check fallback in `/api/system/check-update` (checking releases and `/tags`), fixed Next.js TypeScript build errors (`next.config.ts` and `SavedAnalysis`), aligned README.md & QUICKSTART.md with Open WebUI documentation style, and configured strict release tag triggers (`v*.*.*`). 55/55 backend tests PASS (100%). | AI Coding Agent |
 
 ---
 
@@ -316,4 +316,53 @@ status: "Completed"
 * **Calendar State Reset**: Updated preset click handlers to reset `calSelStart(null)` and `calSelEnd(null)` on *All Time*, *Today*, *Last 7 Days*, and *Last 30 Days*.
 * **Active Projects Filtering**: Added Date Range filter logic to `filteredHistory` calculation checking `item.timestamp` against `dashPreset`, `dashStartDate`, and `dashEndDate`.
 * **Testing & Build Verification**: **55/55 backend unit tests passed (100%)**. Next.js dev server running error-free.
+
+
+---
+
+# Case Study #13: Single All-In-One Container Architecture, GHCR CI/CD Automation, Tag-Based Release Lifecycle & Docker Management Suite (2026-07-22)
+
+## 5W+1H Diagnostic Matrix
+
+### 1. What
+* **Problem**: 
+  1. **Container Isolation & Update Discovery**: Web UI version check queried `/releases/latest` API only, returning 404 when Git tags (`v0.1.8`) were pushed without a manually drafted GitHub Release object.
+  2. **GHCR Owner Case Sensitivity**: GitHub Actions workflow passed `SapiOwO` (capitalized), causing GHCR package publishing failures.
+  3. **TypeScript Build Failures in Docker**: `next.config.ts` included deprecated `devIndicators` (`appIsrStatus`), and `page.tsx` accessed `designerNotes` missing from `SavedAnalysis` interface.
+  4. **Docker Container Lifecycle Confusion**: Users required clear guidance on container immutability, data persistence (`-v fashionflow-data:/app/data`), default PostgreSQL + `pgvector` database selection, and container management commands.
+* **Resolution**:
+  1. **Dual-Layer Version Check Fallback**: Updated `/api/system/check-update` in `backend/app.py` to first check `/releases/latest` and fallback to `/tags` (`https://api.github.com/repos/SapiOwO/FashionFlowAI/tags`).
+  2. **GHCR Lowercase Owner Fix**: Added a step in `.github/workflows/docker-publish.yml` to convert `GITHUB_REPOSITORY_OWNER` to lowercase (`sapiowo`).
+  3. **TypeScript Build Repair**: Removed deprecated `devIndicators` from `next.config.ts`, added `output: "standalone"`, and updated `SavedAnalysis` interface in `page.tsx` with `designerNotes?: string;`.
+  4. **Strict Tag Triggers**: Configured GitHub Actions to trigger Docker container builds strictly on version tags (`v*.*.*`).
+  5. **Open WebUI Documentation Alignment**: Reorganized `README.md` and `docs/QUICKSTART.md` matching Open WebUI style with Open WebUI callout alerts, single-command Docker launcher, update instructions, and a dedicated container management section (`docker ps`, `docker logs -f`, `docker stop`, `docker start`).
+
+### 2. Who
+* DevOps engineers, system administrators, software developers, and end-users deploying FashionFlow AI locally or on cloud VPS instances (AWS EC2, DigitalOcean, Hetzner, GCP).
+
+### 3. Where
+* `backend/app.py`: `/api/system/check-update` endpoint and `is_docker_env` PostgreSQL default logic.
+* `backend/db.py`: Automatic `DB_TYPE` selection logic defaulting to `postgresql` when `IS_DOCKER=true`.
+* `frontend/next.config.ts` & `frontend/src/app/page.tsx`: Standalone output and `SavedAnalysis` interface definition.
+* `.github/workflows/docker-publish.yml`: GitHub Actions GHCR build & publish workflow.
+* `README.md` & `docs/QUICKSTART.md`: Open WebUI documentation layout and container management runbook.
+* `docs/CASE_STUDIES.md`: Document Index and Case Study #13 5W+1H entry.
+
+### 4. When
+* July 22nd, 2026 (Phase 24 — Single All-In-One Container Architecture, GHCR Automation & Tag-Based Release Suite).
+
+### 5. Why
+* **Container Security Boundaries**: Web applications running inside a browser sandbox cannot (and should not) execute host `docker pull` commands directly for security reasons. Providing a clear notification in the UI + 4-line terminal update sequence or Watchtower auto-updater aligns with industry best practices.
+* **Deterministic Version Comparison**: Numeric tuple comparison (`parse_ver_tuple`) ensures version strings like `v0.1.8`, `v0.1.9`, and `v1.0.0` are evaluated strictly by mathematical magnitude.
+* **Idempotent Data Persistence**: Mounting `-v fashionflow-data:/app/data` ensures PostgreSQL database records, HNSW vector indexes, and uploaded garment sketches survive container re-creations and image updates without data loss.
+
+### 6. How
+* **Docker Default Database Enforcement**: In `backend/db.py`, `IS_DOCKER=true` defaults `DB_TYPE` to `postgresql` and `DB_PASS` to `postgres`. The single-container `Dockerfile` compiles PostgreSQL 16 + `pgvector` v0.7.4 from source directly inside the container.
+* **Dual-Layer Version Resolution**: `check_system_update()` queries `/releases/latest` first; if `parse_ver_tuple(latest_tag) <= parse_ver_tuple(current_ver)`, it queries `/tags` to detect pushed git tags.
+* **Workflow Tag Triggering**: Configured `.github/workflows/docker-publish.yml` with `on: push: tags: ["v*.*.*"]` to keep daily git pushes fast and reserve Docker container builds for official releases.
+* **Empirical Verification**:
+  - `npm --prefix frontend run build`: Compiled 100% cleanly in 1703ms with 0 TypeScript errors.
+  - `pytest backend/tests/`: **55/55 tests PASS (100%)**.
+  - GitHub Actions Workflow Run #20: **Build & Publish to GHCR Passed (Green Checkmark `✓`)**.
+  - Container Deployment: Container `fashionflowai` running live on `http://localhost:3000`.
 
