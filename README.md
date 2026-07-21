@@ -111,6 +111,29 @@ docker run -d -p 3000:3000 -p 8000:8000 -v fashionflow-data:/app/data --name fas
 
 After installation, access the FashionFlow AI Engineering Dashboard at **http://localhost:3000**. Enjoy! 🎉
 
+#### Managing Your Running Container 🛠️
+
+Because the `-d` (*detached mode*) and `--restart always` flags were included in the command, **FashionFlow AI is running automatically in the background right now**, and will automatically launch even if you restart your computer!
+
+Useful commands to manage your running container:
+
+* **Check Container Status**:
+  ```bash
+  docker ps
+  ```
+* **View Live Application & Server Logs**:
+  ```bash
+  docker logs -f fashionflowai
+  ```
+* **Stop the Container**:
+  ```bash
+  docker stop fashionflowai
+  ```
+* **Start the Container (after stopping)**:
+  ```bash
+  docker start fashionflowai
+  ```
+
 ---
 
 ### Using the Dev Branch 🌙
