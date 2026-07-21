@@ -77,6 +77,15 @@ code, pre, .font-mono, time {
   font-size: 12px;
 }
 
+.gh-backdrop {
+  background-color: rgba(31, 35, 40, 0.4);
+}
+
+/* Hide Next.js Dev Indicator floating badge (black circle N at bottom left) */
+nextjs-portal {
+  display: none !important;
+}
+
 /* ── PRINT MEDIA SPECIFICATIONS (Clean A4 Technical Spec Export) ── */
 @page {
   margin: 10mm;

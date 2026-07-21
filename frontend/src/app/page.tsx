@@ -1600,14 +1600,14 @@ export default function Home() {
   return (
     <div className="flex flex-col md:flex-row h-screen w-screen overflow-hidden bg-white text-slate-800 print:h-auto print:w-full print:overflow-visible print:bg-white print:p-0 print:m-0">
       {/* Mobile Top Navigation Header (Only visible on small screens) */}
-      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100 sticky top-0 z-30 print:hidden">
-        <div className="flex items-center gap-2.5">
+      <header className="md:hidden flex items-center justify-between px-5 py-3.5 bg-white border-b border-slate-200 sticky top-0 z-30 print:hidden">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileOpen(!isMobileOpen)}
-            className="p-2 text-slate-700 hover:text-[#155DFC] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-slate-700 hover:text-[#155DFC] hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
             aria-label="Open Navigation Drawer"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
@@ -1615,33 +1615,30 @@ export default function Home() {
             FashionFlow <span className="bg-[#155DFC] text-white text-xs uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
           </span>
         </div>
-        <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
-          Mobile Mode
-        </span>
       </header>
 
-      {/* Mobile Backdrop Overlay (Zero reflow for main content) */}
+      {/* Mobile Backdrop Overlay (Zero reflow for main content, standard GitHub dimming) */}
       {isMobileOpen && (
         <div
           onClick={() => setIsMobileOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs md:hidden transition-opacity duration-300"
+          className="fixed inset-0 z-40 gh-backdrop md:hidden transition-opacity duration-300"
           aria-hidden="true"
         />
       )}
 
       {/* Sidebar Navigation — Floating Drawer on Mobile (GPU accelerated), Flex Sidebar on Desktop */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 md:relative md:z-auto h-full flex flex-col py-6 md:py-8 flex-shrink-0 transition-all duration-300 border-r border-slate-100 overflow-hidden bg-white print:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 md:relative md:z-auto h-full flex flex-col py-6 md:py-8 flex-shrink-0 transition-all duration-300 border-r border-slate-200 overflow-hidden bg-white print:hidden ${
           isMobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0"
         } ${
-          isCollapsed ? "md:w-[78px] md:px-3.5" : "w-[280px] px-5"
+          isCollapsed ? "w-[85vw] max-w-[320px] md:w-[78px] px-5 md:px-3.5" : "w-[85vw] max-w-[320px] md:w-[280px] px-5"
         }`}
       >
-        <div className="flex items-center justify-between mb-8 md:mb-10 h-8 pl-2 pr-2 overflow-hidden">
+        <div className="flex items-center justify-between mb-6 md:mb-10 h-8 pl-1 pr-1 overflow-hidden">
           <div className="flex items-center">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden md:flex text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer p-1 rounded-lg hover:bg-slate-100 transition-colors items-center justify-center flex-shrink-0"
+              className="hidden md:flex text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer p-1 rounded-md hover:bg-slate-100 transition-colors items-center justify-center flex-shrink-0"
               aria-label="Toggle Sidebar"
             >
               <svg
@@ -1655,7 +1652,7 @@ export default function Home() {
               </svg>
             </button>
             <span className={`font-display font-bold text-xl text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
-              isCollapsed ? "md:max-w-0 md:opacity-0 md:ml-0" : "max-w-[200px] opacity-100 ml-3.5"
+              isCollapsed ? "md:max-w-0 md:opacity-0 md:ml-0" : "max-w-[200px] opacity-100 ml-3"
             }`}>
               FashionFlow <span className="bg-[#155DFC] text-white text-xs uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
             </span>
@@ -1664,7 +1661,7 @@ export default function Home() {
           {/* Close Button for Mobile Drawer */}
           <button
             onClick={() => setIsMobileOpen(false)}
-            className="md:hidden text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+            className="md:hidden text-slate-500 hover:text-slate-900 p-1.5 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label="Close Drawer"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
