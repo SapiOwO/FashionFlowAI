@@ -32,6 +32,7 @@ status: "Completed"
 | 2026-07-21 | Recommended Tag Badge & Tags/Notes Persistence Rehydration: updated `TagSelector` label to `Project Tags (Recommended)`, added `tags` and `designer_notes` to `DollSheetRequest` model & pipeline, rehydrated tags/notes in `handleLoadProject`, and auto-committed un-entered tag text upon compilation. 45/45 tests PASS (100%), Next.js build compiled in 1665ms. | AI Coding Agent |
 | 2026-07-21 | Active Projects Live Autocomplete & Unified Toolbar Suite: converted Active Projects header toolbar into a Knowledge-Base style single horizontal bar combining search, Status dropdown, and Tags dropdown. Implemented live search autocomplete popup with project image thumbnails, ID `#1`, title, and tags matching as user types. Anchored three-dots menu directly below action button (`right-4 top-full mt-1`). 45/45 tests PASS (100%), Next.js build compiled in 1583ms. | AI Coding Agent |
 | 2026-07-21 | Tag System & Notes Sync, 3-Dots Positioning & History Search Highlight Suite: auto-committed pending typed tags prior to process sheet compilation, added `Project Tags` rendering to Step 3 Doll Metadata, reset `selectedTags` and `designerNotes` on workspace resets, fixed 3-dots actions menu positioning via relative button wrapper, built `HighlightMatch` helper component for regular query font vs bold matched words in Active Projects & History search autocomplete, and populated database with sample tagged test products. 50/50 tests PASS (100%), Next.js build compiled in 1540ms. | AI Coding Agent |
+| 2026-07-21 | GitHub Primer Tokens, Outer/Inner Radius Audit & Date Range Calendar Suite: standardized all UI elements to GitHub Primer design tokens (`--github-border-radius-base: 6px`, `--github-border-radius-large: 12px`). Enforced Outer vs Inner Corner Radius rule ($R_{\text{inner}} = R_{\text{outer}} - \text{padding}$) across all views in `page.tsx` (cards `12px`, inner buttons/badges/inputs `6px`). Integrated custom Date Range Calendar Popover into Active Projects & History, fixed preset click reset behavior (`calSelStart = null`), and removed keyword searchbox from Dashboard toolbar. 55/55 backend tests PASS (100%). | AI Coding Agent |
 
 
 ---
@@ -283,3 +284,36 @@ status: "Completed"
 * `get_top_k_similar_history_records()` (PostgreSQL path): Single SQL `ORDER BY visual_vector <=> %s::vector LIMIT %s` query, returns Top-K with `cosine_pct` computed as `ROUND((1 - (visual_vector <=> query)) * 100, 1)`.
 * Log output changed from `Scanning N DB records / Comparing vs '...'` loop to `pgvector HNSW → Top-1: '...'` single-line result.
 * Full test suite verification: **34/34 tests passed** (30 contract + 4 integration tests with real images from example folder).
+
+
+---
+
+# Case Study #12: GitHub Primer Token Standardization, Outer/Inner Radius Audit & Date Picker Integration (2026-07-21)
+
+## 5W+1H Diagnostic Matrix
+
+### 1. What
+* **Problem**: Certain inner child elements (buttons, inputs, icon slots) nested inside padded card containers used inconsistent `rounded-xl` (12px) radii, violating the Outer vs Inner Radius formula ($R_{\text{inner}} = R_{\text{outer}} - \text{padding}$). In addition, the Calendar Popover retain highlighted date selections when clicking "All Time", `Active Projects & History` lacked the Date Range Picker, and `Engineering Dashboard` contained an unwanted keyword search box.
+* **Resolution**: Standardized all UI elements to GitHub Primer design tokens (`--github-border-radius-base: 6px`, `--github-border-radius-large: 12px`). Audited and updated all inner buttons, inputs, textareas, selects, and icon slots to `rounded-md` (6px) while preserving `rounded-xl` (12px) on outer cards. Integrated the custom Date Range Calendar Popover into `Active Projects & History`, fixed preset click handlers to reset `calSelStart` and `calSelEnd` to `null`, and deleted the keyword search input from `Engineering Dashboard`.
+
+### 2. Who
+* UI/UX designers, garment engineers, and production managers requiring strict design system consistency and date range filtering across engineering logs.
+
+### 3. Where
+* `frontend/src/app/page.tsx`: Sidebar 52px / 36x36 alignment, KPI cards, Engineering Workflow step cards, Date Range Calendar Popover, Active Projects toolbar & table filter logic.
+* `frontend/src/app/globals.css`: GitHub Primer CSS variables, font rules, dev indicator portal suppression.
+* `docs/`: ARCHITECTURE.md, CASE_STUDIES.md, QUICKSTART.md, ROADMAP.md.
+
+### 4. When
+* July 21st, 2026 (Phase 23 — GitHub Primer Design Token Standardization & Date Picker Suite).
+
+### 5. Why
+* Adhering strictly to the mathematical Outer vs Inner Radius Rule ($R_{\text{inner}} = R_{\text{outer}} - \text{padding}$) prevents visual clash and creates a cohesive, high-end, production-grade interface.
+* Resetting calendar selection state on preset click ensures visual feedback is 100% accurate without phantom grid highlights.
+
+### 6. How
+* **Outer vs Inner Radius Refactor**: Replaced `rounded-xl` on inner elements (KPI icon slots, mode choice buttons, form inputs, quantity chips, bottom action buttons) with `rounded-md` (6px).
+* **Calendar State Reset**: Updated preset click handlers to reset `calSelStart(null)` and `calSelEnd(null)` on *All Time*, *Today*, *Last 7 Days*, and *Last 30 Days*.
+* **Active Projects Filtering**: Added Date Range filter logic to `filteredHistory` calculation checking `item.timestamp` against `dashPreset`, `dashStartDate`, and `dashEndDate`.
+* **Testing & Build Verification**: **55/55 backend unit tests passed (100%)**. Next.js dev server running error-free.
+

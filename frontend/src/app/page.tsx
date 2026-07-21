@@ -329,7 +329,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
       {/* Embedded Tag Pills + Direct Type Input Container */}
       <div 
         onClick={() => setIsOpen(true)}
-        className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-2 px-3 min-h-[44px] flex flex-wrap items-center gap-1.5 focus-within:bg-white focus-within:border-[#155DFC] focus-within:ring-1 focus-within:ring-[#155DFC] transition-colors cursor-text"
+        className="bg-slate-50/80 border border-slate-200/90 rounded-md py-2 px-3 min-h-[44px] flex flex-wrap items-center gap-1.5 focus-within:bg-white focus-within:border-[#155DFC] focus-within:ring-1 focus-within:ring-[#155DFC] transition-colors cursor-text"
       >
         {selectedTags.map(tag => (
           <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-[#155DFC] border border-blue-200/60 shadow-2xs">
@@ -2071,7 +2071,7 @@ export default function Home() {
               <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Total Analyses</span>
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                  <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                     <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
@@ -2084,7 +2084,7 @@ export default function Home() {
               <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Unique Designs</span>
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                  <div className="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
                     <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                     </svg>
@@ -2102,7 +2102,7 @@ export default function Home() {
               <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Historical Matches</span>
-                  <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                  <div className="w-8 h-8 rounded-md bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
                     <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
                     </svg>
@@ -2120,7 +2120,7 @@ export default function Home() {
               <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Avg. Est. SMV</span>
-                  <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                  <div className="w-8 h-8 rounded-md bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                     <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -2149,7 +2149,7 @@ export default function Home() {
                   <h2 className="font-display font-bold text-lg text-slate-900">Engineering Workflow</h2>
                   <button
                     onClick={() => { setActiveTab("design-input-view"); setCurrentStep(1); }}
-                    className="text-xs font-semibold text-[#155DFC] hover:text-[#1249cc] bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                    className="text-xs font-semibold text-[#155DFC] hover:text-[#1249cc] bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-md transition-all cursor-pointer flex items-center gap-1.5"
                   >
                     Start New Analysis →
                   </button>
@@ -2360,7 +2360,7 @@ export default function Home() {
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                              <div className={`w-12 h-12 rounded-md flex items-center justify-center ${
                                 projectMode === "single" ? "bg-[#155DFC] text-white" : "bg-slate-100 text-slate-600"
                               }`}>
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -2392,7 +2392,7 @@ export default function Home() {
                             }`}
                           >
                             <div className="flex items-center justify-between">
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                              <div className={`w-12 h-12 rounded-md flex items-center justify-center ${
                                 projectMode === "doll" ? "bg-[#155DFC] text-white" : "bg-slate-100 text-slate-600"
                               }`}>
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -2422,7 +2422,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={handleResetWorkspace}
-                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer active:scale-98"
+                        className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-md transition-all cursor-pointer active:scale-98"
                       >
                         Reset Selection
                       </button>
@@ -2430,7 +2430,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setCurrentStep(2)}
-                        className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
+                        className="px-8 py-3 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-md flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-98"
                       >
                         <span>Continue to Step 2</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -2619,9 +2619,9 @@ export default function Home() {
                                 {/* Matched project preview */}
                                 <div className="flex items-center gap-3 px-4 py-3 border-b border-blue-100/60">
                                   {topMatch?.preview_image ? (
-                                    <img src={topMatch.preview_image} alt={topMatch.title} className="w-12 h-12 object-contain rounded-xl border border-blue-200 bg-white flex-shrink-0" />
+                                    <img src={topMatch.preview_image} alt={topMatch.title} className="w-12 h-12 object-contain rounded-md border border-blue-200 bg-white flex-shrink-0" />
                                   ) : (
-                                    <div className="w-12 h-12 rounded-xl border border-blue-200 bg-blue-100 flex items-center justify-center text-blue-400 flex-shrink-0">
+                                    <div className="w-12 h-12 rounded-md border border-blue-200 bg-blue-100 flex items-center justify-center text-blue-400 flex-shrink-0">
                                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                     </div>
                                   )}
@@ -2639,7 +2639,7 @@ export default function Home() {
                                       setReuseMode("reuse");
                                       setQuizName(topMatch?.title || "");
                                     }}
-                                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 cursor-pointer ${
+                                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-md text-xs font-bold transition-all border-2 cursor-pointer ${
                                       reuseMode === "reuse"
                                         ? "bg-[#155DFC] text-white border-[#155DFC] shadow-md"
                                         : "bg-white text-[#155DFC] border-[#155DFC]/40 hover:border-[#155DFC] hover:bg-blue-50"
@@ -2657,7 +2657,7 @@ export default function Home() {
                                       setReuseMode("new");
                                       setQuizName("");
                                     }}
-                                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 cursor-pointer ${
+                                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-md text-xs font-bold transition-all border-2 cursor-pointer ${
                                       reuseMode === "new"
                                         ? "bg-slate-800 text-white border-slate-800 shadow-md"
                                         : "bg-white text-slate-700 border-slate-200 hover:border-slate-400 hover:bg-slate-50"
@@ -2679,7 +2679,7 @@ export default function Home() {
                                       value={quizName}
                                       onChange={(e) => setQuizName(e.target.value)}
                                       placeholder="e.g. Autumn Casual Jacket Batch #02 — 2026"
-                                      className="bg-white border border-slate-200/90 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                                      className="bg-white border border-slate-200/90 rounded-md py-2.5 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
                                       autoFocus
                                     />
                                   </div>
@@ -2698,7 +2698,7 @@ export default function Home() {
                                 onChange={(e) => setQuizName(e.target.value)}
                                 maxLength={100}
                                 placeholder="e.g. Autumn Casual Jacket Batch #01"
-                                className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full break-words break-all"
+                                className="bg-slate-50/80 border border-slate-200/90 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full break-words break-all"
                               />
                             </div>
                           )}
@@ -2708,7 +2708,7 @@ export default function Home() {
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-sm font-semibold text-slate-700">Garment Category</label>
                                 <select value={quizGarment} onChange={(e) => setQuizGarment(e.target.value)}
-                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                  className="bg-slate-50/80 border border-slate-200/90 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Tops">
                                     <option value="Shirt">Kemeja (Shirt) — 8 Sewing Steps</option>
                                     <option value="T-Shirt">Kaos (T-Shirt) — 4 Sewing Steps</option>
@@ -2727,7 +2727,7 @@ export default function Home() {
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-sm font-semibold text-slate-700">Fabric Application / Weight</label>
                                 <select value={quizFabric} onChange={(e) => setQuizFabric(e.target.value)}
-                                  className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                  className="bg-slate-50/80 border border-slate-200/90 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Light-weight">
                                     <option value="Silk (Light-weight)">Sutra / Silk</option>
                                     <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
@@ -2757,7 +2757,7 @@ export default function Home() {
                             <div className="flex flex-col gap-1.5">
                               <label className="text-sm font-semibold text-slate-700">Doll Type Template</label>
                               <select value={dollType} onChange={(e) => setDollType(e.target.value)}
-                                className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
+                                className="bg-slate-50/80 border border-slate-200/90 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                 {Object.keys(DOLL_TYPES).map(t => (
                                   <option key={t} value={t}>{t} — ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})</option>
                                 ))}
@@ -2773,7 +2773,7 @@ export default function Home() {
                                   key={qty}
                                   type="button"
                                   onClick={() => setBatchQuantity(qty)}
-                                  className={`flex-1 py-2 px-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer border ${
+                                  className={`flex-1 py-2 px-2 rounded-md text-xs font-mono font-bold transition-all cursor-pointer border ${
                                     batchQuantity === qty
                                       ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
                                       : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
@@ -2787,7 +2787,7 @@ export default function Home() {
                                 min={1}
                                 value={batchQuantity}
                                 onChange={(e) => setBatchQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="w-20 bg-slate-50/80 border border-slate-200/90 rounded-xl py-2 px-2 text-xs font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
+                                className="w-20 bg-slate-50/80 border border-slate-200/90 rounded-md py-2 px-2 text-xs font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
                                 placeholder="Qty"
                               />
                             </div>
@@ -2809,7 +2809,7 @@ export default function Home() {
                               maxLength={1000}
                               placeholder="e.g. Hand-sewn collar detail, 1cm seam allowance on armholes, customer request for extra reinforced bartacking..."
                               rows={3}
-                              className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 px-3.5 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full resize-none leading-relaxed break-words break-all"
+                              className="bg-slate-50/80 border border-slate-200/90 rounded-md py-2.5 px-3.5 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full resize-none leading-relaxed break-words break-all"
                             />
                           </div>
                           
@@ -2841,7 +2841,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={handleResetStep2}
-                        className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 font-semibold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+                        className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 font-semibold text-xs rounded-md transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                       >
                         <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -2853,7 +2853,7 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={handleSafeBackToStep1}
-                          className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2 active:scale-98"
+                          className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-md transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                         >
                           ← Back to Mode Choice
                         </button>
@@ -2870,7 +2870,7 @@ export default function Home() {
                             // Must have a sketch loaded
                             (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))
                           }
-                          className="px-8 py-3 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98 bg-[#155DFC] hover:bg-[#1249cc]"
+                          className="px-8 py-3 text-white font-bold text-xs rounded-md flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98 bg-[#155DFC] hover:bg-[#1249cc]"
                         >
                           {isLoading ? (
                             <>
@@ -3021,13 +3021,13 @@ export default function Home() {
                         <h1 className="font-sans font-bold text-2xl md:text-3xl text-slate-900">{quizName}</h1>
                       </div>
                       <div className="flex items-center gap-3 no-print">
-                        <button onClick={() => window.print()} className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                        <button onClick={() => window.print()} className="px-5 py-2.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition-colors cursor-pointer flex items-center gap-1.5">
                           <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                           </svg>
                           Export Specs
                         </button>
-                        <button onClick={handleResetWorkspace} className="px-5 py-2.5 rounded-xl bg-[#155DFC] hover:bg-[#1249cc] text-white font-medium text-xs transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5">
+                        <button onClick={handleResetWorkspace} className="px-5 py-2.5 rounded-md bg-[#155DFC] hover:bg-[#1249cc] text-white font-medium text-xs transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5">
                           <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                           </svg>
@@ -3479,16 +3479,16 @@ export default function Home() {
                         setActiveTechPackData(fullResult);
                         setShowTechPackModal(true);
                       }}
-                      className="px-4 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-4 py-2.5 text-xs font-bold rounded-md bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                       </svg>
                       EXPORT TECH PACK
                     </button>
-                    <button className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-[#155DFC] text-white shadow-xs">FRONT</button>
-                    <button className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">BACK</button>
-                    <button className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 cursor-pointer">
+                    <button className="px-4 py-2.5 text-xs font-semibold rounded-md bg-[#155DFC] text-white shadow-xs">FRONT</button>
+                    <button className="px-4 py-2.5 text-xs font-semibold rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">BACK</button>
+                    <button className="px-4 py-2.5 text-xs font-semibold rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 cursor-pointer">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
                       </svg>
