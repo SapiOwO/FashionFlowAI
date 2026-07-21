@@ -1631,14 +1631,14 @@ export default function Home() {
         className={`fixed inset-y-0 left-0 z-50 md:relative md:z-auto h-full flex flex-col py-6 md:py-8 flex-shrink-0 transition-all duration-300 border-r border-slate-200 overflow-hidden bg-white print:hidden ${
           isMobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0"
         } ${
-          isCollapsed ? "w-[85vw] max-w-[320px] md:w-[78px] px-5 md:px-3.5" : "w-[85vw] max-w-[320px] md:w-[280px] px-5"
+          isCollapsed ? "w-[85vw] max-w-[320px] md:w-[52px] px-5 md:px-2" : "w-[85vw] max-w-[320px] md:w-[280px] px-5"
         }`}
       >
-        <div className="flex items-center justify-between mb-6 md:mb-10 h-8 pl-1 pr-1 overflow-hidden">
+        <div className={`flex items-center mb-6 md:mb-8 h-9 overflow-hidden ${isCollapsed ? "md:justify-center px-0" : "justify-between pl-1 pr-1"}`}>
           <div className="flex items-center">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden md:flex text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer p-1 rounded-md hover:bg-slate-100 transition-colors items-center justify-center flex-shrink-0"
+              className="hidden md:flex w-9 h-9 text-slate-700 hover:text-[#155DFC] focus:outline-none cursor-pointer rounded-md hover:bg-slate-100 transition-colors items-center justify-center flex-shrink-0 mx-auto"
               aria-label="Toggle Sidebar"
             >
               <svg
@@ -1652,7 +1652,7 @@ export default function Home() {
               </svg>
             </button>
             <span className={`font-display font-bold text-xl text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
-              isCollapsed ? "md:max-w-0 md:opacity-0 md:ml-0" : "max-w-[200px] opacity-100 ml-3"
+              isCollapsed ? "md:hidden" : "max-w-[200px] opacity-100 ml-3"
             }`}>
               FashionFlow <span className="bg-[#155DFC] text-white text-xs uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
             </span>
@@ -1671,50 +1671,58 @@ export default function Home() {
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex flex-col gap-1.5 flex-grow overflow-y-auto pr-1">
-          {sidebarItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                setActiveTab(item.id);
-                setIsMobileOpen(false);
-              }}
-              className={`flex items-center rounded-xl font-medium text-xs py-3 px-3.5 transition-all duration-300 w-full cursor-pointer overflow-hidden ${
-                activeTab === item.id
-                  ? "bg-[#155DFC] text-white shadow-xs font-semibold"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <svg
-                className="w-5 h-5 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
+        <nav className="flex flex-col gap-1.5 flex-grow overflow-y-auto pr-0">
+          {sidebarItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setIsMobileOpen(false);
+                }}
+                title={isCollapsed ? item.label : undefined}
+                className={`flex items-center rounded-md font-medium text-sm transition-all duration-300 cursor-pointer overflow-hidden ${
+                  isCollapsed
+                    ? "md:w-9 md:h-9 md:justify-center md:px-0 md:mx-auto py-2.5 px-3.5 w-full"
+                    : "w-full py-2.5 px-3.5"
+                } ${
+                  isActive
+                    ? "bg-[#155DFC] text-white font-semibold shadow-xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
               >
-                {item.id === "dashboard-view" ? (
-                  <>
+                <svg
+                  className="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  {item.id === "dashboard-view" ? (
+                    <>
+                      <path d={item.icon}></path>
+                      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </>
+                  ) : item.id === "history-view" || item.id === "design-input-view" || item.id === "sewing-sequence-view" || item.id === "tooling-view" || item.id === "smv-view" || item.id === "knowledge-view" || item.id === "projects-view" || item.id === "settings-view" ? (
                     <path d={item.icon}></path>
-                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                  </>
-                ) : item.id === "history-view" || item.id === "design-input-view" || item.id === "sewing-sequence-view" || item.id === "tooling-view" || item.id === "smv-view" || item.id === "knowledge-view" || item.id === "projects-view" || item.id === "settings-view" ? (
-                  <path d={item.icon}></path>
-                ) : (
-                  <>
-                    <rect x="3" y="3" width="7" height="9" rx="1" />
-                    <rect x="14" y="3" width="7" height="5" rx="1" />
-                    <rect x="14" y="12" width="7" height="9" rx="1" />
-                    <rect x="3" y="16" width="7" height="5" rx="1" />
-                  </>
-                )}
-              </svg>
-              <span className={`whitespace-nowrap truncate overflow-hidden transition-all duration-300 ${
-                isCollapsed ? "md:max-w-0 md:opacity-0 md:ml-0" : "max-w-[180px] opacity-100 ml-3.5"
-              }`}>
-                {item.label}
-              </span>
-            </button>
-          ))}
+                  ) : (
+                    <>
+                      <rect x="3" y="3" width="7" height="9" rx="1" />
+                      <rect x="14" y="3" width="7" height="5" rx="1" />
+                      <rect x="14" y="12" width="7" height="9" rx="1" />
+                      <rect x="3" y="16" width="7" height="5" rx="1" />
+                    </>
+                  )}
+                </svg>
+                <span className={`whitespace-nowrap truncate overflow-hidden transition-all duration-300 ${
+                  isCollapsed ? "md:hidden" : "max-w-[180px] opacity-100 ml-3"
+                }`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
         </nav>
       </aside>
 
