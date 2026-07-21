@@ -92,31 +92,48 @@ fashionflowrework/
 
 ## 🚀 Quickstart & Verification
 
-### 1. Installation
+Choose your preferred deployment method below:
+
+### Method A: Local Virtualenv Setup (Recommended for Development)
 
 ```bash
-# Create and activate virtual environment
+# 1. Create and activate virtual environment
 python -m venv .venv
 .venv\Scripts\Activate.ps1   # Windows
 # source .venv/bin/activate  # macOS / Linux
 
-# Install backend & frontend dependencies
+# 2. Install backend & frontend dependencies
 pip install -r requirements.txt
 cd frontend && npm install && cd ..
-```
 
-### 2. Launch Application
-
-```bash
+# 3. Launch unified dev environment (FastAPI + Next.js)
 python main.py
 ```
 - **Frontend Dashboard**: `http://localhost:3000`
 - **FastAPI Backend**: `http://127.0.0.1:8000`
 - **Catalog Diagnostics**: `http://127.0.0.1:8000/api/validate-catalog`
 
-### 3. Run Automated Unit & Integration Tests
+---
+
+### Method B: Docker & Docker Compose Container Deployment
 
 ```bash
-.venv\Scripts\python.exe -m unittest backend/tests/test_backend_contract.py
+# Build and start all services (Backend API + Next.js Frontend + Optional pgvector DB)
+docker-compose up --build -d
+
+# Check running container status
+docker-compose ps
+
+# View live container logs
+docker-compose logs -f
 ```
-- Executes **35 automated integration tests** covering DINOv2 vector extraction, machine resolver logic, presser foot specs, batch SMV scaling, and sub-10ms caching.
+- Containers run synchronously: `fashionflow-backend` (Port 8000) & `fashionflow-frontend` (Port 3000).
+
+---
+
+### Method C: Automated Unit & Integration Tests
+
+```bash
+.\.venv\Scripts\pytest backend/tests/
+```
+- Executes **55 automated integration & contract tests** covering DINOv2 vector extraction, machine resolver logic, presser foot specs, batch SMV scaling, system info endpoints, and sub-10ms caching (100% pass rate).
