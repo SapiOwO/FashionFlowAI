@@ -3361,7 +3361,7 @@ export default function Home() {
                 )}
               </div>
 
-              <div className="border border-slate-100 rounded-xl overflow-hidden">
+              <div className="border border-slate-100 rounded-xl overflow-visible">
                  <table className="w-full text-left text-xs text-slate-600 border-collapse">
                   <thead className="bg-slate-50/70 font-mono text-[11px] text-slate-400 uppercase border-b border-slate-100">
                     <tr>
@@ -3481,7 +3481,7 @@ export default function Home() {
                                       setActiveMenuId(null);
                                     }} 
                                   />
-                                  <div className="absolute right-6 top-full mt-1 z-50 bg-white border border-slate-100 rounded-xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100">
+                                  <div className={`absolute right-6 ${idx >= filteredHistory.length - 2 ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100`}>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();

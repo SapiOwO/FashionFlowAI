@@ -144,6 +144,7 @@ The Create Process Sheet view uses a **2-phase studio layout**:
   * **Multi-Criteria Search**: Instant text filtering by **Project Name**, **Project ID (`#18`)**, **Tag**, **Date**, or **Designer Notes**.
   * **Status Dropdown with Live Count Badges**: Displays real-time category counts (`All Statuses (11)`, `Approved (10)`, `Duplicate Locked (1)`).
   * **Quick Tag Filter Pills**: Filter projects with 1 click using tag pills.
+  * **Smart Action Menu Positioning (`activeMenuId`)**: History table container uses `overflow-visible` and action dropdowns on lower rows expand upwards (`bottom-full mb-1`) to eliminate clipping/truncation.
 * **Manufacturing Knowledge Base 2-Column Responsive Grid**: SOP reference cards lay out in a clean 2-column responsive grid (`grid grid-cols-1 md:grid-cols-2 gap-6`) for optimal desktop screen utilization.
 * **Stationary Sewing Flow Table Layout**: Locked column percentages (`w-[12%]`, `w-[40%]`, `w-[10%]`, `w-[38%]`) with `table-fixed` CSS prevent horizontal layout shift on row expansion.
 * **Explicit SMV Units**: Step timing badges explicitly declare `1.5 mins` to prevent ambiguity with meters.
