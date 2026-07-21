@@ -28,16 +28,19 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Lowercase repository owner for GHCR tag matching
+        id: repo_owner
+        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_OUTPUT
+
       - name: Extract metadata (tags, labels) for FashionFlow AI All-In-One Image
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/fashionflowai
+          images: ghcr.io/${{ steps.repo_owner.outputs.owner }}/fashionflowai
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=ref,event=branch
             type=semver,pattern={{version}}
-            type=raw,value={{tag}}
 
       - name: Build and push All-In-One Image
         uses: docker/build-push-action@v5
