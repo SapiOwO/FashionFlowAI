@@ -145,22 +145,17 @@ const HighlightMatch: React.FC<HighlightMatchProps> = ({ text, query, className 
 
   return (
     <span className={className}>
-      {parts.map((part, i) => {
-        if (part.toLowerCase() === cleanQuery.toLowerCase()) {
-          // Typed search characters -> BOLD
-          return (
-            <strong key={i} className="font-bold text-slate-900 bg-blue-50/80 px-0.5 rounded">
-              {part}
-            </strong>
-          );
-        }
-        // Untyped/remaining characters -> REGULAR
-        return (
-          <span key={i} className="font-normal text-slate-600">
+      {parts.map((part, i) =>
+        part.toLowerCase() === cleanQuery.toLowerCase() ? (
+          <mark key={i} className="font-bold text-slate-900 bg-blue-100/80 p-0 m-0 rounded-2xs inline">
+            {part}
+          </mark>
+        ) : (
+          <span key={i} className="font-normal text-slate-600 p-0 m-0 inline">
             {part}
           </span>
-        );
-      })}
+        )
+      )}
     </span>
   );
 };
@@ -392,7 +387,7 @@ export default function Home() {
   const [historySearchQuery, setHistorySearchQuery] = useState<string>("");
   const [historyStatusFilter, setHistoryStatusFilter] = useState<string>("ALL");
   const [historyTagFilter, setHistoryTagFilter] = useState<string>("ALL");
-  const [showHistoryAutocomplete, setShowHistoryAutocomplete] = useState<boolean>(false);
+
 
   // Multi-step wizard stepper state (1: Upload & Originality, 2: Engineering Parameters, 3: Process Sheet)
   const [currentStep, setCurrentStep] = useState(1);
@@ -3387,17 +3382,12 @@ export default function Home() {
 
               {/* Unified Search & Filters Toolbar (Knowledge Base Style) */}
               <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full">
-                {/* Autocomplete Live Search Input with Dropdown & Image Thumbnails */}
+                {/* Clean Live Filter Search Input */}
                 <div className="relative flex-1">
                   <input
                     type="text"
                     value={historySearchQuery}
-                    onChange={(e) => {
-                      setHistorySearchQuery(e.target.value);
-                      setShowHistoryAutocomplete(true);
-                    }}
-                    onFocus={() => setShowHistoryAutocomplete(true)}
-                    onBlur={() => setTimeout(() => setShowHistoryAutocomplete(false), 200)}
+                    onChange={(e) => setHistorySearchQuery(e.target.value)}
                     placeholder="Search by project name, ID (#1), or tag (e.g. doll, SS26)..."
                     className="w-full bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 pl-10 pr-8 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:outline-none transition-colors shadow-2xs"
                   />
@@ -3407,87 +3397,9 @@ export default function Home() {
                   {historySearchQuery && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setHistorySearchQuery("");
-                        setShowHistoryAutocomplete(false);
-                      }}
+                      onClick={() => setHistorySearchQuery("")}
                       className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-700 font-bold cursor-pointer"
                     >✕</button>
-                  )}
-
-                  {/* Live Autocomplete Suggestions Popup with Thumbnails */}
-                  {showHistoryAutocomplete && historySearchQuery.trim().length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-72 overflow-y-auto py-1 text-left animate-in fade-in duration-150 divide-y divide-slate-100">
-                      {(() => {
-                        const q = historySearchQuery.toLowerCase().trim();
-                        const suggestions = analysisHistory.filter(item => {
-                          const idStr = item.id.toString().toLowerCase();
-                          const nameStr = (item.fileName || item?.result?.classification?.[0]?.class_name || "").toLowerCase();
-                          const itemTags = (item.result?.tags || []).join(" ").toLowerCase();
-                          return idStr.includes(q) || `#${idStr}`.includes(q) || nameStr.includes(q) || itemTags.includes(q);
-                        }).slice(0, 6);
-
-                        if (suggestions.length === 0) {
-                          return (
-                            <div className="p-4 text-center text-xs text-slate-400 font-medium">
-                              No matching projects found for &quot;{historySearchQuery}&quot;
-                            </div>
-                          );
-                        }
-
-                        return suggestions.map((item, idx) => {
-                          const s = (item.result?.status || "").toUpperCase();
-                          const isRejected = s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND";
-                          const itemTags: string[] = item.result?.tags || [];
-
-                          return (
-                            <button
-                              key={idx}
-                              type="button"
-                              onMouseDown={() => {
-                                setHistorySearchQuery(item.fileName || item?.result?.classification?.[0]?.class_name || "");
-                                setShowHistoryAutocomplete(false);
-                              }}
-                              className="w-full text-left px-3.5 py-2.5 hover:bg-blue-50/80 flex items-center justify-between gap-3 cursor-pointer transition-colors"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <img
-                                  src={item.result?.preview_image || "globe.svg"}
-                                  alt="Thumbnail"
-                                  className="w-9 h-9 rounded-xl object-cover border border-slate-200/80 bg-slate-100 flex-shrink-0 shadow-2xs"
-                                  onError={(e) => { (e.target as HTMLElement).setAttribute("src", "globe.svg"); }}
-                                />
-                                <div className="min-w-0 flex flex-col">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-mono font-bold text-xs text-[#155DFC] bg-blue-50 px-1.5 py-0.5 rounded">#{item.id}</span>
-                                    <span className="font-bold text-xs text-slate-900 truncate">
-                                      {item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}
-                                    </span>
-                                  </div>
-                                  {itemTags.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                      {itemTags.map(t => (
-                                        <span key={t} className="inline-flex items-center gap-1 text-[9px] font-semibold text-[#155DFC] bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200/50">
-                                          <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
-                                          {t}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                                  isRejected ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                }`}>
-                                  {isRejected ? "Duplicate Locked" : "Approved"}
-                                </span>
-                              </div>
-                            </button>
-                          );
-                        });
-                      })()}
-                    </div>
                   )}
                 </div>
 
