@@ -1,61 +1,48 @@
-# FashionFlow AI - Docker Compose
-# Orchestrates: frontend (Next.js), backend (FastAPI), and optional postgres database
+# FashionFlow AI - Docker Compose (Default PostgreSQL + pgvector Enabled)
 version: "3.9"
 
 services:
-  backend:
+  app:
     build:
       context: .
-      dockerfile: backend/Dockerfile
-    container_name: fashionflow_backend
+      dockerfile: Dockerfile
+    container_name: fashionflow_app
     ports:
+      - "3000:3000"
       - "8000:8000"
     environment:
-      - DB_TYPE=sqlite
-      # Uncomment and set the following for PostgreSQL production mode:
-      # DB_TYPE=postgres
-      # DATABASE_URL=postgresql://fashionflow_user:fashionflow_pass@postgres:5432/fashionflow_db
+      - DB_TYPE=postgresql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=fashionflow_db
+    depends_on:
+      - postgres
     volumes:
-      - ./models:/app/models
       - ./data:/app/data
     networks:
       - fashionflow_net
     restart: unless-stopped
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: fashionflow_frontend
-    ports:
-      - "3000:3000"
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: fashionflow_postgres
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
-    depends_on:
-      - backend
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fashionflow_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - fashionflow_net
     restart: unless-stopped
-
-  # Optional: Uncomment to enable PostgreSQL with pgvector extension
-  # postgres:
-  #   image: pgvector/pgvector:pg16
-  #   container_name: fashionflow_postgres
-  #   environment:
-  #     POSTGRES_USER: fashionflow_user
-  #     POSTGRES_PASSWORD: fashionflow_pass
-  #     POSTGRES_DB: fashionflow_db
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - fashionflow_net
-  #   restart: unless-stopped
 
 networks:
   fashionflow_net:
     driver: bridge
 
-# volumes:
-#   postgres_data:
+volumes:
+  postgres_data:
