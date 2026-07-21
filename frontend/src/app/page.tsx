@@ -1874,7 +1874,7 @@ export default function Home() {
       <main className={`flex-grow h-full overflow-y-auto print:p-0 print:m-0 print:w-full print:h-auto print:overflow-visible print:bg-white ${activeTab === "design-input-view" ? "p-0 bg-white" : "px-4 sm:px-6 md:px-10 py-6"}`}>
         {/* VIEW 1: Pre-Production Engineering Dashboard */}
         {activeTab === "dashboard-view" && (
-          <div className="fade-in w-full">
+          <div className="w-full">
             <header className="mb-6">
               <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Pre-Production Engineering</span>
               <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
@@ -2286,7 +2286,7 @@ export default function Home() {
           const wfTxt = grade?.letter === "B" ? "text-amber-950" : "text-white";
 
           return (
-            <div className="fade-in w-full flex flex-col min-h-screen bg-white">
+            <div className="w-full flex flex-col min-h-screen bg-white">
               {/* ── BANNER — Sleek compact header matching exact Y baseline ── */}
               <div className="bg-[#155DFC] px-10 py-6 flex items-center justify-between no-print print:hidden">
                 <div>
@@ -2989,7 +2989,7 @@ export default function Home() {
                     </div>
 
                     {/* ── WEB APPLICATION INTERACTIVE UI (RESTORED 100% FOR ON-SCREEN VIEWING) ── */}
-                    <div className="flex-1 p-8 flex flex-col gap-8 animate-in fade-in duration-300 print:hidden">
+                    <div className="flex-1 p-8 flex flex-col gap-8 print:hidden">
                     {/* Official Industrial Technical Spec Header (Visible only during Print / PDF Export) */}
                     <div className="hidden print:block mb-6 pb-4 border-b-2 border-slate-900">
                       <div className="flex items-center justify-between">
@@ -3458,7 +3458,7 @@ export default function Home() {
     })()}
 
         {activeTab === "sewing-sequence-view" && (
-          <div className="fade-in w-full">
+          <div className="w-full">
             {result ? (
               <div className="w-full">
                 <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -3617,7 +3617,7 @@ export default function Home() {
 
         {/* VIEW 4: All Sewing Tools Catalog */}
         {activeTab === "tooling-view" && (
-          <div className="fade-in w-full">
+          <div className="w-full">
             <header className="mb-6">
               <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Industrial Tooling Library</span>
               <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
@@ -3759,7 +3759,7 @@ export default function Home() {
 
         {/* VIEW 5: SMV Estimator Sheet */}
         {activeTab === "smv-view" && (
-          <div className="fade-in w-full">
+          <div className="w-full">
             <header className="mb-6">
               <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Time Study &amp; Operations</span>
               <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
@@ -3802,7 +3802,7 @@ export default function Home() {
 
         {/* VIEW 6: Historical Search (pgvector search) */}
         {activeTab === "history-view" && (
-          <div className="fade-in w-full">
+          <div className="w-full">
             <header className="mb-6">
               <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Vector Similarity DB</span>
               <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
@@ -3871,7 +3871,7 @@ export default function Home() {
 
         {/* VIEW 7: Knowledge Base */}
         {activeTab === "knowledge-view" && (
-          <div className="fade-in w-full">
+          <div className="w-full">
             <header className="mb-6">
               <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Engineering SOP &amp; Technical Specs</span>
               <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
@@ -4022,7 +4022,7 @@ export default function Home() {
 
         {/* VIEW 8: Projects */}
         {activeTab === "projects-view" && (
-          <div className="fade-in w-full">
+          <div className="w-full">
             <header className="mb-6">
               <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Database Management</span>
               <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
@@ -4461,7 +4461,7 @@ export default function Home() {
 
         {/* VIEW 9: System Settings */}
         {activeTab === "settings-view" && (
-          <div className="fade-in w-full max-w-5xl">
+          <div className="w-full max-w-5xl">
             <header className="mb-6">
               <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">System Preferences &amp; Releases</span>
               <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
