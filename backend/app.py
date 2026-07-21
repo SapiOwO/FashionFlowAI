@@ -1089,7 +1089,7 @@ def generate_process_sheet(req: ProcessSheetRequest):
         # Normal mode: persist new project record to DB
         if req.similarity_status.upper() == "REJECTED":
             raise HTTPException(status_code=400, detail="Production Blocked: Similarity status is REJECTED. Cannot save duplicate pattern to database.")
-        timestamp_str = datetime.now().strftime("%H:%M:%S (%d/%m/%Y)")
+        timestamp_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         save_analysis_to_db(req.project_name, timestamp_str, result_payload)
     else:
         # Reuse mode: batch recalculation only — do NOT insert a new row
@@ -1227,7 +1227,7 @@ def generate_doll_process_sheet(req: DollSheetRequest):
         }
     }
 
-    timestamp_str = datetime.now().strftime("%H:%M:%S (%d/%m/%Y)")
+    timestamp_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     save_analysis_to_db(req.project_name, timestamp_str, result_payload)
 
     return result_payload

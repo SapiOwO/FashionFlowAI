@@ -152,15 +152,19 @@ const HighlightMatch: React.FC<HighlightMatchProps> = ({ text, query, className 
     return <span className={className}>{text}</span>;
   }
 
-  const cleanQuery = query.trim();
-  const escapedQuery = cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`(${escapedQuery})`, "gi");
+  // Split query into individual tokens (same logic as the table filter)
+  const tokens = query.trim().split(/[,\s]+/).map(t => t.trim()).filter(Boolean);
+  if (tokens.length === 0) return <span className={className}>{text}</span>;
+
+  // Build a combined regex that matches ANY token
+  const escaped = tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const regex = new RegExp(`(${escaped.join("|")})`, "gi");
   const parts = text.split(regex);
 
   return (
     <span className={className}>
       {parts.map((part, i) =>
-        part.toLowerCase() === cleanQuery.toLowerCase() ? (
+        regex.test(part) ? (
           <mark key={i} style={{ background: "#DBEAFE", color: "inherit", padding: "0", margin: "0" }}>
             {part}
           </mark>
