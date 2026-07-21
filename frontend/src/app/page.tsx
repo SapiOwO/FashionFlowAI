@@ -170,7 +170,10 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Project Tags (Optional)</label>
+      <label className="text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+        <span>Project Tags</span>
+        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">Recommended</span>
+      </label>
       
       {/* Selected Tag Pills + Trigger Input */}
       <div 
@@ -606,6 +609,8 @@ export default function Home() {
         components: componentsList,
         message: `Consolidated doll clothing process sheet for ${dollType}.`,
         batch_quantity: batchQuantity,
+        tags: selectedTags,
+        designer_notes: designerNotes,
       };
 
       const res = await fetch("http://127.0.0.1:8000/api/generate-doll-sheet", {
@@ -832,6 +837,8 @@ export default function Home() {
     });
     setFullResult(pResult);
     setPreviewUrl(pResult.preview_image);
+    setSelectedTags(pResult.tags || []);
+    setDesignerNotes(pResult.designer_notes || "");
     
     if (pResult.is_doll_project) {
       setProjectMode("doll");

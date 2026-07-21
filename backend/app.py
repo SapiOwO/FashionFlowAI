@@ -862,6 +862,8 @@ class DollSheetRequest(BaseModel):
     components: list[GarmentComponent]
     message: str
     batch_quantity: int = 100
+    tags: list[str] = []
+    designer_notes: str = ""
 
 class ProcessSheetRequest(BaseModel):
     project_name: str
@@ -1210,6 +1212,8 @@ def generate_doll_process_sheet(req: DollSheetRequest):
         "similarity_percentage": req.components[0].similarity_percentage if req.components else 100.0,
         "status": "APPROVED",
         "message": req.message,
+        "tags": req.tags,
+        "designer_notes": req.designer_notes,
         "project_details": {
             "name": req.project_name,
             "doll_type": req.doll_type,
