@@ -71,14 +71,28 @@ interface SavedAnalysis {
 
 const formatActivityDate = (item: any): string => {
   const rawDate = item?.timestamp || item?.created_at || item?.date;
-  if (!rawDate) return "Just now";
+  if (!rawDate) return "—";
   try {
     const formattedStr = typeof rawDate === "string" ? rawDate.replace(" ", "T") : rawDate;
     const d = new Date(formattedStr);
-    if (isNaN(d.getTime())) return "Just now";
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (isNaN(d.getTime())) return "—";
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    // Less than 1 minute ago
+    if (diffSec < 60) return "Just now";
+    // Less than 1 hour ago
+    if (diffMin < 60) return `${diffMin}m ago`;
+    // Less than 24 hours ago
+    if (diffHr < 24) return `${diffHr}h ago`;
+    // Older — show full date + time
+    const dateStr = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return `${dateStr}, ${timeStr}`;
   } catch {
-    return "Just now";
+    return "—";
   }
 };
 
@@ -3465,17 +3479,23 @@ export default function Home() {
                         if (historyTagFilter !== "ALL" && !itemTags.includes(historyTagFilter)) return false;
 
                         if (historySearchQuery.trim()) {
-                          const q = historySearchQuery.toLowerCase().trim();
-                          const idStr = item.id.toString().toLowerCase();
-                          const nameStr = (item.fileName || item?.result?.classification?.[0]?.class_name || "").toLowerCase();
-                          const dateStr = (item.timestamp || "").toLowerCase();
-                          const itemTagsStr = itemTags.join(" ").toLowerCase();
+                          // Split query by commas or whitespace into tokens, filter empty
+                          const tokens = historySearchQuery
+                            .toLowerCase()
+                            .split(/[,\s]+/)
+                            .map(t => t.trim())
+                            .filter(Boolean);
 
-                          const matches = idStr.includes(q) ||
-                            nameStr.includes(q) ||
-                            dateStr.includes(q) ||
-                            itemTagsStr.includes(q) ||
-                            `#${idStr}`.includes(q);
+                          const idStr = item.id.toString();
+                          const nameStr = (item.fileName || item?.result?.classification?.[0]?.class_name || "").toLowerCase();
+                          const itemTagsStr = itemTags.join(" ").toLowerCase();
+                          const fullSearch = `${nameStr} ${idStr} #${idStr} ${itemTagsStr}`;
+
+                          // Item must match ALL tokens (AND logic across terms)
+                          const matches = tokens.every(token =>
+                            fullSearch.includes(token) ||
+                            `#${idStr}`.includes(token)
+                          );
 
                           if (!matches) return false;
                         }
