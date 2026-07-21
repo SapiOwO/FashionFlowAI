@@ -9,6 +9,19 @@ def log_stream(stream, prefix):
         sys.stdout.write(f"[{prefix}] {line}")
         sys.stdout.flush()
 
+def ensure_embedded_postgres():
+    """Start embedded PostgreSQL service and initialize database/pgvector inside Docker container."""
+    if os.environ.get("IS_DOCKER") == "true" and os.environ.get("DB_TYPE") == "postgresql" and os.environ.get("DB_HOST") in ("127.0.0.1", "localhost"):
+        print("[SYSTEM] Starting embedded PostgreSQL service & initializing pgvector extension...")
+        try:
+            subprocess.run(["service", "postgresql", "start"], check=False)
+            subprocess.run(["su", "-", "postgres", "-c", "psql -c \"ALTER USER postgres WITH PASSWORD 'postgres';\""], stderr=subprocess.DEVNULL, check=False)
+            subprocess.run(["su", "-", "postgres", "-c", "psql -c \"CREATE DATABASE fashionflow_db OWNER postgres;\""], stderr=subprocess.DEVNULL, check=False)
+            subprocess.run(["su", "-", "postgres", "-c", "psql -d fashionflow_db -c \"CREATE EXTENSION IF NOT EXISTS vector;\""], stderr=subprocess.DEVNULL, check=False)
+            print("[SYSTEM] PostgreSQL (pgvector HNSW Index) initialized successfully.")
+        except Exception as e:
+            print(f"[SYSTEM-WARN] Could not start embedded PostgreSQL: {e}. System will fallback to SQLite.")
+
 def main():
     root_dir = os.path.dirname(os.path.abspath(__file__))
     backend_dir = os.path.join(root_dir, "backend")
@@ -29,6 +42,9 @@ def main():
         python_executable = sys.executable
 
     print(f"[SYSTEM] Using Python interpreter: {python_executable}")
+
+    # Ensure embedded PostgreSQL service is active in Docker mode
+    ensure_embedded_postgres()
 
     # Start FastAPI Backend Subprocess
     backend_cmd = [python_executable, "app.py"]

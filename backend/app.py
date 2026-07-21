@@ -20,6 +20,8 @@ import numpy as np
 import time
 from datetime import datetime
 
+from typing import List, Dict, Any, Optional
+
 # Import database module
 from db import init_database, search_similar_garments, get_mock_embedding, save_analysis_to_db, get_analysis_history_from_db, delete_analysis_from_db, rename_analysis_in_db, check_saved_history_similarity, clear_analysis_history_in_db, get_top_k_similar_history_records, is_sqlite
 
@@ -1629,7 +1631,7 @@ class UpdateApplyRequest(BaseModel):
 def get_system_info():
     """Return application version, container environment status, live database engine, and repository details."""
     current_ver = get_local_git_version()
-    is_docker = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_CONTAINER") == "true"
+    is_docker = os.path.exists("/.dockerenv") or os.environ.get("IS_DOCKER") == "true" or os.environ.get("DOCKER_CONTAINER") == "true"
     db_name = "SQLite (Local File DB)" if is_sqlite() else "PostgreSQL (pgvector HNSW Index)"
     return {
         "app_version": current_ver,
@@ -1646,38 +1648,34 @@ def check_system_update():
     """Query GitHub API for the latest release tag and compare with current APP_VERSION."""
     current_ver = get_local_git_version()
     url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-    req = urllib.request.Request(
-        url,
-        headers={"User-Agent": "FashionFlowAI-App/1.0", "Accept": "application/vnd.github+json"}
-    )
-    
+    req = urllib.request.Request(url, headers={"User-Agent": "FashionFlowAI-System"})
     try:
         with urllib.request.urlopen(req, timeout=5) as resp:
-            if resp.status == 200:
-                data = json.loads(resp.read().decode("utf-8"))
-                latest_tag = data.get("tag_name", current_ver).strip()
-                release_notes = data.get("body", "No release notes provided.").strip()
-                published_at = data.get("published_at", "")
-                html_url = data.get("html_url", GITHUB_REPO_URL)
+            data = json.loads(resp.read().decode("utf-8"))
+            latest_tag = data.get("tag_name", "v0.1.7")
+            body = data.get("body", "No release notes available.")
+            pub_date = data.get("published_at", "")
 
-                is_newer = parse_ver_tuple(latest_tag) > parse_ver_tuple(current_ver)
+            is_newer = parse_ver_tuple(latest_tag) > parse_ver_tuple(current_ver)
 
-                return {
-                    "update_available": is_newer,
-                    "current_version": current_ver,
-                    "latest_version": latest_tag,
-                    "release_name": data.get("name") or latest_tag,
-                    "release_notes": release_notes,
-                    "published_at": published_at,
-                    "download_url": html_url,
-                    "status": "success"
-                }
-    except Exception as err:
+            return {
+                "update_available": is_newer,
+                "current_version": current_ver,
+                "latest_version": latest_tag,
+                "is_newer": is_newer,
+                "release_name": data.get("name", latest_tag),
+                "release_notes": body,
+                "published_at": pub_date,
+                "download_url": data.get("html_url", GITHUB_REPO_URL),
+                "status": "success"
+            }
+    except Exception:
         return {
             "update_available": False,
             "current_version": current_ver,
             "latest_version": current_ver,
-            "release_name": "Latest Development Build",
+            "is_newer": False,
+            "release_name": "Latest Release",
             "release_notes": f"System is running up-to-date code ({current_ver}).",
             "published_at": datetime.now().isoformat(),
             "download_url": GITHUB_REPO_URL,
@@ -1688,7 +1686,7 @@ def check_system_update():
 def apply_system_update(req: UpdateApplyRequest):
     """Execute update action: git pull for source code, docker pull for containers."""
     action = req.action.lower().strip()
-    is_docker = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_CONTAINER") == "true"
+    is_docker = os.path.exists("/.dockerenv") or os.environ.get("IS_DOCKER") == "true" or os.environ.get("DOCKER_CONTAINER") == "true"
 
     if action in ("download", "pull"):
         msg = "Release update assets downloaded."
@@ -1714,6 +1712,6 @@ def apply_system_update(req: UpdateApplyRequest):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 

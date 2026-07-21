@@ -104,7 +104,7 @@ const renderSpecsDescription = (desc: string) => {
   
   return (
     <div className="mt-4 border-t border-slate-100 pt-4 w-full">
-      <h4 className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-2.5">Technical Specifications</h4>
+      <h4 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2.5">Technical Specifications</h4>
       <div className="bg-slate-50/60 rounded-xl p-3.5 border border-slate-100 space-y-2">
         {rawItems.map((item, i) => {
           const cleanItem = item.replace(/\*\*/g, "").trim();
@@ -115,14 +115,14 @@ const renderSpecsDescription = (desc: string) => {
             const key = parts[0].trim();
             const val = parts.slice(1).join(":").trim();
             return (
-              <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-100/60 pb-1.5 last:border-0 last:pb-0 gap-2">
+              <div key={i} className="flex justify-between items-center text-xs border-b border-slate-100/60 pb-1.5 last:border-0 last:pb-0 gap-2">
                 <span className="font-semibold text-slate-500 flex-shrink-0">{key}</span>
                 <span className="font-semibold text-slate-800 text-right truncate">{val}</span>
               </div>
             );
           }
           return (
-            <div key={i} className="text-[11px] text-slate-600 font-medium">
+            <div key={i} className="text-xs text-slate-600 font-medium">
               {cleanItem}
             </div>
           );
@@ -194,7 +194,7 @@ const renderReleaseNotesMarkdown = (text: string) => {
   const lines = text.split("\n");
 
   return (
-    <div className="space-y-1 text-xs text-slate-700 font-sans">
+    <div className="space-y-1 text-sm text-slate-700 font-sans">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
         if (!trimmed) return <div key={idx} className="h-1" />;
@@ -214,7 +214,7 @@ const renderReleaseNotesMarkdown = (text: string) => {
           const body = trimmed.replace(/^[\*\-]\s*/, "");
           const parts = body.split(/(\*\*[^*]+\*\*)/g);
           return (
-            <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 my-1 leading-relaxed">
+            <div key={idx} className="flex items-start gap-2 text-sm text-slate-700 my-1 leading-relaxed">
               <span className="text-[#155DFC] font-bold select-none text-sm leading-none pt-0.5">•</span>
               <div>
                 {parts.map((p, pIdx) => {
@@ -228,7 +228,7 @@ const renderReleaseNotesMarkdown = (text: string) => {
                       <span key={pIdx}>
                         {urlParts.map((u, uIdx) =>
                           u.startsWith("http") ? (
-                            <a key={uIdx} href={u} target="_blank" rel="noreferrer" className="text-[#155DFC] hover:underline font-mono text-[11px] break-all">
+                            <a key={uIdx} href={u} target="_blank" rel="noreferrer" className="text-[#155DFC] hover:underline font-mono text-xs break-all">
                               {u}
                             </a>
                           ) : (
@@ -248,14 +248,14 @@ const renderReleaseNotesMarkdown = (text: string) => {
         // Normal paragraph lines
         const parts = trimmed.split(/(\*\*[^*]+\*\*|https?:\/\/[^\s]+)/g);
         return (
-          <p key={idx} className="text-xs text-slate-700 leading-relaxed">
+          <p key={idx} className="text-sm text-slate-700 leading-relaxed">
             {parts.map((p, pIdx) => {
               if (p.startsWith("**") && p.endsWith("**")) {
                 return <strong key={pIdx} className="font-bold text-slate-900">{p.slice(2, -2)}</strong>;
               }
               if (p.startsWith("http://") || p.startsWith("https://")) {
                 return (
-                  <a key={pIdx} href={p} target="_blank" rel="noreferrer" className="text-[#155DFC] hover:underline font-mono text-[11px] break-all">
+                  <a key={pIdx} href={p} target="_blank" rel="noreferrer" className="text-[#155DFC] hover:underline font-mono text-xs break-all">
                     {p}
                   </a>
                 );
@@ -321,9 +321,9 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      <label className="text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+      <label className="text-sm font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
         <span>Project Tags</span>
-        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">Recommended</span>
+        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">Recommended</span>
       </label>
       
       {/* Embedded Tag Pills + Direct Type Input Container */}
@@ -567,7 +567,7 @@ export default function Home() {
     checking: false,
     updateAvailable: false,
     currentVersion: "v0.1.6",
-    latestVersion: "v0.1.6",
+    latestVersion: "v0.1.7",
     releaseName: "Latest Release",
     releaseNotes: "",
     downloadUrl: "https://github.com/SapiOwO/FashionFlowAI",
@@ -1623,7 +1623,7 @@ export default function Home() {
           <span className={`font-display font-bold text-xl text-slate-900 select-none flex items-center gap-1.5 whitespace-nowrap overflow-hidden transition-all duration-300 ${
             isCollapsed ? "max-w-0 opacity-0 ml-0" : "max-w-[200px] opacity-100 ml-3.5"
           }`}>
-            FashionFlow <span className="bg-[#155DFC] text-white text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
+            FashionFlow <span className="bg-[#155DFC] text-white text-xs uppercase font-mono px-1.5 py-0.5 rounded-md font-bold">AI</span>
           </span>
         </div>
 
@@ -1678,11 +1678,11 @@ export default function Home() {
         {activeTab === "dashboard-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Pre-Production Engineering</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Pre-Production Engineering</span>
+              <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
                 Engineering Dashboard
               </h1>
-              <p className="text-slate-500 text-xs max-w-2xl leading-relaxed">
+              <p className="text-slate-500 text-sm max-w-2xl leading-relaxed">
                 AI-assisted garment analysis, originality verification, and process sheet generation for pre-production engineering.
               </p>
             </header>
@@ -1691,7 +1691,7 @@ export default function Home() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Total Analyses</span>
+                  <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Total Analyses</span>
                   <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                     <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -1704,7 +1704,7 @@ export default function Home() {
 
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Unique Designs</span>
+                  <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Unique Designs</span>
                   <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
                     <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -1722,7 +1722,7 @@ export default function Home() {
 
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Historical Matches</span>
+                  <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Historical Matches</span>
                   <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
                     <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
@@ -1740,7 +1740,7 @@ export default function Home() {
 
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Avg. Est. SMV</span>
+                  <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Avg. Est. SMV</span>
                   <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                     <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1805,7 +1805,7 @@ export default function Home() {
                   return (
                     <div className="mt-6 pt-6 border-t border-slate-100">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Originality Ratio</span>
+                        <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Originality Ratio</span>
                         <span className="text-xs font-bold text-emerald-600">{approvedPct}% Approved</span>
                       </div>
                       <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
@@ -1815,8 +1815,8 @@ export default function Home() {
                         />
                       </div>
                       <div className="flex justify-between mt-2 font-mono">
-                        <span className="text-[10px] text-slate-400">{approved} unique designs</span>
-                        <span className="text-[10px] text-slate-400">{rejected} historical matches</span>
+                        <span className="text-xs text-slate-400">{approved} unique designs</span>
+                        <span className="text-xs text-slate-400">{rejected} historical matches</span>
                       </div>
                     </div>
                   );
@@ -1854,9 +1854,9 @@ export default function Home() {
                             <p className="text-xs font-semibold text-slate-800 truncate">
                               {isRejected ? "Historical Match Found" : "Analysis Complete"}
                             </p>
-                            <p className="text-[11px] text-slate-400 truncate">{item.fileName || item.result?.classification?.[0]?.class_name || "Untitled"}</p>
+                            <p className="text-xs text-slate-400 truncate">{item.fileName || item.result?.classification?.[0]?.class_name || "Untitled"}</p>
                           </div>
-                          <span className="text-[10px] font-mono text-slate-400 flex-shrink-0">{formattedTime}</span>
+                          <span className="text-xs font-mono text-slate-400 flex-shrink-0">{formattedTime}</span>
                         </div>
                       );
                     })}
@@ -1911,11 +1911,11 @@ export default function Home() {
               {/* ── BANNER — Sleek compact header matching exact Y baseline ── */}
               <div className="bg-[#155DFC] px-10 py-6 flex items-center justify-between no-print print:hidden">
                 <div>
-                  <span className="text-[10px] font-mono text-blue-200/90 font-bold uppercase tracking-widest bg-blue-600/50 px-2 py-0.5 rounded-md inline-block">Process Sheet Engineering</span>
-                  <h1 className="font-display font-bold text-2xl md:text-3xl text-white tracking-tight mt-1 mb-1.5">
+                  <span className="text-xs font-mono text-blue-200 font-bold uppercase tracking-wider bg-blue-600/50 px-2.5 py-1 rounded-md inline-block">Process Sheet Engineering</span>
+                  <h1 className="font-display font-bold text-3xl text-white tracking-tight mt-1.5 mb-1.5">
                     Create Process Sheet
                   </h1>
-                  <p className="text-blue-100/90 text-xs max-w-xl leading-relaxed">
+                  <p className="text-blue-100 text-sm max-w-xl leading-relaxed">
                     Compile industrial sewing specifications, machine allocations, and SMV timing.
                   </p>
                 </div>
@@ -1945,8 +1945,8 @@ export default function Home() {
                         active
                           ? "bg-white text-[#155DFC] relative z-10"
                           : done
-                          ? "bg-[#1249cc]/70 text-blue-100 hover:bg-[#1249cc]"
-                          : "bg-[#1249cc]/40 text-blue-200/60 cursor-default"
+                          ? "bg-[#1249cc] text-blue-100 hover:bg-[#1249cc]"
+                          : "bg-[#1249cc]/60 text-blue-200 cursor-default"
                       }`}
                     >
                       {label}
@@ -2312,7 +2312,7 @@ export default function Home() {
                           {/* Standard project name input — only when NO catalog match (no reuse prompt) or doll mode */}
                           {(!showReusePrompt || projectMode === "doll") && (
                             <div className="flex flex-col gap-1.5">
-                              <label className="text-xs font-semibold text-slate-700">Project / Batch Name *</label>
+                              <label className="text-sm font-semibold text-slate-700">Project / Batch Name *</label>
                               <input
                                 type="text"
                                 value={quizName}
@@ -2327,7 +2327,7 @@ export default function Home() {
                           {projectMode === "single" ? (
                             <>
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-slate-700">Garment Category</label>
+                                <label className="text-sm font-semibold text-slate-700">Garment Category</label>
                                 <select value={quizGarment} onChange={(e) => setQuizGarment(e.target.value)}
                                   className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Tops">
@@ -2346,7 +2346,7 @@ export default function Home() {
                                 </select>
                               </div>
                               <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-slate-700">Fabric Application / Weight</label>
+                                <label className="text-sm font-semibold text-slate-700">Fabric Application / Weight</label>
                                 <select value={quizFabric} onChange={(e) => setQuizFabric(e.target.value)}
                                   className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                   <optgroup label="Light-weight">
@@ -2376,7 +2376,7 @@ export default function Home() {
                             </>
                           ) : (
                             <div className="flex flex-col gap-1.5">
-                              <label className="text-xs font-semibold text-slate-700">Doll Type Template</label>
+                              <label className="text-sm font-semibold text-slate-700">Doll Type Template</label>
                               <select value={dollType} onChange={(e) => setDollType(e.target.value)}
                                 className="bg-slate-50/80 border border-slate-200/90 rounded-xl py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
                                 {Object.keys(DOLL_TYPES).map(t => (
@@ -2387,7 +2387,7 @@ export default function Home() {
                           )}
 
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
+                            <label className="text-sm font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
                             <div className="flex items-center gap-2">
                               {[100, 250, 500, 1000].map((qty) => (
                                 <button
@@ -2423,7 +2423,7 @@ export default function Home() {
 
                           {/* Optional Designer / Pattern Notes */}
                           <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-slate-700">Designer &amp; Pattern Notes (Optional)</label>
+                            <label className="text-sm font-semibold text-slate-700">Designer &amp; Pattern Notes (Optional)</label>
                             <textarea
                               value={designerNotes}
                               onChange={(e) => setDesignerNotes(e.target.value)}
@@ -3084,11 +3084,11 @@ export default function Home() {
               <div className="w-full">
                 <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Garment Assembly Line</span>
-                    <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+                    <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Garment Assembly Line</span>
+                    <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
                       {result?.classification?.[0]?.class_name || "Original Sketch Pattern"}
                     </h1>
-                    <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
+                    <p className="text-slate-500 text-sm max-w-xl leading-relaxed">
                       Sequential sewing operations, machine type allocations, and seam construction step flow.
                     </p>
                   </div>
@@ -3240,11 +3240,11 @@ export default function Home() {
         {activeTab === "tooling-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Industrial Tooling Library</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Industrial Tooling Library</span>
+              <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
                 Sewing Machinery Catalog
               </h1>
-              <p className="text-slate-500 text-xs max-w-2xl mb-4 leading-relaxed">
+              <p className="text-slate-500 text-sm max-w-2xl mb-4 leading-relaxed">
                 Explore specialized Juki sewing machinery catalog, stitch technical specifications, needles, and attachments.
               </p>
 
@@ -3382,11 +3382,11 @@ export default function Home() {
         {activeTab === "smv-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Time Study &amp; Operations</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Time Study &amp; Operations</span>
+              <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
                 SMV Estimator
               </h1>
-              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
+              <p className="text-slate-500 text-sm max-w-xl leading-relaxed">
                 Calculates Standard Allowed Minutes (SAM/SMV) based on seam lengths, machine stitches per minute, and operator allowances.
               </p>
             </header>
@@ -3425,11 +3425,11 @@ export default function Home() {
         {activeTab === "history-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Vector Similarity DB</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Vector Similarity DB</span>
+              <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
                 Historical Knowledge Search
               </h1>
-              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
+              <p className="text-slate-500 text-sm max-w-xl leading-relaxed">
                 Query pgvector similarity database for similar reference items, tooling logs, and past learnings.
               </p>
             </header>
@@ -3494,11 +3494,11 @@ export default function Home() {
         {activeTab === "knowledge-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Engineering SOP & Technical Specs</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Engineering SOP &amp; Technical Specs</span>
+              <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
                 Manufacturing Knowledge Base
               </h1>
-              <p className="text-slate-500 text-xs max-w-2xl mb-4 leading-relaxed">
+              <p className="text-slate-500 text-sm max-w-2xl mb-4 leading-relaxed">
                 Corporate engineering database, garment quality standards, and assembly reference manuals.
               </p>
 
@@ -3645,11 +3645,11 @@ export default function Home() {
         {activeTab === "projects-view" && (
           <div className="fade-in w-full">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Database Management</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">Database Management</span>
+              <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
                 Active Projects &amp; History
               </h1>
-              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
+              <p className="text-slate-500 text-sm max-w-xl leading-relaxed">
                 Manage your active garment styles, persistent analysis runs, and process sheet history.
               </p>
             </header>
@@ -3657,8 +3657,8 @@ export default function Home() {
             <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs space-y-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
-                  <h2 className="font-display font-bold text-base text-slate-900">Saved Projects Database</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">Filter by Name, ID (#), Tags, or Status with live record counts.</p>
+                  <h2 className="font-display font-bold text-lg text-slate-900">Saved Projects Database</h2>
+                  <p className="text-sm text-slate-500 mt-0.5">Filter by Name, ID (#), Tags, or Status with live record counts.</p>
                 </div>
               </div>
 
@@ -3923,11 +3923,11 @@ export default function Home() {
         {activeTab === "settings-view" && (
           <div className="fade-in w-full max-w-5xl">
             <header className="mb-6">
-              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">System Preferences &amp; Releases</span>
-              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
+              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md">System Preferences &amp; Releases</span>
+              <h1 className="font-display font-bold text-3xl text-slate-900 tracking-tight mt-1.5 mb-1.5">
                 System Settings
               </h1>
-              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
+              <p className="text-slate-500 text-sm max-w-xl leading-relaxed">
                 Manage your system release updates, Docker container runtime, API hosts, and open-source repository configuration.
               </p>
             </header>

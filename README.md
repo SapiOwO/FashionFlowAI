@@ -90,55 +90,77 @@ fashionflowrework/
 
 ---
 
-## 🚀 Quickstart & Verification
+## How to Install
 
-Choose your preferred deployment method below:
+### Quick Start with Docker (Single All-In-One Container)
 
-### Quick Start with Docker 🐳 (Single All-In-One Container — Zero Setup Needed)
+> **Note**: Mount `-v fashionflow-data:/app/data` to ensure your database and uploaded assets are persisted across container updates.
 
-Run FashionFlow AI instantly via GitHub Container Registry (GHCR) with **1 single command**:
-
+#### 1. Stable Release (Main Branch)
 ```bash
-docker run -d -p 3000:3000 -p 8000:8000 --name fashionflowai ghcr.io/sapiowo/fashionflowai:latest
+docker run -d -p 3000:3000 -p 8000:8000 -v fashionflow-data:/app/data --name fashionflowai --restart always ghcr.io/sapiowo/fashionflowai:latest
+```
+
+#### 2. Nightly / Bleeding Edge Build (Dev Branch)
+```bash
+docker run -d -p 3000:3000 -p 8000:8000 -v fashionflow-data:/app/data --name fashionflowai-dev --restart always ghcr.io/sapiowo/fashionflowai:dev
 ```
 - **Frontend Dashboard**: `http://localhost:3000`
 - **FastAPI Backend API**: `http://localhost:8000`
 
 ---
 
-### Method A: Local Virtualenv Setup (Development)
+### Installation via Python Virtual Environment
+
+For developers modifying source code:
 
 ```bash
-# 1. Create and activate virtual environment
+# 1. Clone repository and create virtual environment
+git clone https://github.com/SapiOwO/FashionFlowAI.git
+cd FashionFlowAI
 python -m venv .venv
+
+# 2. Activate virtual environment
 .venv\Scripts\Activate.ps1   # Windows
 # source .venv/bin/activate  # macOS / Linux
 
-# 2. Install backend & frontend dependencies
+# 3. Install backend & frontend dependencies
 pip install -r requirements.txt
 cd frontend && npm install && cd ..
 
-# 3. Launch unified dev environment (FastAPI + Next.js)
+# 4. Launch unified dev environment (FastAPI + Next.js)
 python main.py
 ```
 
 ---
 
-### Method B: Local Docker Compose Deployment (Source Code)
+## Keeping Your Docker Installation Up-to-Date
+
+How to update FashionFlow AI without losing your saved projects or database data:
 
 ```bash
-# Build and start all services (Backend API + Next.js Frontend + Optional pgvector DB)
-docker-compose up --build -d
+# 1. Pull the latest Docker image
+docker pull ghcr.io/sapiowo/fashionflowai:latest  # or :dev for Nightly
 
-# Check running container status
-docker-compose ps
+# 2. Stop the running container
+docker stop fashionflowai
+
+# 3. Remove the old container
+docker rm fashionflowai
+
+# 4. Start the updated container
+docker run -d -p 3000:3000 -p 8000:8000 -v fashionflow-data:/app/data --name fashionflowai --restart always ghcr.io/sapiowo/fashionflowai:latest
 ```
 
 ---
 
-### Method C: Automated Unit & Integration Tests
+## Developer Testing
+
+Run automated integration & contract test suite:
+
+Run automated integration & contract test suite:
 
 ```bash
 .\.venv\Scripts\pytest backend/tests/
 ```
-- Executes **55 automated integration & contract tests** covering DINOv2 vector extraction, machine resolver logic, presser foot specs, batch SMV scaling, system info endpoints, and sub-10ms caching (100% pass rate).
+- Executes **55 automated integration & contract tests** covering DINOv2 vector extraction, machine resolver rules, system info endpoints, and vector search (100% pass rate).
