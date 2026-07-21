@@ -2,44 +2,57 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1e293b;
+  --foreground: #1f2328;
   --brand-blue: #005cea;
   --brand-blue-hover: #004ac2;
   --border-whisper: #e4e4e7;
+  --github-font-sans: var(--font-mona-sans), "Mona Sans VF", "Mona Sans", MonaSansFallback, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --github-font-mono: "Mona Sans Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-family: var(--github-font-sans);
   font-size: 14px; /* GitHub standard 14px body */
   line-height: 1.5;
   overflow: hidden;
 }
 
-h1 {
-  font-family: var(--font-outfit), sans-serif;
+h1, .font-display-h1 {
+  font-family: var(--github-font-sans);
   font-size: 32px;
   font-weight: 600;
   line-height: 1.25;
+  letter-spacing: -0.02em;
 }
 
-h2 {
-  font-family: var(--font-outfit), sans-serif;
+h2, .font-display-h2 {
+  font-family: var(--github-font-sans);
   font-size: 24px;
   font-weight: 600;
   line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
-h3 {
-  font-family: var(--font-outfit), sans-serif;
+h3, .font-display-h3 {
+  font-family: var(--github-font-sans);
   font-size: 22px;
   font-weight: 600;
   line-height: 1.35;
 }
 
-code, pre, .font-mono {
-  font-family: var(--font-geist-mono), monospace;
+.font-display {
+  font-family: var(--github-font-sans);
+}
+
+button, input, select, textarea, label {
+  font-family: var(--github-font-sans);
+}
+
+code, pre, .font-mono, time {
+  font-family: var(--github-font-mono);
+  font-size: 12px;
 }
 
 /* ── PRINT MEDIA SPECIFICATIONS (Clean A4 Technical Spec Export) ── */
