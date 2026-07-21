@@ -134,7 +134,7 @@ The Create Process Sheet view uses a **2-phase studio layout**:
   * When similarity $\ge 90\%$, an interactive **Catalog Reuse Prompt Card** is rendered with a unified Cobalt Blue (`#155DFC`) theme:
     * **`REUSE MASTER SPEC (ID #X)`**: Recalculates batch size and SMV scaling on existing master spec with zero manual typing.
     * **`CREATE NEW VARIANT`**: Opens custom project name input for explicit branch creation.
-  * **GitHub-Style Dynamic Tag Selector (`TagSelector`)**: Enables selecting existing database tags or creating new custom tags on the fly (<kbd>Enter</kbd> key handling prevents form submission).
+  * **GitHub-Style Dynamic Tag Selector (`TagSelector`)**: Dynamically syncs tags strictly from database records (`GET /api/tags` and `analysisHistory`). Draft custom tags exist only as active form pills until process sheet compilation; removing uncommitted tags with "✕" leaves zero leftovers in the dropdown menu. (<kbd>Enter</kbd> key intercept prevents form submission).
   * **Optional Designer & Pattern Notes**: Textarea allows production designers and engineers to record handwritten notes or custom garment instructions.
   * **Step 2 Compilation Confirmation Review Modal**: Interactive modal summarizes project parameters, quantity, tags, and notes before triggering sheet compilation.
 * **Active Projects & History Multi-Criteria Search/Filter Suite**:

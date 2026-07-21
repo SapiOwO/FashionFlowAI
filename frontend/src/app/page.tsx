@@ -165,7 +165,6 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
     if (!selectedTags.includes(cleanTag)) {
       onChange([...selectedTags, cleanTag]);
     }
-    if (onAddCustomTag) onAddCustomTag(cleanTag);
     setTagQuery("");
   };
 
@@ -424,18 +423,26 @@ export default function Home() {
 
       try {
         const res = await fetch("http://127.0.0.1:8000/api/tags");
+        let apiTags: string[] = [];
         if (res.ok) {
           const data = await res.json();
-          if (data.tags && data.tags.length > 0) {
-            setAvailableTags(prev => Array.from(new Set([...prev, ...data.tags])));
-          }
+          if (data.tags) apiTags = data.tags;
         }
+        setAvailableTags(apiTags);
       } catch (err) {
         console.warn("Failed to load unique tags.", err);
       }
     }
     fetchInitialData();
   }, []);
+
+  // Sync availableTags automatically whenever analysisHistory or API tags update
+  useEffect(() => {
+    const historyTags = (analysisHistory || []).flatMap(item => item.result?.tags || []);
+    if (historyTags.length > 0) {
+      setAvailableTags(prev => Array.from(new Set([...prev, ...historyTags])).filter(Boolean));
+    }
+  }, [analysisHistory]);
 
   // Sync componentsState with selected dollType required garments and default fabric weights
   useEffect(() => {
@@ -2045,7 +2052,6 @@ export default function Home() {
                             selectedTags={selectedTags}
                             onChange={setSelectedTags}
                             availableTags={availableTags}
-                            onAddCustomTag={(newTag) => setAvailableTags(prev => Array.from(new Set([...prev, newTag])))}
                           />
 
                           {/* Optional Designer / Pattern Notes */}
