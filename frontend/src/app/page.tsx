@@ -542,9 +542,11 @@ export default function Home() {
       setCalSelStart(dateStr);
       setCalSelEnd(null);
     } else {
-      if (new Date(dateStr) < new Date(calSelStart)) {
+      const start = new Date(calSelStart);
+      const clicked = new Date(dateStr);
+      if (clicked < start) {
         setCalSelStart(dateStr);
-        setCalSelEnd(null);
+        setCalSelEnd(calSelStart);
       } else {
         setCalSelEnd(dateStr);
       }
