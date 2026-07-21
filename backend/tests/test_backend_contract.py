@@ -807,6 +807,35 @@ class TestTagsAndDesignerNotes(unittest.TestCase):
         self.assertEqual(doll_res["designer_notes"], "Extra bartacking on pocket seams")
 
 
+class TestSystemVersionAndUpdates(unittest.TestCase):
+    """Validate system info, release update check, and 2-stage update execution endpoints."""
+
+    def test_get_system_info(self):
+        info = backend_app.get_system_info()
+        self.assertEqual(info["app_version"], "v1.0.0")
+        self.assertIn("github_repo", info)
+        self.assertIn("is_docker", info)
+        self.assertIn("environment", info)
+
+    def test_check_system_update(self):
+        res = backend_app.check_system_update()
+        self.assertIn("update_available", res)
+        self.assertIn("current_version", res)
+        self.assertIn("latest_version", res)
+
+    def test_apply_system_update_download(self):
+        req = backend_app.UpdateApplyRequest(action="download")
+        res = backend_app.apply_system_update(req)
+        self.assertEqual(res["status"], "ready_to_restart")
+        self.assertEqual(res["stage"], 1)
+
+    def test_apply_system_update_restart(self):
+        req = backend_app.UpdateApplyRequest(action="restart")
+        res = backend_app.apply_system_update(req)
+        self.assertEqual(res["status"], "restarting")
+        self.assertEqual(res["stage"], 2)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 
