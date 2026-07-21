@@ -3878,12 +3878,14 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="text-[11px] font-mono text-slate-400 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  Containerized via Docker Compose · Port 3000 (UI) &amp; Port 8000 (API)
+                  {systemInfo.is_docker
+                    ? "Containerized via Docker Compose · Port 3000 (UI) & Port 8000 (API)"
+                    : "Running via Local Python venv & Node.js · Port 3000 (UI) & Port 8000 (API)"}
                 </div>
               </div>
             </div>
 
-            {/* 2-Stage Update Notifier Card (Scenario A) */}
+            {/* 2-Stage Update Notifier Card */}
             <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs max-w-5xl space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
@@ -3896,7 +3898,7 @@ export default function Home() {
                     )}
                   </div>
                   <p className="text-slate-500 text-xs mt-1">
-                    Check for latest GitHub releases and apply Docker container updates with one click.
+                    Check for latest GitHub releases and apply updates with one click.
                   </p>
                 </div>
 
@@ -3945,7 +3947,7 @@ export default function Home() {
               <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-slate-800 text-xs font-mono uppercase tracking-wider">
-                    Scenario A — 1-Click Container Update Workflow
+                    {systemInfo.is_docker ? "Scenario A — 1-Click Container Update Workflow" : "Scenario A — 1-Click Source Update Workflow"}
                   </h3>
                   <span className="text-[10px] font-mono text-slate-400">
                     Latest Tag: <span className="font-bold text-slate-700">{updateState.latestVersion}</span>
@@ -3957,10 +3959,12 @@ export default function Home() {
                   <div className={`p-4 rounded-xl border transition-all ${updateState.stage === 0 ? "bg-white border-slate-200 shadow-2xs" : "bg-slate-100 border-slate-200 opacity-80"}`}>
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
                       <span className="w-5 h-5 rounded-full bg-blue-100 text-[#155DFC] flex items-center justify-center text-[10px] font-mono">1</span>
-                      Download Release Packages
+                      {systemInfo.is_docker ? "Download Release Packages" : "Pull Latest Source Code"}
                     </div>
                     <p className="text-[11px] text-slate-500 mb-4 leading-relaxed">
-                      Pulls the newest release assets &amp; Docker container images in the background.
+                      {systemInfo.is_docker
+                        ? "Pulls the newest release assets & Docker container images in the background."
+                        : "Pulls the newest release tag assets & git repository code in the background."}
                     </p>
                     <button
                       type="button"
@@ -3978,20 +3982,24 @@ export default function Home() {
                         </>
                       ) : updateState.stage >= 1 ? (
                         "✓ Downloaded (Ready)"
-                      ) : (
+                      ) : systemInfo.is_docker ? (
                         "Download Update (Step 1)"
+                      ) : (
+                        "Pull Latest Code (Step 1)"
                       )}
                     </button>
                   </div>
 
-                  {/* Step 2: Relaunch Container */}
+                  {/* Step 2: Relaunch Application */}
                   <div className={`p-4 rounded-xl border transition-all ${updateState.stage === 1 ? "bg-white border-blue-200 ring-2 ring-blue-500/20 shadow-xs" : "bg-slate-100 border-slate-200 opacity-80"}`}>
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
                       <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-mono">2</span>
-                      Relaunch Container &amp; Apply
+                      {systemInfo.is_docker ? "Relaunch Container & Apply" : "Relaunch Service & Apply"}
                     </div>
                     <p className="text-[11px] text-slate-500 mb-4 leading-relaxed">
-                      Restarts the Docker container service to launch the newly downloaded code.
+                      {systemInfo.is_docker
+                        ? "Restarts the Docker container service to launch the newly downloaded code."
+                        : "Restarts the Python API & Node server process to launch the newly updated code."}
                     </p>
                     <button
                       type="button"
@@ -4005,12 +4013,14 @@ export default function Home() {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          Relaunching Container...
+                          Relaunching Service...
                         </>
                       ) : updateState.stage === 2 ? (
                         "✓ Relaunched Successfully"
-                      ) : (
+                      ) : systemInfo.is_docker ? (
                         "Relaunch Container & Apply (Step 2)"
+                      ) : (
+                        "Relaunch Service & Apply (Step 2)"
                       )}
                     </button>
                   </div>
