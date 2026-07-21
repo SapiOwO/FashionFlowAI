@@ -5,7 +5,9 @@
   --foreground: #1f2328;
   --brand-blue: #005cea;
   --brand-blue-hover: #004ac2;
-  --border-whisper: #e4e4e7;
+  --border-whisper: #d0d7de;
+  --github-border-radius-base: 6px;  /* GitHub Primer standard 6px border-radius */
+  --github-border-radius-large: 12px; /* GitHub Primer 12px container border-radius */
   --github-font-sans: var(--font-mona-sans), "Mona Sans VF", "Mona Sans", MonaSansFallback, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --github-font-mono: "Mona Sans Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
@@ -51,6 +53,26 @@ button, input, select, textarea, label {
 }
 
 code, pre, .font-mono, time {
+  font-family: var(--github-font-mono);
+  font-size: 12px;
+}
+
+/* GitHub Primer Component Style Classes */
+.gh-card {
+  border-radius: var(--github-border-radius-base);
+  border: 1px solid #d0d7de;
+  background-color: #ffffff;
+}
+
+.gh-btn {
+  border-radius: var(--github-border-radius-base);
+  font-family: var(--github-font-sans);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.gh-badge, .gh-tag {
+  border-radius: var(--github-border-radius-base);
   font-family: var(--github-font-mono);
   font-size: 12px;
 }

@@ -382,7 +382,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
 
       {/* Dropdown Menu for Available Database Tags & Create Option */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 space-y-2 animate-in fade-in duration-150">
+        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-2 space-y-2 animate-in fade-in duration-150">
           <div className="max-h-40 overflow-y-auto space-y-1">
             {filteredTags.length === 0 && !showCreateOption && (
               <div className="text-[11px] text-slate-400 p-2 text-center">No matching tags found</div>
@@ -1689,7 +1689,7 @@ export default function Home() {
 
             {/* Engineering KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Total Analyses</span>
                   <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
@@ -1702,7 +1702,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Engineering runs logged</p>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Unique Designs</span>
                   <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
@@ -1720,7 +1720,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Approved original patterns</p>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Historical Matches</span>
                   <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
@@ -1738,7 +1738,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Vector DB reference records</p>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Avg. Est. SMV</span>
                   <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
@@ -1765,7 +1765,7 @@ export default function Home() {
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left: System Workflow Guide */}
-              <div className="lg:col-span-2 bg-white border border-slate-100 rounded-2xl p-7 shadow-2xs">
+              <div className="lg:col-span-2 bg-white border border-slate-100 rounded-xl p-7 shadow-2xs">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="font-display font-bold text-lg text-slate-900">Engineering Workflow</h2>
                   <button
@@ -1824,7 +1824,7 @@ export default function Home() {
               </div>
 
               {/* Right: Activity Feed */}
-              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex flex-col">
+              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs flex flex-col">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="font-display font-bold text-lg text-slate-900">Activity Feed</h2>
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100 animate-pulse" title="Live"></span>
@@ -1974,7 +1974,7 @@ export default function Home() {
                           {/* Option 1: Single Garment */}
                           <div
                             onClick={() => setProjectMode("single")}
-                            className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
+                            className={`p-8 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
                               projectMode === "single"
                                 ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
                                 : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
@@ -2006,7 +2006,7 @@ export default function Home() {
                           {/* Option 2: Doll Outfit Set */}
                           <div
                             onClick={() => setProjectMode("doll")}
-                            className={`p-8 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
+                            className={`p-8 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-6 ${
                               projectMode === "doll"
                                 ? "border-[#155DFC] bg-blue-50/40 shadow-md ring-2 ring-[#155DFC]/20"
                                 : "border-slate-200/80 hover:border-[#155DFC]/60 bg-white hover:bg-slate-50/50"
@@ -2222,7 +2222,7 @@ export default function Home() {
                           {showReusePrompt && result && projectMode === "single" && (() => {
                             const topMatch = result.top_3_saved_projects?.[0];
                             return (
-                              <div className="border border-[#155DFC]/30 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50/80 to-indigo-50/60 shadow-sm">
+                              <div className="border border-[#155DFC]/30 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50/80 to-indigo-50/60 shadow-sm">
                                 {/* Header */}
                                 <div className="flex items-center gap-3 px-4 py-3 bg-[#155DFC] text-white">
                                   <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -2662,7 +2662,7 @@ export default function Home() {
                   {/* Left Column: Image, stats overlays and technical tags */}
                   <div className="xl:col-span-2 flex flex-col gap-6">
                     {fullResult.is_doll_project ? (
-                      <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs">
+                      <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs">
                         <h2 className="font-bold text-slate-900 text-base mb-4 font-display">Doll Outfit Components</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Array.isArray(fullResult.classification) && fullResult.classification.map((comp: any, idx: number) => {
@@ -2686,13 +2686,13 @@ export default function Home() {
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs relative">
+                      <div className="bg-white border border-slate-100 rounded-xl p-6 md:p-8 shadow-2xs relative">
                         <h2 className="font-bold text-slate-900 text-base mb-6 font-display leading-tight">Visual Layout Analysis</h2>
                         <div className="relative w-full flex items-center justify-center pt-0 px-1 pb-1">
                           <img
                             src={fullResult.preview_image}
                             alt="Garment Preview"
-                            className="max-h-[520px] w-auto rounded-2xl object-contain shadow-xs"
+                            className="max-h-[520px] w-auto rounded-xl object-contain shadow-xs"
                           />
                           {fullResult.yolo_detections && fullResult.yolo_detections.map((det: any, idx: number) => (
                             <div
@@ -2714,7 +2714,7 @@ export default function Home() {
                       </div>
                     )}
 
-                    <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-xl p-6 md:p-8 shadow-2xs">
                       <h3 className="font-bold text-slate-900 text-sm mb-4 font-display">
                         {fullResult.is_doll_project ? "Doll Project Metadata" : "Pattern Metadata"}
                       </h3>
@@ -2781,7 +2781,7 @@ export default function Home() {
 
                     {/* Step 3 Designer & Engineering Notes Card */}
                     {fullResult?.designer_notes && (
-                      <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs overflow-hidden">
+                      <div className="bg-white border border-slate-100 rounded-xl p-6 md:p-8 shadow-2xs overflow-hidden">
                         <h3 className="font-bold text-slate-900 text-sm mb-2 font-display flex items-center gap-2">
                           <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                           Designer &amp; Pattern Notes
@@ -2795,7 +2795,7 @@ export default function Home() {
 
                   {/* Right Column: Step-by-Step Sewing Flow Table & Tooling */}
                   <div className="xl:col-span-3 flex flex-col gap-8">
-                    <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-xl p-6 md:p-8 shadow-2xs">
                       <h2 className="font-bold text-base text-slate-900 mb-6 font-display leading-tight">
                         STEP-BY-STEP SEWING FLOW
                       </h2>
@@ -2947,13 +2947,13 @@ export default function Home() {
                     </div>
 
                     {/* Tooling Grid Recommendations */}
-                    <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-xl p-8 shadow-2xs">
                       <h2 className="font-bold text-base text-slate-900 mb-6 font-display">
                         RECOMMENDED JUKI MACHINERY
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {fullResult.tooling_recommendations && fullResult.tooling_recommendations.map((tool: any, idx: number) => (
-                          <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
+                          <div key={idx} className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
                             <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-4 relative overflow-hidden">
                               <img 
                                 src={`/image/${tool.file}`} 
@@ -2971,7 +2971,7 @@ export default function Home() {
                     </div>
 
                     {/* SMV & COMPLEXITY SUMMARY */}
-                    <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs flex flex-col gap-6">
+                    <div className="bg-white border border-slate-100 rounded-xl p-8 shadow-2xs flex flex-col gap-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">
@@ -3121,7 +3121,7 @@ export default function Home() {
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                   {/* Left Column: Image box with overlays */}
                   <div className="lg:col-span-2 flex flex-col gap-6">
-                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs relative">
+                    <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs relative">
                       <div className="relative rounded-xl overflow-hidden border border-slate-100 aspect-square w-full bg-slate-50 flex items-center justify-center">
                         <img
                           src={result.preview_image}
@@ -3152,7 +3152,7 @@ export default function Home() {
 
                   {/* Right Column: Step-by-Step Sewing Flow Table */}
                   <div className="lg:col-span-3 flex flex-col gap-6">
-                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs">
                       <h2 className="font-display font-bold text-lg text-slate-900 mb-4">
                         Step-by-Step Sewing Operations
                       </h2>
@@ -3192,7 +3192,7 @@ export default function Home() {
                     </div>
 
                     {/* ESTIMATED SMV CARD */}
-                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex items-center justify-between">
+                    <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs flex items-center justify-between">
                       <div>
                         <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1 font-bold">
                           ESTIMATED SMV
@@ -3222,7 +3222,7 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white border border-slate-100 rounded-2xl p-16 flex items-center justify-center text-center shadow-2xs min-h-[400px]">
+              <div className="bg-white border border-slate-100 rounded-xl p-16 flex items-center justify-center text-center shadow-2xs min-h-[400px]">
                 <div>
                   <svg className="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -3320,7 +3320,7 @@ export default function Home() {
                     return matchesSearch && (tool.name.toLowerCase().includes(selectedMachineCategory.toLowerCase()) || (tool.desc || "").toLowerCase().includes(selectedMachineCategory.toLowerCase()));
                   })
                   .map((tool, idx) => (
-                    <div key={idx} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
+                    <div key={idx} className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
                       {/* Machine Photo Rendering */}
                       <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-3 relative overflow-hidden">
                         <img 
@@ -3341,7 +3341,7 @@ export default function Home() {
                   ))
               ) : (
                 <div className="col-span-full py-12 flex flex-col items-center justify-center space-y-6">
-                  <div className="w-full max-w-md bg-white border border-slate-100 rounded-2xl p-6 text-center shadow-2xs">
+                  <div className="w-full max-w-md bg-white border border-slate-100 rounded-xl p-6 text-center shadow-2xs">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-2">
                       <span className="flex items-center gap-2">
                         <span className="relative flex h-2.5 w-2.5">
@@ -3361,7 +3361,7 @@ export default function Home() {
                   {/* Skeleton Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full opacity-60">
                     {[1, 2, 3, 4].map((n) => (
-                      <div key={n} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-2xs animate-pulse space-y-4">
+                      <div key={n} className="bg-white border border-slate-100 rounded-xl p-5 shadow-2xs animate-pulse space-y-4">
                         <div className="bg-slate-100 aspect-[4/3] rounded-xl"></div>
                         <div className="h-4 bg-slate-100 rounded w-3/4"></div>
                         <div className="space-y-2 pt-2">
@@ -3391,7 +3391,7 @@ export default function Home() {
               </p>
             </header>
 
-            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs max-w-4xl space-y-6">
+            <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs max-w-4xl space-y-6">
               <h2 className="font-display font-bold text-lg text-slate-900">Standard Allowed Minutes Formula</h2>
               <div className="bg-slate-50 rounded-xl p-5 font-mono text-xs text-slate-700 border border-slate-100 leading-relaxed">
                 SMV = (Basic Time) + (Bundle Allowance) + (Machine Allowance) + (Personal Allowance)<br />
@@ -3452,7 +3452,7 @@ export default function Home() {
             </div>
 
             {/* Results Grid */}
-            <div className="border border-slate-100 rounded-2xl p-6 bg-white min-h-[350px] shadow-2xs flex flex-col justify-center">
+            <div className="border border-slate-100 rounded-xl p-6 bg-white min-h-[350px] shadow-2xs flex flex-col justify-center">
               {searchResults.length === 0 ? (
                 <p className="text-slate-400 text-center text-xs">
                   No historical entries in database. Add items to database to search.
@@ -3569,7 +3569,7 @@ export default function Home() {
 
             <div className="w-full">
               {knowledgeBase.length === 0 ? (
-                <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500 text-sm shadow-2xs">
+                <div className="bg-white border border-slate-100 rounded-xl p-8 text-center text-slate-500 text-sm shadow-2xs">
                   Loading corporate reference guides and sewing parameters from database...
                 </div>
               ) : (
@@ -3586,7 +3586,7 @@ export default function Home() {
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-500 text-sm shadow-2xs">
+                      <div className="bg-white border border-slate-100 rounded-xl p-8 text-center text-slate-500 text-sm shadow-2xs">
                         No reference logs match your search criteria.
                       </div>
                     );
@@ -3595,7 +3595,7 @@ export default function Home() {
                   return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {filtered.map((k: any, idx: number) => (
-                        <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300 flex flex-col justify-between">
+                        <div key={idx} className="bg-white border border-slate-100 rounded-xl p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300 flex flex-col justify-between">
                           <div>
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
                               <div>
@@ -3654,7 +3654,7 @@ export default function Home() {
               </p>
             </header>
 
-            <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs space-y-6">
+            <div className="bg-white border border-slate-100 rounded-xl p-6 md:p-8 shadow-2xs space-y-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
                   <h2 className="font-display font-bold text-lg text-slate-900">Saved Projects Database</h2>
@@ -3862,7 +3862,7 @@ export default function Home() {
                                         setActiveMenuId(null);
                                       }} 
                                     />
-                                    <div className={`absolute right-0 ${filteredHistory.length >= 4 && idx >= filteredHistory.length - 1 ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100`}>
+                                    <div className={`absolute right-0 ${filteredHistory.length >= 4 && idx >= filteredHistory.length - 1 ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100`}>
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -3934,7 +3934,7 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* GitHub Promotional Banner Card */}
-              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex flex-col justify-between relative overflow-hidden">
+              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs flex flex-col justify-between relative overflow-hidden">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-[11px] font-mono font-semibold">
@@ -3963,7 +3963,7 @@ export default function Home() {
               </div>
 
               {/* Runtime Environment & Database Status Card */}
-              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
+              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-[#155DFC] text-[11px] font-mono font-semibold">
@@ -4011,7 +4011,7 @@ export default function Home() {
             </div>
 
             {/* System Update Notifier Card */}
-            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs max-w-5xl space-y-6">
+            <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs max-w-5xl space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
                   <div className="flex items-center gap-2">
@@ -4161,7 +4161,7 @@ export default function Home() {
         {/* Confirmation Modal before returning to Step 1 */}
         {showBackConfirmModal && (
           <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 flex flex-col gap-4">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl border border-slate-100 flex flex-col gap-4">
               <div className="flex items-start gap-3 text-amber-600">
                 <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -4199,7 +4199,7 @@ export default function Home() {
         {/* Enterprise Tech Pack Printable Modal */}
         {showTechPackModal && activeTechPackData && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden my-8 border border-slate-200 print:shadow-none print:border-none print:m-0 print:w-full print:max-w-none">
+            <div className="bg-white rounded-xl max-w-4xl w-full shadow-2xl overflow-hidden my-8 border border-slate-200 print:shadow-none print:border-none print:m-0 print:w-full print:max-w-none">
               {/* Action Bar (Hidden on print) */}
               <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between print:hidden">
                 <div className="flex items-center gap-2">
@@ -4353,9 +4353,9 @@ export default function Home() {
         {/* Step 2 Process Sheet Compilation Confirmation Review Modal */}
         {showProcessSheetConfirmModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-5">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-5">
               <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#155DFC] flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#155DFC] flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
                 <div>
@@ -4364,7 +4364,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="space-y-3 bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 text-xs overflow-hidden">
+              <div className="space-y-3 bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 text-xs overflow-hidden">
                 <div className="flex justify-between items-center gap-2">
                   <span className="text-slate-500 shrink-0">Project / Batch Name:</span>
                   <strong className="text-slate-900 font-bold break-words break-all text-right max-w-[220px]">
