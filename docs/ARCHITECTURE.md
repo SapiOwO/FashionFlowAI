@@ -140,11 +140,10 @@ The Create Process Sheet view uses a **2-phase studio layout**:
   * **Defensive Text-Wrapping & Layout Overflow Safeguards**: Applied `break-words break-all` across project titles, tags, and notes to prevent layout distortion from long unbroken strings (e.g. `thisisatest...`).
   * **Strict Upload Validation & Path Traversal Safeguards**: `/api/predict` strictly validates image MIME content-types (`image/jpeg`, `image/png`, `image/webp`, `image/bmp`, `image/tiff`, `image/svg+xml`) and extensions. Non-image formats (e.g. `.mp4`, `.exe`, `.bin`) are rejected with `400 Bad Request`. `model_name` input is sanitized via `os.path.basename` to eliminate path traversal attacks.
   * **Database Reset Endpoint (`POST /api/reset-db`)**: `reset_analysis_history()` wipes records and resets SQLite auto-increment sequence back to ID 1.
-* **Active Projects & History Multi-Criteria Search/Filter Suite**:
-  * **Multi-Criteria Search**: Instant text filtering by **Project Name**, **Project ID (`#18`)**, **Tag**, **Date**, or **Designer Notes**.
-  * **Status Dropdown with Live Count Badges**: Displays real-time category counts (`All Statuses (11)`, `Approved (10)`, `Duplicate Locked (1)`).
-  * **Quick Tag Filter Pills**: Filter projects with 1 click using tag pills.
-  * **Smart Action Menu Positioning (`activeMenuId`)**: History table container uses `overflow-visible` and action dropdowns on lower rows expand upwards (`bottom-full mb-1`) to eliminate clipping/truncation.
+* **Active Projects & History Unified Search & Toolbar Suite**:
+  * **Knowledge-Base Style Unified Top Toolbar**: Combines live search input, Status filter dropdown (`All Statuses`, `Approved`, `Duplicate Locked`), and Tags filter dropdown into a single clean horizontal flex bar.
+  * **Live Autocomplete Search Dropdown with Image Thumbnails**: As users type into the search bar, a live popup menu renders instant matching results featuring **preview image thumbnails**, **Project ID (`#1`)**, **Project Name**, **Tags (`[SS26-Core]`)**, and **Status Badges**.
+  * **Anchored Action Dropdown Menu (`activeMenuId`)**: Three-dots action dropdown menu is anchored directly below/beside the action button (`right-4 top-full mt-1`) with smart flip upward logic (`bottom-full mb-1`) on long lists to prevent popping away or overflowing.
 * **Manufacturing Knowledge Base 2-Column Responsive Grid**: SOP reference cards lay out in a clean 2-column responsive grid (`grid grid-cols-1 md:grid-cols-2 gap-6`) for optimal desktop screen utilization.
 * **Stationary Sewing Flow Table Layout**: Locked column percentages (`w-[12%]`, `w-[40%]`, `w-[10%]`, `w-[38%]`) with `table-fixed` CSS prevent horizontal layout shift on row expansion.
 * **Explicit SMV Units**: Step timing badges explicitly declare `1.5 mins` to prevent ambiguity with meters.

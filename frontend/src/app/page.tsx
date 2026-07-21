@@ -335,6 +335,7 @@ export default function Home() {
   const [historySearchQuery, setHistorySearchQuery] = useState<string>("");
   const [historyStatusFilter, setHistoryStatusFilter] = useState<string>("ALL");
   const [historyTagFilter, setHistoryTagFilter] = useState<string>("ALL");
+  const [showHistoryAutocomplete, setShowHistoryAutocomplete] = useState<boolean>(false);
 
   // Multi-step wizard stepper state (1: Upload & Originality, 2: Engineering Parameters, 3: Process Sheet)
   const [currentStep, setCurrentStep] = useState(1);
@@ -3276,14 +3277,121 @@ export default function Home() {
               </p>
             </header>
 
-            <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-2xs space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-white border border-slate-100 rounded-2xl p-6 md:p-8 shadow-2xs space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
                   <h2 className="font-display font-bold text-base text-slate-900">Saved Projects Database</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">Filter by Name, ID (#), Tags, Date, or Status with live record counts.</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Filter by Name, ID (#), Tags, or Status with live record counts.</p>
+                </div>
+              </div>
+
+              {/* Unified Search & Filters Toolbar (Knowledge Base Style) */}
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full">
+                {/* Autocomplete Live Search Input with Dropdown & Image Thumbnails */}
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={historySearchQuery}
+                    onChange={(e) => {
+                      setHistorySearchQuery(e.target.value);
+                      setShowHistoryAutocomplete(true);
+                    }}
+                    onFocus={() => setShowHistoryAutocomplete(true)}
+                    onBlur={() => setTimeout(() => setShowHistoryAutocomplete(false), 200)}
+                    placeholder="Search by project name, ID (#1), or tag (e.g. doll, SS26)..."
+                    className="w-full bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 pl-10 pr-8 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:outline-none transition-colors shadow-2xs"
+                  />
+                  <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  {historySearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHistorySearchQuery("");
+                        setShowHistoryAutocomplete(false);
+                      }}
+                      className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-700 font-bold cursor-pointer"
+                    >✕</button>
+                  )}
+
+                  {/* Live Autocomplete Suggestions Popup with Thumbnails */}
+                  {showHistoryAutocomplete && historySearchQuery.trim().length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-72 overflow-y-auto py-1 text-left animate-in fade-in duration-150 divide-y divide-slate-100">
+                      {(() => {
+                        const q = historySearchQuery.toLowerCase().trim();
+                        const suggestions = analysisHistory.filter(item => {
+                          const idStr = item.id.toString().toLowerCase();
+                          const nameStr = (item.fileName || item?.result?.classification?.[0]?.class_name || "").toLowerCase();
+                          const itemTags = (item.result?.tags || []).join(" ").toLowerCase();
+                          return idStr.includes(q) || `#${idStr}`.includes(q) || nameStr.includes(q) || itemTags.includes(q);
+                        }).slice(0, 6);
+
+                        if (suggestions.length === 0) {
+                          return (
+                            <div className="p-4 text-center text-xs text-slate-400 font-medium">
+                              No matching projects found for &quot;{historySearchQuery}&quot;
+                            </div>
+                          );
+                        }
+
+                        return suggestions.map((item, idx) => {
+                          const s = (item.result?.status || "").toUpperCase();
+                          const isRejected = s === "REJECTED" || s === "HISTORICAL_MATCH_FOUND";
+                          const itemTags: string[] = item.result?.tags || [];
+
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onMouseDown={() => {
+                                setHistorySearchQuery(item.fileName || item?.result?.classification?.[0]?.class_name || "");
+                                setShowHistoryAutocomplete(false);
+                              }}
+                              className="w-full text-left px-3.5 py-2.5 hover:bg-blue-50/80 flex items-center justify-between gap-3 cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <img
+                                  src={item.result?.preview_image || "globe.svg"}
+                                  alt="Thumbnail"
+                                  className="w-9 h-9 rounded-xl object-cover border border-slate-200/80 bg-slate-100 flex-shrink-0 shadow-2xs"
+                                  onError={(e) => { (e.target as HTMLElement).setAttribute("src", "globe.svg"); }}
+                                />
+                                <div className="min-w-0 flex flex-col">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono font-bold text-xs text-[#155DFC] bg-blue-50 px-1.5 py-0.5 rounded">#{item.id}</span>
+                                    <span className="font-bold text-xs text-slate-900 truncate">
+                                      {item.fileName || item?.result?.classification?.[0]?.class_name || "Untitled Project"}
+                                    </span>
+                                  </div>
+                                  {itemTags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {itemTags.map(t => (
+                                        <span key={t} className="inline-flex items-center gap-1 text-[9px] font-semibold text-[#155DFC] bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200/50">
+                                          <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+                                          {t}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                                  isRejected ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                }`}>
+                                  {isRejected ? "Duplicate Locked" : "Approved"}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        });
+                      })()}
+                    </div>
+                  )}
                 </div>
 
-                {/* Status Dropdown with Dynamic Count Badges */}
+                {/* Status Filter Dropdown */}
                 {(() => {
                   const totalCount = analysisHistory.length;
                   const approvedCount = analysisHistory.filter(item => {
@@ -3293,79 +3401,34 @@ export default function Home() {
                   const duplicateCount = totalCount - approvedCount;
 
                   return (
-                    <div className="flex items-center gap-3">
-                      <select
-                        value={historyStatusFilter}
-                        onChange={(e) => setHistoryStatusFilter(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs"
-                      >
-                        <option value="ALL">All Statuses ({totalCount})</option>
-                        <option value="APPROVED">Approved ({approvedCount})</option>
-                        <option value="DUPLICATE">Duplicate Locked ({duplicateCount})</option>
-                      </select>
-                    </div>
+                    <select
+                      value={historyStatusFilter}
+                      onChange={(e) => setHistoryStatusFilter(e.target.value)}
+                      className="bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs shrink-0"
+                    >
+                      <option value="ALL">All Statuses ({totalCount})</option>
+                      <option value="APPROVED">Approved ({approvedCount})</option>
+                      <option value="DUPLICATE">Duplicate Locked ({duplicateCount})</option>
+                    </select>
                   );
                 })()}
-              </div>
 
-              {/* Search Bar & Tag Filter Pills */}
-              <div className="flex flex-col gap-3">
-                <div className="relative w-full">
-                  <input
-                    type="text"
-                    value={historySearchQuery}
-                    onChange={(e) => setHistorySearchQuery(e.target.value)}
-                    placeholder="Search by project name, ID (#18), tag (SS26), designer notes, or date..."
-                    className="w-full bg-slate-50/80 border border-slate-200/90 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:outline-none transition-colors"
-                  />
-                  <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                  </svg>
-                  {historySearchQuery && (
-                    <button
-                      onClick={() => setHistorySearchQuery("")}
-                      className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-700 font-bold"
-                    >✕</button>
-                  )}
-                </div>
-
-                {/* Quick Tag Pills Bar */}
-                {availableTags.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Filter by Tag:</span>
-                    <button
-                      type="button"
-                      onClick={() => setHistoryTagFilter("ALL")}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        historyTagFilter === "ALL"
-                          ? "bg-[#155DFC] text-white shadow-2xs"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
-                    >
-                      All Tags
-                    </button>
-                    {availableTags.map(t => {
-                      const isSel = historyTagFilter === t;
-                      const count = analysisHistory.filter(h => (h.result?.tags || []).includes(t)).length;
-                      return (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => setHistoryTagFilter(isSel ? "ALL" : t)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                            isSel
-                              ? "bg-[#155DFC] text-white shadow-2xs"
-                              : "bg-blue-50 text-[#155DFC] border border-blue-200/60 hover:bg-blue-100"
-                          }`}
-                        >
-                          <svg className={`w-3 h-3 ${isSel ? "text-white" : "text-[#155DFC]"}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
-                          <span>{t}</span>
-                          <span className="opacity-75 font-mono text-[10px]">({count})</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                {/* Tags Filter Dropdown */}
+                <select
+                  value={historyTagFilter}
+                  onChange={(e) => setHistoryTagFilter(e.target.value)}
+                  className="bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155DFC] cursor-pointer shadow-2xs shrink-0"
+                >
+                  <option value="ALL">All Tags ({availableTags.length})</option>
+                  {availableTags.map(t => {
+                    const count = analysisHistory.filter(h => (h.result?.tags || []).includes(t)).length;
+                    return (
+                      <option key={t} value={t}>
+                        Tag: {t} ({count})
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
 
               <div className="border border-slate-100 rounded-xl overflow-visible">
@@ -3396,14 +3459,12 @@ export default function Home() {
                           const idStr = item.id.toString().toLowerCase();
                           const nameStr = (item.fileName || item?.result?.classification?.[0]?.class_name || "").toLowerCase();
                           const dateStr = (item.timestamp || "").toLowerCase();
-                          const notesStr = (item.result?.designer_notes || "").toLowerCase();
-                          const tagsStr = itemTags.join(" ").toLowerCase();
+                          const itemTagsStr = itemTags.join(" ").toLowerCase();
 
                           const matches = idStr.includes(q) ||
                             nameStr.includes(q) ||
                             dateStr.includes(q) ||
-                            notesStr.includes(q) ||
-                            tagsStr.includes(q) ||
+                            itemTagsStr.includes(q) ||
                             `#${idStr}`.includes(q);
 
                           if (!matches) return false;
@@ -3488,7 +3549,7 @@ export default function Home() {
                                       setActiveMenuId(null);
                                     }} 
                                   />
-                                  <div className={`absolute right-6 ${idx >= filteredHistory.length - 2 ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100`}>
+                                  <div className={`absolute right-4 ${filteredHistory.length >= 4 && idx >= filteredHistory.length - 1 ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100`}>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
