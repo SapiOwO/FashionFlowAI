@@ -810,9 +810,14 @@ class TestTagsAndDesignerNotes(unittest.TestCase):
 class TestSystemVersionAndUpdates(unittest.TestCase):
     """Validate system info, release update check, and 2-stage update execution endpoints."""
 
+    def test_parse_ver_tuple(self):
+        self.assertTrue(backend_app.parse_ver_tuple("v0.1.6") > backend_app.parse_ver_tuple("v0.1.5"))
+        self.assertFalse(backend_app.parse_ver_tuple("v0.1.5") > backend_app.parse_ver_tuple("v0.1.6"))
+        self.assertFalse(backend_app.parse_ver_tuple("v0.1.6") > backend_app.parse_ver_tuple("v0.1.6"))
+
     def test_get_system_info(self):
         info = backend_app.get_system_info()
-        self.assertEqual(info["app_version"], "v1.0.0")
+        self.assertTrue(info["app_version"].startswith("v"))
         self.assertIn("github_repo", info)
         self.assertIn("is_docker", info)
         self.assertIn("environment", info)

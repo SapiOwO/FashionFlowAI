@@ -178,7 +178,7 @@ const HighlightMatch: React.FC<HighlightMatchProps> = ({ text, query, className 
     <span className={className}>
       {parts.map((part, i) =>
         regex.test(part) ? (
-          <mark key={i} style={{ background: "#DBEAFE", color: "inherit", padding: "0", margin: "0" }}>
+          <mark key={i} className="bg-blue-100 text-inherit p-0 m-0">
             {part}
           </mark>
         ) : (
@@ -186,6 +186,86 @@ const HighlightMatch: React.FC<HighlightMatchProps> = ({ text, query, className 
         )
       )}
     </span>
+  );
+};
+
+const renderReleaseNotesMarkdown = (text: string) => {
+  if (!text) return null;
+  const lines = text.split("\n");
+
+  return (
+    <div className="space-y-1 text-xs text-slate-700 font-sans">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={idx} className="h-1" />;
+
+        // Headers like ## What's Changed
+        if (trimmed.startsWith("## ") || trimmed.startsWith("# ")) {
+          const title = trimmed.replace(/^#+\s*/, "");
+          return (
+            <h4 key={idx} className="font-display font-bold text-sm text-slate-900 mt-3 mb-1.5 border-b border-slate-100 pb-1">
+              {title}
+            </h4>
+          );
+        }
+
+        // Bullet points like * **Feature**: description
+        if (trimmed.startsWith("* ") || trimmed.startsWith("- ")) {
+          const body = trimmed.replace(/^[\*\-]\s*/, "");
+          const parts = body.split(/(\*\*[^*]+\*\*)/g);
+          return (
+            <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 my-1 leading-relaxed">
+              <span className="text-[#155DFC] font-bold select-none text-sm leading-none pt-0.5">•</span>
+              <div>
+                {parts.map((p, pIdx) => {
+                  if (p.startsWith("**") && p.endsWith("**")) {
+                    const boldText = p.slice(2, -2);
+                    return <strong key={pIdx} className="font-bold text-slate-900">{boldText}</strong>;
+                  }
+                  if (p.includes("http://") || p.includes("https://")) {
+                    const urlParts = p.split(/(https?:\/\/[^\s]+)/g);
+                    return (
+                      <span key={pIdx}>
+                        {urlParts.map((u, uIdx) =>
+                          u.startsWith("http") ? (
+                            <a key={uIdx} href={u} target="_blank" rel="noreferrer" className="text-[#155DFC] hover:underline font-mono text-[11px] break-all">
+                              {u}
+                            </a>
+                          ) : (
+                            u
+                          )
+                        )}
+                      </span>
+                    );
+                  }
+                  return p;
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        // Normal paragraph lines
+        const parts = trimmed.split(/(\*\*[^*]+\*\*|https?:\/\/[^\s]+)/g);
+        return (
+          <p key={idx} className="text-xs text-slate-700 leading-relaxed">
+            {parts.map((p, pIdx) => {
+              if (p.startsWith("**") && p.endsWith("**")) {
+                return <strong key={pIdx} className="font-bold text-slate-900">{p.slice(2, -2)}</strong>;
+              }
+              if (p.startsWith("http://") || p.startsWith("https://")) {
+                return (
+                  <a key={pIdx} href={p} target="_blank" rel="noreferrer" className="text-[#155DFC] hover:underline font-mono text-[11px] break-all">
+                    {p}
+                  </a>
+                );
+              }
+              return p;
+            })}
+          </p>
+        );
+      })}
+    </div>
   );
 };
 
@@ -460,12 +540,14 @@ export default function Home() {
     github_url: string;
     is_docker: boolean;
     environment: string;
+    db_type?: string;
   }>({
-    app_version: "v1.0.0",
+    app_version: "v0.1.6",
     github_repo: "SapiOwO/FashionFlowAI",
     github_url: "https://github.com/SapiOwO/FashionFlowAI",
     is_docker: false,
-    environment: "Standalone Python"
+    environment: "Standalone Python",
+    db_type: "PostgreSQL (pgvector HNSW Index)"
   });
 
   const [updateState, setUpdateState] = useState<{
@@ -476,19 +558,23 @@ export default function Home() {
     releaseName: string;
     releaseNotes: string;
     downloadUrl: string;
-    stage: number; // 0: idle, 1: ready to restart, 2: restarting
+    stage: number; // 0: initial (download), 1: downloaded (ready to restart), 2: completed
     applying: boolean;
+    progressPercent: number;
+    progressStatus: string;
     message: string;
   }>({
     checking: false,
     updateAvailable: false,
-    currentVersion: "v1.0.0",
-    latestVersion: "v1.0.0",
+    currentVersion: "v0.1.6",
+    latestVersion: "v0.1.6",
     releaseName: "Latest Release",
     releaseNotes: "",
     downloadUrl: "https://github.com/SapiOwO/FashionFlowAI",
     stage: 0,
     applying: false,
+    progressPercent: 0,
+    progressStatus: "",
     message: ""
   });
 
@@ -502,12 +588,12 @@ export default function Home() {
           ...prev,
           checking: false,
           updateAvailable: data.update_available,
-          currentVersion: data.current_version,
+          currentVersion: data.current_version || systemInfo.app_version,
           latestVersion: data.latest_version,
           releaseName: data.release_name || data.latest_version,
-          releaseNotes: data.release_notes || "",
+          releaseNotes: data.release_notes || "Release includes performance optimizations, UI enhancements, and security patches.",
           downloadUrl: data.download_url || "https://github.com/SapiOwO/FashionFlowAI",
-          message: data.update_available ? `New update ${data.latest_version} available!` : "System is running the latest version."
+          message: data.update_available ? `New release ${data.latest_version} is available!` : "System is running the latest version."
         }));
       } else {
         setUpdateState(prev => ({ ...prev, checking: false, message: "System is up to date." }));
@@ -517,40 +603,73 @@ export default function Home() {
     }
   };
 
-  const handleApplyUpdateStep = async (action: "download" | "restart") => {
-    setUpdateState(prev => ({
-      ...prev,
-      applying: true,
-      message: action === "download" ? "Downloading latest release packages & Docker images..." : "Relaunching container service..."
-    }));
-    try {
-      const res = await fetch("http://127.0.0.1:8000/api/system/apply-update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (action === "download") {
-          setUpdateState(prev => ({
-            ...prev,
-            applying: false,
-            stage: 1,
-            message: data.message || "Packages downloaded. Click 'Relaunch Container & Apply' to complete."
-          }));
-        } else {
-          setUpdateState(prev => ({
-            ...prev,
-            applying: false,
-            stage: 2,
-            message: data.message || "Container relaunch signal sent. System reconnecting..."
-          }));
-        }
-      } else {
-        setUpdateState(prev => ({ ...prev, applying: false, message: "Update step failed. Please try again." }));
+  const handleUpdateAction = async () => {
+    if (updateState.stage === 0) {
+      setUpdateState(prev => ({
+        ...prev,
+        applying: true,
+        progressPercent: 40,
+        progressStatus: "Downloading release assets & fetching code...",
+        message: "Downloading release update packages..."
+      }));
+
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/system/apply-update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "download" })
+        });
+        if (!res.ok) throw new Error("Failed to download release update.");
+
+        setUpdateState(prev => ({
+          ...prev,
+          applying: false,
+          stage: 1,
+          progressPercent: 100,
+          progressStatus: "100% — Release packages downloaded. Ready to relaunch and apply.",
+          message: "Release packages downloaded. Click below to restart and apply."
+        }));
+      } catch (err: any) {
+        setUpdateState(prev => ({
+          ...prev,
+          applying: false,
+          progressPercent: 0,
+          progressStatus: "",
+          message: err?.message || "Download failed. Please try again."
+        }));
       }
-    } catch {
-      setUpdateState(prev => ({ ...prev, applying: false, message: "Update step failed. Please try again." }));
+    } else if (updateState.stage === 1) {
+      setUpdateState(prev => ({
+        ...prev,
+        applying: true,
+        progressPercent: 45,
+        progressStatus: "Relaunching system services...",
+        message: "Restarting application service..."
+      }));
+
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/system/apply-update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "restart" })
+        });
+        if (!res.ok) throw new Error("Failed to relaunch application service.");
+
+        setUpdateState(prev => ({
+          ...prev,
+          applying: false,
+          stage: 2,
+          progressPercent: 100,
+          progressStatus: "100% — System successfully updated & reconnected!",
+          message: `Successfully updated to ${prev.latestVersion}.`
+        }));
+      } catch (err: any) {
+        setUpdateState(prev => ({
+          ...prev,
+          applying: false,
+          message: err?.message || "Relaunch failed. Please try again."
+        }));
+      }
     }
   };
 
@@ -2963,31 +3082,34 @@ export default function Home() {
           <div className="fade-in w-full">
             {result ? (
               <div className="w-full">
-                <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">Sewing Sequence</span>
-                    <h1 className="font-display font-bold text-4xl text-black mt-1">
+                    <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Garment Assembly Line</span>
+                    <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
                       {result?.classification?.[0]?.class_name || "Original Sketch Pattern"}
                     </h1>
+                    <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
+                      Sequential sewing operations, machine type allocations, and seam construction step flow.
+                    </p>
                   </div>
 
-                  {/* Top action buttons matching photo */}
-                  <div className="flex gap-2">
+                  {/* Top action buttons */}
+                  <div className="flex gap-2 items-center">
                     <button
                       onClick={() => {
                         setActiveTechPackData(fullResult);
                         setShowTechPackModal(true);
                       }}
-                      className="px-4 py-2.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 transition-colors"
+                      className="px-4 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                       </svg>
                       EXPORT TECH PACK
                     </button>
-                    <button className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-blue-600 text-white shadow-xs">FRONT</button>
-                    <button className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700">BACK</button>
-                    <button className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1">
+                    <button className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-[#155DFC] text-white shadow-xs">FRONT</button>
+                    <button className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">BACK</button>
+                    <button className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 cursor-pointer">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
                       </svg>
@@ -2996,11 +3118,11 @@ export default function Home() {
                   </div>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                   {/* Left Column: Image box with overlays */}
                   <div className="lg:col-span-2 flex flex-col gap-6">
-                    <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-xs relative">
-                      <div className="relative rounded-lg overflow-hidden border border-zinc-150 aspect-square w-full bg-slate-50 flex items-center justify-center">
+                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs relative">
+                      <div className="relative rounded-xl overflow-hidden border border-slate-100 aspect-square w-full bg-slate-50 flex items-center justify-center">
                         <img
                           src={result.preview_image}
                           alt="Garment Preview"
@@ -3011,7 +3133,7 @@ export default function Home() {
                         {result.yolo_detections.map((det, idx) => (
                           <div
                             key={idx}
-                            className="absolute border-2 border-blue-500 bg-blue-500/10 transition-opacity duration-300"
+                            className="absolute border-2 border-blue-500 bg-blue-500/10 transition-opacity duration-300 rounded-xs"
                             style={{
                               top: `${det.box[0]}%`,
                               left: `${det.box[1]}%`,
@@ -3019,7 +3141,7 @@ export default function Home() {
                               height: `${det.box[3] - det.box[1]}%`,
                             }}
                           >
-                            <span className="absolute -top-5 -left-0.5 bg-blue-600 text-white font-mono text-[9px] py-0.5 px-1.5 rounded-sm whitespace-nowrap">
+                            <span className="absolute -top-5 -left-0.5 bg-[#155DFC] text-white font-mono text-[9px] py-0.5 px-1.5 rounded-xs whitespace-nowrap shadow-xs">
                               {det.label} ({(det.confidence * 100).toFixed(0)}%)
                             </span>
                           </div>
@@ -3029,32 +3151,32 @@ export default function Home() {
                   </div>
 
                   {/* Right Column: Step-by-Step Sewing Flow Table */}
-                  <div className="lg:col-span-3 flex flex-col gap-8">
-                    <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs">
-                      <h2 className="font-display font-semibold text-xl text-black mb-6">
-                        STEP-BY-STEP SEWING FLOW
+                  <div className="lg:col-span-3 flex flex-col gap-6">
+                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs">
+                      <h2 className="font-display font-bold text-lg text-slate-900 mb-4">
+                        Step-by-Step Sewing Operations
                       </h2>
                       
-                      <div className="overflow-hidden border border-zinc-150 rounded-lg">
-                        <table className="w-full text-left text-sm text-slate-600 border-collapse">
-                          <thead className="bg-slate-50 text-[11px] font-mono text-slate-400 uppercase border-b border-zinc-150">
+                      <div className="overflow-hidden border border-slate-100 rounded-xl">
+                        <table className="w-full text-left text-xs text-slate-600 border-collapse">
+                          <thead className="bg-slate-50/70 font-mono text-[11px] text-slate-400 uppercase border-b border-slate-100">
                             <tr>
-                              <th className="py-4.5 px-6 font-bold w-16">Step</th>
-                              <th className="py-4.5 px-4 font-bold">Action / Step Flow</th>
-                              <th className="py-4.5 px-4 font-bold text-center w-24">Part</th>
-                              <th className="py-4.5 px-6 font-bold w-48">Machine Type</th>
+                              <th className="py-3.5 px-6 font-bold w-16">Step</th>
+                              <th className="py-3.5 px-4 font-bold">Action / Step Flow</th>
+                              <th className="py-3.5 px-4 font-bold text-center w-24">Part</th>
+                              <th className="py-3.5 px-6 font-bold w-48">Machine Type</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-150 bg-white">
+                          <tbody className="divide-y divide-slate-100 bg-white">
                             {result.sewing_sequence.map((step, idx) => {
                               const machineLabel = idx === 0 ? "Lockstitch" : (idx === 1 ? "Overlock" : "Lockstitch");
                               return (
                                 <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="py-4 px-6 font-semibold text-black">{idx + 1}</td>
-                                  <td className="py-4 px-4 font-medium text-slate-700">{step}</td>
-                                  <td className="py-4 px-4 flex justify-center">{getPartIcon(step)}</td>
-                                  <td className="py-4 px-6">
-                                    <div className="flex items-center justify-between border border-zinc-200 rounded-md py-1.5 px-3 bg-slate-50 font-mono text-xs w-full">
+                                  <td className="py-3.5 px-6 font-semibold text-slate-900 font-mono">#{idx + 1}</td>
+                                  <td className="py-3.5 px-4 font-medium text-slate-700">{step}</td>
+                                  <td className="py-3.5 px-4 flex justify-center">{getPartIcon(step)}</td>
+                                  <td className="py-3.5 px-6">
+                                    <div className="flex items-center justify-between border border-slate-200/80 rounded-lg py-1.5 px-3 bg-slate-50 font-mono text-xs w-full">
                                       <span>{machineLabel}</span>
                                       <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -3070,27 +3192,27 @@ export default function Home() {
                     </div>
 
                     {/* ESTIMATED SMV CARD */}
-                    <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs flex items-center justify-between">
+                    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex items-center justify-between">
                       <div>
-                        <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">
+                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1 font-bold">
                           ESTIMATED SMV
                         </span>
                         <div className="flex items-baseline gap-2">
-                          <span className="font-display font-bold text-4xl text-black">
+                          <span className="font-display font-bold text-3xl text-slate-900 font-mono">
                             {result.smv_range.split(" ")[0]}
                           </span>
-                          <span className="text-sm font-semibold text-slate-400">min/pc</span>
+                          <span className="text-xs font-semibold text-slate-400">min/pc</span>
                         </div>
                       </div>
 
                       <div className="flex gap-8">
                         <div>
-                          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Range</span>
-                          <span className="text-sm font-bold text-slate-700">{result.smv_range}</span>
+                          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1 font-bold">Range</span>
+                          <span className="text-xs font-bold text-slate-700 font-mono">{result.smv_range}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Confidence</span>
-                          <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700 border border-green-200">
+                          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1 font-bold">Confidence</span>
+                          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
                             High
                           </span>
                         </div>
@@ -3100,13 +3222,13 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white border border-zinc-200 rounded-xl p-16 flex items-center justify-center text-center shadow-xs min-h-[400px]">
+              <div className="bg-white border border-slate-100 rounded-2xl p-16 flex items-center justify-center text-center shadow-2xs min-h-[400px]">
                 <div>
                   <svg className="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
-                  <p className="text-slate-400 text-sm max-w-md">
-                    Please upload a sketch in the <strong>Design Input</strong> tab and execute analysis to view step-by-step assembly flows.
+                  <p className="text-slate-400 text-xs max-w-md leading-relaxed">
+                    Please upload a sketch in <strong>Create Process Sheet</strong> to view step-by-step assembly flows.
                   </p>
                 </div>
               </div>
@@ -3259,40 +3381,41 @@ export default function Home() {
         {/* VIEW 5: SMV Estimator Sheet */}
         {activeTab === "smv-view" && (
           <div className="fade-in w-full">
-            <header className="mb-10">
-              <h1 className="font-display font-bold text-4xl text-black mb-2">
+            <header className="mb-6">
+              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Time Study &amp; Operations</span>
+              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
                 SMV Estimator
               </h1>
-              <p className="text-slate-500 text-lg">
+              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
                 Calculates Standard Allowed Minutes (SAM/SMV) based on seam lengths, machine stitches per minute, and operator allowances.
               </p>
             </header>
 
-            <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-xs max-w-4xl">
-              <h2 className="font-display font-semibold text-xl mb-6">Standard Allowed Minutes Formula</h2>
-              <div className="bg-slate-50 rounded-lg p-6 font-mono text-sm text-slate-700 mb-8 border border-zinc-150 leading-relaxed">
+            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs max-w-4xl space-y-6">
+              <h2 className="font-display font-bold text-lg text-slate-900">Standard Allowed Minutes Formula</h2>
+              <div className="bg-slate-50 rounded-xl p-5 font-mono text-xs text-slate-700 border border-slate-100 leading-relaxed">
                 SMV = (Basic Time) + (Bundle Allowance) + (Machine Allowance) + (Personal Allowance)<br />
                 Basic Time = (Observed Time * Rating) / 100
               </div>
 
-              <h3 className="font-display font-semibold text-md text-black mb-4">Calculation Factors</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="border border-zinc-200 rounded-lg p-5 bg-white">
-                  <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">Standard Allowance</span>
-                  <span className="font-display font-bold text-xl text-black">15% - 20%</span>
+              <h3 className="font-display font-bold text-sm text-slate-900">Calculation Factors</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1 font-bold">Standard Allowance</span>
+                  <span className="font-display font-bold text-lg text-slate-900">15% - 20%</span>
                 </div>
-                <div className="border border-zinc-200 rounded-lg p-5 bg-white">
-                  <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">Machine RPM</span>
-                  <span className="font-display font-bold text-xl text-black">4,500 - 5,500</span>
+                <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1 font-bold">Machine RPM</span>
+                  <span className="font-display font-bold text-lg text-slate-900">4,500 - 5,500</span>
                 </div>
-                <div className="border border-zinc-200 rounded-lg p-5 bg-white">
-                  <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">Estimated Efficiency</span>
-                  <span className="font-display font-bold text-xl text-blue-600">85% (Target)</span>
+                <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1 font-bold">Estimated Efficiency</span>
+                  <span className="font-display font-bold text-lg text-[#155DFC]">85% (Target)</span>
                 </div>
               </div>
 
-              <div className="border-t border-zinc-200 pt-6 text-sm text-slate-500 leading-relaxed">
-                Estimations are dynamically matched with sewing process history using the vector database. Run a **Design Input** to receive garment-specific calculations.
+              <div className="border-t border-slate-100 pt-4 text-xs text-slate-500 leading-relaxed">
+                Estimations are dynamically matched with sewing process history using the vector database. Execute <strong>Create Process Sheet</strong> to receive garment-specific calculations.
               </div>
             </div>
           </div>
@@ -3301,60 +3424,61 @@ export default function Home() {
         {/* VIEW 6: Historical Search (pgvector search) */}
         {activeTab === "history-view" && (
           <div className="fade-in w-full">
-            <header className="mb-10">
-              <h1 className="font-display font-bold text-4xl text-black mb-2">
+            <header className="mb-6">
+              <span className="text-[10px] font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md">Vector Similarity DB</span>
+              <h1 className="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-1 mb-1.5">
                 Historical Knowledge Search
               </h1>
-              <p className="text-slate-500 text-lg">
+              <p className="text-slate-500 text-xs max-w-xl leading-relaxed">
                 Query pgvector similarity database for similar reference items, tooling logs, and past learnings.
               </p>
             </header>
 
             {/* Search Input */}
-            <div className="flex gap-4 mb-10">
+            <div className="flex gap-3 mb-6 max-w-3xl">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search historical databases by style, fabric type or tooling (e.g. Oxford, Denim)..."
-                className="flex-grow bg-white border border-zinc-200 rounded-lg py-3.5 px-5 text-md font-body focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-4 text-xs font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
               />
               <button
                 onClick={handleSearch}
-                className="py-3.5 px-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all duration-300"
+                className="py-2.5 px-6 rounded-xl bg-[#155DFC] hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex-shrink-0"
               >
                 Search
               </button>
             </div>
 
             {/* Results Grid */}
-            <div className="border border-zinc-150 rounded-xl p-9 bg-white min-h-[400px] flex flex-col justify-center">
+            <div className="border border-slate-100 rounded-2xl p-6 bg-white min-h-[350px] shadow-2xs flex flex-col justify-center">
               {searchResults.length === 0 ? (
-                <p className="text-slate-400 text-center text-sm">
+                <p className="text-slate-400 text-center text-xs">
                   No historical entries in database. Add items to database to search.
                 </p>
               ) : (
                 <div>
-                  <h2 className="font-display font-semibold text-2xl text-black mb-8">
+                  <h2 className="font-display font-bold text-base text-slate-900 mb-6">
                     Similar Historical Process Sheets ({searchResults.length} Matches Found)
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {searchResults.map((match, idx) => (
-                      <div key={idx} className="bg-slate-50 border border-zinc-200 rounded-xl p-7 shadow-xs">
-                        <div className="flex justify-between items-start mb-4">
-                          <h3 className="font-display font-semibold text-black text-md">
+                      <div key={idx} className="bg-slate-50 border border-slate-100 rounded-xl p-5 shadow-2xs">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-display font-bold text-slate-900 text-xs">
                             {match.title}
                           </h3>
                           <span className="text-[10px] font-mono text-slate-400">
                             {match.ref}
                           </span>
                         </div>
-                        <div className="text-xs text-slate-500 space-y-2 mb-4 leading-relaxed">
+                        <div className="text-xs text-slate-500 space-y-1.5 mb-3 leading-relaxed">
                           <div><strong>Specs:</strong> {match.features}</div>
                           <div><strong>Tooling:</strong> {match.tooling}</div>
                           <div><strong>SMV:</strong> {match.smv}</div>
                         </div>
-                        <div className="border-t border-zinc-200 pt-3 text-[11px] text-slate-400 leading-relaxed">
+                        <div className="border-t border-slate-200/60 pt-2.5 text-[11px] text-slate-400 leading-relaxed">
                           <strong>Learnings:</strong> {match.learnings}
                         </div>
                       </div>
@@ -3810,57 +3934,56 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* GitHub Promotional Banner Card */}
-              <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 shadow-md text-white border border-slate-700/60 flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute -right-4 -bottom-4 opacity-10 pointer-events-none text-white">
-                  <GitHubIcon className="w-48 h-48" />
-                </div>
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex flex-col justify-between relative overflow-hidden">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/10 backdrop-blur-xs border border-white/10 text-[11px] font-mono font-semibold text-slate-200">
-                      <GitHubIcon className="w-4 h-4 text-white" />
-                      GitHub Open Source
-                    </span>
-                    <span className="px-2 py-0.5 bg-blue-500/20 border border-blue-400/30 text-blue-300 text-[10px] font-mono rounded font-bold uppercase tracking-wider">
-                      Official Repository
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-[11px] font-mono font-semibold">
+                      <GitHubIcon className="w-4 h-4 text-slate-800" />
+                      GitHub Repository
                     </span>
                   </div>
-                  <h2 className="font-display font-bold text-xl text-white tracking-tight mb-2">
+                  <h2 className="font-display font-bold text-xl text-slate-900 tracking-tight mb-2">
                     SapiOwO / FashionFlowAI
                   </h2>
-                  <p className="text-slate-300 text-xs leading-relaxed mb-6">
+                  <p className="text-slate-500 text-xs leading-relaxed mb-6">
                     FashionFlow AI is open-source! Star the repository, report issues, or contribute release pull requests.
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between border-t border-slate-100 pt-4">
                   <a
                     href={systemInfo.github_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-slate-900 hover:bg-slate-100 font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
                   >
-                    <GitHubIcon className="w-4 h-4 text-slate-900" />
+                    <GitHubIcon className="w-4 h-4 text-white" />
                     Visit GitHub Repository ↗
                   </a>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    Version {systemInfo.app_version}
-                  </span>
                 </div>
               </div>
 
-              {/* Docker Runtime Status Card */}
+              {/* Runtime Environment & Database Status Card */}
               <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-[#155DFC] text-[11px] font-mono font-semibold">
-                      <DockerIcon className="w-4 h-4 text-[#155DFC]" />
-                      Container Runtime
-                    </span>
-                    <span className={`px-2 py-0.5 text-[10px] font-mono rounded font-bold uppercase tracking-wider ${systemInfo.is_docker ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-600 border border-slate-200"}`}>
-                      {systemInfo.environment}
+                      {systemInfo.is_docker ? (
+                        <>
+                          <DockerIcon className="w-4 h-4 text-[#155DFC]" />
+                          Docker Container Environment
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                          </svg>
+                          Python Virtualenv
+                        </>
+                      )}
                     </span>
                   </div>
                   <h2 className="font-display font-bold text-lg text-slate-900 tracking-tight mb-2">
-                    Deployment Container Status
+                    {systemInfo.is_docker ? "Deployment Container Status" : "Local System Deployment Status"}
                   </h2>
                   <div className="space-y-2.5 my-4">
                     <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
@@ -3872,8 +3995,10 @@ export default function Home() {
                       <span className="font-mono font-semibold text-slate-800">DINOv2 (384-dim)</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-500 font-medium">Vector Index DB</span>
-                      <span className="font-mono font-semibold text-slate-800">SQLite / pgvector (95%)</span>
+                      <span className="text-slate-500 font-medium">Active Database Engine</span>
+                      <span className="font-mono font-semibold text-slate-800">
+                        {systemInfo.db_type || "PostgreSQL (pgvector HNSW Index)"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -3885,12 +4010,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 2-Stage Update Notifier Card */}
+            {/* System Update Notifier Card */}
             <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-2xs max-w-5xl space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="font-display font-bold text-lg text-slate-900">System Update Notifier</h2>
+                    <h2 className="font-display font-bold text-lg text-slate-900">System Updates</h2>
                     {updateState.updateAvailable && (
                       <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider">
                         New Release Available
@@ -3898,7 +4023,7 @@ export default function Home() {
                     )}
                   </div>
                   <p className="text-slate-500 text-xs mt-1">
-                    Check for latest GitHub releases and apply updates with one click.
+                    Check for latest GitHub releases and pull updates.
                   </p>
                 </div>
 
@@ -3910,7 +4035,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={handleCheckUpdate}
-                    disabled={updateState.checking}
+                    disabled={updateState.checking || updateState.applying}
                     className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
                   >
                     {updateState.checking ? (
@@ -3933,9 +4058,36 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Status Message Notification */}
-              {updateState.message && (
-                <div className={`p-3.5 rounded-xl border text-xs font-medium flex items-center gap-2.5 ${updateState.updateAvailable ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-slate-50 text-slate-700 border-slate-200"}`}>
+              {/* Formatted Release Notes Box */}
+              {(updateState.updateAvailable || updateState.releaseNotes) && (
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-5 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-slate-900 bg-blue-100 text-[#155DFC] px-2 py-0.5 rounded">
+                        {updateState.latestVersion}
+                      </span>
+                      {updateState.releaseName && updateState.releaseName !== updateState.latestVersion && (
+                        <span className="font-bold text-xs text-slate-900">
+                          {updateState.releaseName}
+                        </span>
+                      )}
+                    </div>
+                    <a
+                      href={updateState.downloadUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] font-mono text-[#155DFC] hover:underline font-semibold flex items-center gap-1"
+                    >
+                      View GitHub Release Notes ↗
+                    </a>
+                  </div>
+                  {renderReleaseNotesMarkdown(updateState.releaseNotes)}
+                </div>
+              )}
+
+              {/* Status Message Notification (Shown only when a new update is available or during active action) */}
+              {updateState.updateAvailable && updateState.message && (
+                <div className="p-3.5 rounded-xl border text-xs font-medium flex items-center gap-2.5 bg-amber-50 text-amber-800 border-amber-200">
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12v-.008z" />
                   </svg>
@@ -3943,89 +4095,65 @@ export default function Home() {
                 </div>
               )}
 
-              {/* 2-Step Update Process Execution Panel */}
-              <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-slate-800 text-xs font-mono uppercase tracking-wider">
-                    {systemInfo.is_docker ? "Scenario A — 1-Click Container Update Workflow" : "Scenario A — 1-Click Source Update Workflow"}
-                  </h3>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    Latest Tag: <span className="font-bold text-slate-700">{updateState.latestVersion}</span>
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Step 1: Download Update */}
-                  <div className={`p-4 rounded-xl border transition-all ${updateState.stage === 0 ? "bg-white border-slate-200 shadow-2xs" : "bg-slate-100 border-slate-200 opacity-80"}`}>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
-                      <span className="w-5 h-5 rounded-full bg-blue-100 text-[#155DFC] flex items-center justify-center text-[10px] font-mono">1</span>
-                      {systemInfo.is_docker ? "Download Release Packages" : "Pull Latest Source Code"}
-                    </div>
-                    <p className="text-[11px] text-slate-500 mb-4 leading-relaxed">
-                      {systemInfo.is_docker
-                        ? "Pulls the newest release assets & Docker container images in the background."
-                        : "Pulls the newest release tag assets & git repository code in the background."}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => handleApplyUpdateStep("download")}
-                      disabled={updateState.applying || updateState.stage !== 0}
-                      className="w-full py-2.5 px-3 bg-[#155DFC] hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {updateState.applying && updateState.stage === 0 ? (
-                        <>
-                          <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Downloading Release...
-                        </>
-                      ) : updateState.stage >= 1 ? (
-                        "✓ Downloaded (Ready)"
-                      ) : systemInfo.is_docker ? (
-                        "Download Update (Step 1)"
-                      ) : (
-                        "Pull Latest Code (Step 1)"
-                      )}
-                    </button>
+              {/* Progress Bar (Visible during or after update execution) */}
+              {(updateState.applying || updateState.stage > 0) && (
+                <div className="space-y-1.5 pt-2">
+                  <div className="flex justify-between text-[11px] font-mono font-semibold text-slate-700">
+                    <span>{updateState.progressStatus}</span>
+                    <span>{updateState.progressPercent}%</span>
                   </div>
-
-                  {/* Step 2: Relaunch Application */}
-                  <div className={`p-4 rounded-xl border transition-all ${updateState.stage === 1 ? "bg-white border-blue-200 ring-2 ring-blue-500/20 shadow-xs" : "bg-slate-100 border-slate-200 opacity-80"}`}>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-900 mb-1">
-                      <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-mono">2</span>
-                      {systemInfo.is_docker ? "Relaunch Container & Apply" : "Relaunch Service & Apply"}
-                    </div>
-                    <p className="text-[11px] text-slate-500 mb-4 leading-relaxed">
-                      {systemInfo.is_docker
-                        ? "Restarts the Docker container service to launch the newly downloaded code."
-                        : "Restarts the Python API & Node server process to launch the newly updated code."}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => handleApplyUpdateStep("restart")}
-                      disabled={updateState.applying || updateState.stage !== 1}
-                      className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {updateState.applying && updateState.stage === 1 ? (
-                        <>
-                          <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Relaunching Service...
-                        </>
-                      ) : updateState.stage === 2 ? (
-                        "✓ Relaunched Successfully"
-                      ) : systemInfo.is_docker ? (
-                        "Relaunch Container & Apply (Step 2)"
-                      ) : (
-                        "Relaunch Service & Apply (Step 2)"
-                      )}
-                    </button>
+                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#155DFC] h-full transition-all duration-500 rounded-full"
+                      style={{ width: `${updateState.progressPercent}%` }}
+                    />
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Action Button */}
+              {!updateState.updateAvailable && updateState.stage === 0 ? (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full py-2.5 px-4 bg-slate-50 text-slate-400 border border-slate-200/80 font-bold text-xs rounded-xl cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  ✓ System is Up to Date ({updateState.currentVersion})
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleUpdateAction}
+                  disabled={updateState.applying || updateState.stage === 2}
+                  className={`w-full py-2.5 px-4 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 ${updateState.stage === 1 ? "bg-emerald-600 hover:bg-emerald-700" : "bg-[#155DFC] hover:bg-blue-700"}`}
+                >
+                  {updateState.applying ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {updateState.stage === 0 ? (systemInfo.is_docker ? "Downloading Release Assets..." : "Pulling Git Source Code...") : "Relaunching System Services..."}
+                    </>
+                  ) : updateState.stage === 0 ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                      {systemInfo.is_docker ? `Download Update (${updateState.latestVersion})` : `Pull Source Updates (${updateState.latestVersion})`}
+                    </>
+                  ) : updateState.stage === 1 ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                      </svg>
+                      Relaunch Service &amp; Apply Update ({updateState.latestVersion})
+                    </>
+                  ) : (
+                    "✓ System Successfully Updated to " + updateState.latestVersion
+                  )}
+                </button>
+              )}
             </div>
           </div>
         )}

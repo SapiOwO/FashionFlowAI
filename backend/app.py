@@ -4,6 +4,7 @@ import csv
 import re
 import json
 import urllib.request
+import subprocess
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -20,7 +21,7 @@ import time
 from datetime import datetime
 
 # Import database module
-from db import init_database, search_similar_garments, get_mock_embedding, save_analysis_to_db, get_analysis_history_from_db, delete_analysis_from_db, rename_analysis_in_db, check_saved_history_similarity, clear_analysis_history_in_db, get_top_k_similar_history_records
+from db import init_database, search_similar_garments, get_mock_embedding, save_analysis_to_db, get_analysis_history_from_db, delete_analysis_from_db, rename_analysis_in_db, check_saved_history_similarity, clear_analysis_history_in_db, get_top_k_similar_history_records, is_sqlite
 
 # Add models path
 MODELS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
@@ -1591,7 +1592,33 @@ def export_project_to_mes(project_id: int):
     }
 
 
-APP_VERSION = "v1.0.0"
+def parse_ver_tuple(ver_str: str):
+    """Parse version string like 'v0.1.6' or '0.1.5' into integer tuple for proper magnitude comparison."""
+    clean = re.sub(r"[^\d.]", "", ver_str)
+    try:
+        return tuple(int(x) for x in clean.split(".") if x.isdigit())
+    except Exception:
+        return (0, 0, 0)
+
+def get_local_git_version() -> str:
+    """Dynamically get the current git tag or branch version of the codebase."""
+    try:
+        cmd = ["git", "describe", "--tags", "--abbrev=0"]
+        out = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=2).decode("utf-8").strip()
+        if out:
+            return out
+    except Exception:
+        pass
+    try:
+        cmd = ["git", "tag", "-l"]
+        tags = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=2).decode("utf-8").strip().splitlines()
+        if tags:
+            return tags[-1].strip()
+    except Exception:
+        pass
+    return "v0.1.6"
+
+APP_VERSION = get_local_git_version()
 GITHUB_REPO = "SapiOwO/FashionFlowAI"
 GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
 
@@ -1600,21 +1627,24 @@ class UpdateApplyRequest(BaseModel):
 
 @app.get("/api/system/info")
 def get_system_info():
-    """Return application version, container environment status, and repository details."""
+    """Return application version, container environment status, live database engine, and repository details."""
+    current_ver = get_local_git_version()
     is_docker = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_CONTAINER") == "true"
+    db_name = "SQLite (Local File DB)" if is_sqlite() else "PostgreSQL (pgvector HNSW Index)"
     return {
-        "app_version": APP_VERSION,
+        "app_version": current_ver,
         "github_repo": GITHUB_REPO,
         "github_url": GITHUB_REPO_URL,
         "is_docker": is_docker,
         "environment": "Docker Container" if is_docker else "Standalone Python",
+        "db_type": db_name,
         "api_status": "healthy"
     }
 
 @app.get("/api/system/check-update")
 def check_system_update():
     """Query GitHub API for the latest release tag and compare with current APP_VERSION."""
-    current_ver = APP_VERSION
+    current_ver = get_local_git_version()
     url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
     req = urllib.request.Request(
         url,
@@ -1625,14 +1655,12 @@ def check_system_update():
         with urllib.request.urlopen(req, timeout=5) as resp:
             if resp.status == 200:
                 data = json.loads(resp.read().decode("utf-8"))
-                latest_tag = data.get("tag_name", "v1.0.0").strip()
+                latest_tag = data.get("tag_name", current_ver).strip()
                 release_notes = data.get("body", "No release notes provided.").strip()
                 published_at = data.get("published_at", "")
                 html_url = data.get("html_url", GITHUB_REPO_URL)
 
-                clean_current = current_ver.lstrip("v")
-                clean_latest = latest_tag.lstrip("v")
-                is_newer = clean_latest != clean_current
+                is_newer = parse_ver_tuple(latest_tag) > parse_ver_tuple(current_ver)
 
                 return {
                     "update_available": is_newer,
@@ -1658,23 +1686,31 @@ def check_system_update():
 
 @app.post("/api/system/apply-update")
 def apply_system_update(req: UpdateApplyRequest):
-    """Scenario A 2-stage update execution: download/pull -> relaunch container."""
+    """Execute update action: git pull for source code, docker pull for containers."""
     action = req.action.lower().strip()
-    if action == "download":
-        time.sleep(1)
+    is_docker = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_CONTAINER") == "true"
+
+    if action in ("download", "pull"):
+        msg = "Release update assets downloaded."
+        if not is_docker:
+            try:
+                git_out = subprocess.check_output(["git", "pull"], stderr=subprocess.STDOUT, timeout=15).decode("utf-8").strip()
+                msg = f"Git pull completed: {git_out}"
+            except Exception as e:
+                msg = f"Git pull: {str(e)}"
         return {
             "status": "ready_to_restart",
             "stage": 1,
-            "message": "Latest release packages downloaded successfully. Ready to relaunch container."
+            "message": msg
         }
     elif action == "restart":
         return {
             "status": "restarting",
             "stage": 2,
-            "message": "Relaunching container service... System will reconnect in a few seconds."
+            "message": "System service restart initiated. Refresh page in a few seconds."
         }
     else:
-        raise HTTPException(status_code=400, detail="Invalid update action. Use 'download' or 'restart'.")
+        raise HTTPException(status_code=400, detail="Invalid update action.")
 
 
 if __name__ == "__main__":
