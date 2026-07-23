@@ -4066,7 +4066,7 @@ export default function Home() {
                               )}
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4 text-xs text-slate-600 leading-relaxed mb-4">
+                            <div className="grid grid-cols-1 gap-4 text-xs text-slate-600 leading-relaxed">
                               {k.features && (
                                 <div>
                                   <strong className="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-1">Key Features / Material Specs</strong>
@@ -4079,15 +4079,14 @@ export default function Home() {
                                   <p className="text-slate-700">{k.tooling}</p>
                                 </div>
                               )}
+                              {k.learnings && (
+                                <div>
+                                  <strong className="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-1">Guidelines &amp; Manufacturing Learnings</strong>
+                                  <p className="text-slate-700">{k.learnings}</p>
+                                </div>
+                              )}
                             </div>
                           </div>
-
-                          {k.learnings && (
-                            <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-4 text-xs text-slate-700 leading-relaxed mt-auto">
-                              <strong className="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-1.5">Guidelines &amp; Manufacturing Learnings</strong>
-                              {k.learnings}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -4228,7 +4227,7 @@ export default function Home() {
                       {/* Selection Summary & Action Footer */}
                       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                         <span className="text-xs font-mono text-slate-500 truncate max-w-[150px]">
-                          {calSelStart ? (calSelEnd ? `${calSelStart} → ${calSelEnd}` : `Start: ${calSelStart}`) : "Click dates"}
+                          {calSelStart ? (calSelEnd ? `${calSelStart} → ${calSelEnd}` : `Start: ${calSelStart}`) : ""}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <button
@@ -4393,7 +4392,7 @@ export default function Home() {
                                 <img
                                   src={item.result?.preview_image || "globe.svg"}
                                   alt="Thumbnail"
-                                  className="w-10 h-10 rounded-xl object-cover border border-slate-200/80 bg-slate-100 flex-shrink-0 shadow-2xs"
+                                  className="w-14 h-14 rounded-md object-cover border border-slate-200/80 bg-slate-100 flex-shrink-0 shadow-2xs"
                                   onError={(e) => { (e.target as HTMLElement).setAttribute("src", "globe.svg"); }}
                                 />
                                 <div className="min-w-0 flex flex-col">
