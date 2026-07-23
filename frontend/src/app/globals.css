@@ -23,26 +23,42 @@ body {
 
 h1, .font-display-h1 {
   font-family: var(--github-font-sans);
-  font-size: 32px;
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
 }
 
 h2, .font-display-h2 {
   font-family: var(--github-font-sans);
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
 }
 
 h3, .font-display-h3 {
   font-family: var(--github-font-sans);
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.35;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
 }
+
+/* ── Golden Hierarchy 5-Tier Typography Classes (phi ~ 1.618 Scale) ── */
+.font-golden-display-bold { font-family: var(--github-font-sans); font-size: 42px; font-weight: 700; line-height: 1.15; letter-spacing: -0.025em; }
+.font-golden-display-regular { font-family: var(--github-font-sans); font-size: 42px; font-weight: 400; line-height: 1.15; letter-spacing: -0.025em; }
+
+.font-golden-heading-bold { font-family: var(--github-font-sans); font-size: 26px; font-weight: 700; line-height: 1.25; letter-spacing: -0.015em; }
+.font-golden-heading-regular { font-family: var(--github-font-sans); font-size: 26px; font-weight: 400; line-height: 1.25; letter-spacing: -0.015em; }
+
+.font-golden-subheading-bold { font-family: var(--github-font-sans); font-size: 20px; font-weight: 700; line-height: 1.3; }
+.font-golden-subheading-regular { font-family: var(--github-font-sans); font-size: 20px; font-weight: 400; line-height: 1.3; }
+
+.font-golden-body-bold { font-family: var(--github-font-sans); font-size: 16px; font-weight: 700; line-height: 1.5; }
+.font-golden-body-regular { font-family: var(--github-font-sans); font-size: 16px; font-weight: 400; line-height: 1.5; }
+
+.font-golden-caption-bold { font-family: var(--github-font-mono); font-size: 12px; font-weight: 700; line-height: 1.4; }
+.font-golden-caption-regular { font-family: var(--github-font-sans); font-size: 12px; font-weight: 400; line-height: 1.4; }
 
 .font-display {
   font-family: var(--github-font-sans);
@@ -79,6 +95,51 @@ code, pre, .font-mono, time {
 
 .gh-backdrop {
   background-color: rgba(31, 35, 40, 0.4);
+}
+
+/* Global Clean Control Variables & CSS Utilities */
+.input-clean-search {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 0.375rem; /* 6px rounded-md */
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  padding-left: 2.5rem;
+  padding-right: 1rem;
+  font-size: 0.75rem; /* 12px caption */
+  font-family: var(--github-font-sans);
+  color: #0f172a;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+}
+.input-clean-search:focus {
+  border-color: #155DFC;
+}
+
+.select-clean-category {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 0.375rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #334155;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  transition: border-color 0.15s ease-in-out;
+}
+.select-clean-category:focus {
+  border-color: #155DFC;
+}
+@media (min-width: 640px) {
+  .select-clean-category {
+    width: 14rem; /* sm:w-56 */
+    flex-shrink: 0;
+  }
 }
 
 /* View Tab Animations — Disabled for instant zero-lag subtab switching */

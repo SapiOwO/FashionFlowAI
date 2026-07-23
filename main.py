@@ -54,6 +54,8 @@ def main():
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         bufsize=1
     )
 
@@ -75,6 +77,8 @@ def main():
         stderr=subprocess.PIPE,
         shell=shell_val,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         bufsize=1
     )
 
