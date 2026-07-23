@@ -13,15 +13,15 @@
 
 | System Engineering Dashboard | Process Sheet Studio & Parameter Form |
 |:-:|:-:|
-| ![System Engineering Dashboard](image/Dashboard.png) | ![Originality Check & Quiz Form](image/CreateProcessSheet.png) |
+| ![System Engineering Dashboard](image/Dashboard.png) | ![Originality Check & Quiz Form](image/Create2.png) |
 
 | Step-by-Step Sewing Flow & Specs | Saved Active Projects History |
 |:-:|:-:|
-| ![Process Specification Sheet](image/CreateProcessSheet2.png) | ![Saved Projects Database](image/ActiveProjects.png) |
+| ![Process Specification Sheet](image/Create3.png) | ![Saved Projects Database](image/ProjectsHistory.png) |
 
 | Manufacturing Knowledge Base | Sewing Machinery Catalog |
 |:-:|:-:|
-| ![Pattern Originality Knowledge Base](image/KnowledgeBase.png) | ![All Juki Machinery Catalog](image/SewingToolsCatalog.png) |
+| ![Pattern Originality Knowledge Base](image/KnowledgeBase.png) | ![All Juki Machinery Catalog](image/MachineryCatalog.png) |
 
 ---
 
