@@ -3,8 +3,6 @@
 > **Intelligent pattern recognition, original sketch verification, and automated process sheet compilation for garment manufacturing.**  
 > Upload a garment or doll outfit sketch → AI checks design originality via Meta DINOv2 visual embeddings → Configure engineering parameters → Receive a complete production specification sheet with step-by-step sewing flows, Juki machine model recommendations, presser foot & needle specifications, batch SMV scaling, factory line balancing, and historical baselines.
 
----
-
 ## 📸 System Interface & Architecture
 
 ### Application Workflows & Views
