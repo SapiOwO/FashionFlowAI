@@ -850,6 +850,9 @@ def get_all_juki_catalog() -> list:
                 "name": model,
                 "file": clean_image_filename(model),
                 "desc": row.get("description", ""),
+                "type": row.get("type", ""),
+                "category": row.get("category", ""),
+                "application": row.get("application", "")
             })
     _JUKI_CATALOG_CACHE = catalog
     return catalog
@@ -1656,56 +1659,114 @@ def get_system_info():
         "api_status": "healthy"
     }
 
+# ── In-Memory Update Cache (Open WebUI Architecture) ──
+UPDATE_CACHE = {
+    "timestamp": 0,
+    "etag": None,
+    "data": None,
+    "ttl_seconds": 900  # 15 minutes cache window
+}
+
 @app.get("/api/system/check-update")
-def check_system_update():
-    """Query GitHub API for the latest release or tag and compare with current APP_VERSION."""
+def check_system_update(force: bool = False):
+    """
+    Query GitHub Releases API with 15-minute server-side caching, ETag conditional headers,
+    and raw.githubusercontent.com fallback (identical to Open WebUI architecture).
+    """
+    now = time.time()
     current_ver = get_local_git_version()
+
+    # 1. Return cached response if within 15-minute TTL window (unless force=true)
+    if not force and UPDATE_CACHE["data"] and (now - UPDATE_CACHE["timestamp"] < UPDATE_CACHE["ttl_seconds"]):
+        # Update current_version in case local version changed
+        cached = dict(UPDATE_CACHE["data"])
+        cached["current_version"] = current_ver
+        cached["is_newer"] = parse_ver_tuple(cached.get("latest_version", current_ver)) > parse_ver_tuple(current_ver) or cached.get("is_draft", False)
+        cached["update_available"] = cached["is_newer"]
+        return cached
+
     latest_tag = current_ver
+    release_name = f"Release {current_ver}"
     body = "Release includes performance optimizations, UI enhancements, and security patches."
     pub_date = datetime.now().isoformat()
-    download_url = GITHUB_REPO_URL
+    download_url = f"{GITHUB_REPO_URL}/releases"
+    is_draft = False
+    fetched = False
 
-    # Step 1: Try GitHub Releases API
+    headers = {"User-Agent": "FashionFlowAI-System", "Accept": "application/vnd.github+json"}
+    gh_token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if gh_token:
+        headers["Authorization"] = f"token {gh_token}"
+    if UPDATE_CACHE["etag"]:
+        headers["If-None-Match"] = UPDATE_CACHE["etag"]
+
+    # 2. Query strictly the GitHub /releases endpoint
     try:
-        url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-        req = urllib.request.Request(url, headers={"User-Agent": "FashionFlowAI-System"})
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            latest_tag = data.get("tag_name", current_ver)
-            body = data.get("body", body)
-            pub_date = data.get("published_at", pub_date)
-            download_url = data.get("html_url", download_url)
-    except Exception:
-        pass
+        url_all = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
+        req_all = urllib.request.Request(url_all, headers=headers)
+        with urllib.request.urlopen(req_all, timeout=5) as resp:
+            new_etag = resp.headers.get("ETag")
+            if new_etag:
+                UPDATE_CACHE["etag"] = new_etag
 
-    # Step 2: Fallback to GitHub Tags API if releases endpoint didn't find a newer version
-    if parse_ver_tuple(latest_tag) <= parse_ver_tuple(current_ver):
-        try:
-            url_tags = f"https://api.github.com/repos/{GITHUB_REPO}/tags"
-            req_tags = urllib.request.Request(url_tags, headers={"User-Agent": "FashionFlowAI-System"})
-            with urllib.request.urlopen(req_tags, timeout=5) as resp:
-                tags_data = json.loads(resp.read().decode("utf-8"))
-                if isinstance(tags_data, list) and len(tags_data) > 0:
-                    top_tag = tags_data[0].get("name", "")
-                    if parse_ver_tuple(top_tag) > parse_ver_tuple(latest_tag):
-                        latest_tag = top_tag
-                        download_url = f"{GITHUB_REPO_URL}/releases/tag/{top_tag}"
-        except Exception:
-            pass
+            releases_data = json.loads(resp.read().decode("utf-8"))
+            if isinstance(releases_data, list) and len(releases_data) > 0:
+                rel = releases_data[0]
+                latest_tag = rel.get("tag_name") or rel.get("name") or current_ver
+                release_name = rel.get("name") or f"Release {latest_tag}"
+                body = rel.get("body") or "No detailed release notes provided on GitHub."
+                pub_date = rel.get("published_at") or rel.get("created_at") or pub_date
+                download_url = rel.get("html_url") or f"{GITHUB_REPO_URL}/releases"
+                is_draft = rel.get("draft", False)
+                fetched = True
+            else:
+                body = "No published releases found on GitHub repository (https://github.com/SapiOwO/FashionFlowAI/releases)."
+                fetched = True
+    except urllib.error.HTTPError as http_err:
+        if http_err.code == 304 and UPDATE_CACHE["data"]:
+            # 304 Not Modified — Return cached data without counting against rate limit!
+            UPDATE_CACHE["timestamp"] = now
+            return UPDATE_CACHE["data"]
+        elif http_err.code == 403:
+            # 3. Rate Limit Exceeded — Fallback to raw.githubusercontent.com (No 60 req/hr limit!)
+            try:
+                raw_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/package.json"
+                req_raw = urllib.request.Request(raw_url, headers={"User-Agent": "FashionFlowAI-System"})
+                with urllib.request.urlopen(req_raw, timeout=4) as raw_resp:
+                    pkg_data = json.loads(raw_resp.read().decode("utf-8"))
+                    raw_ver = f"v{pkg_data.get('version', '0.1.8')}"
+                    latest_tag = raw_ver
+                    release_name = f"Release {raw_ver}"
+                    body = "Fetched latest version info via GitHub Raw mirror (bypassed GitHub API rate limit)."
+                    fetched = True
+            except Exception:
+                body = "## ⚠️ GitHub API Rate Limit Exceeded\n\nGitHub unauthenticated API rate limit reached (60 requests/hour per IP address).\n\n* Results are cached for 15 minutes to preserve rate limits."
+        else:
+            body = f"## ⚠️ GitHub API Error (HTTP {http_err.code})\n\nUnable to fetch releases from GitHub repository."
+    except Exception as err:
+        body = f"## ⚠️ Connection Warning\n\nCould not connect to GitHub API: {str(err)}"
 
-    is_newer = parse_ver_tuple(latest_tag) > parse_ver_tuple(current_ver)
+    is_newer = parse_ver_tuple(latest_tag) > parse_ver_tuple(current_ver) or is_draft
 
-    return {
+    res_payload = {
         "update_available": is_newer,
         "current_version": current_ver,
         "latest_version": latest_tag,
         "is_newer": is_newer,
-        "release_name": f"Release {latest_tag}",
+        "is_draft": is_draft,
+        "release_name": f"[Draft] {release_name}" if is_draft and not release_name.startswith("[Draft]") else release_name,
         "release_notes": body,
         "published_at": pub_date,
         "download_url": download_url,
         "status": "success"
     }
+
+    # Store in 15-min in-memory cache if fetch succeeded or raw fallback succeeded
+    if fetched:
+        UPDATE_CACHE["timestamp"] = now
+        UPDATE_CACHE["data"] = res_payload
+
+    return res_payload
 
 @app.post("/api/system/apply-update")
 def apply_system_update(req: UpdateApplyRequest):

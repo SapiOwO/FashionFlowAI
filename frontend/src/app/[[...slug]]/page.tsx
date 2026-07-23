@@ -108,7 +108,7 @@ const renderSpecsDescription = (desc: string) => {
   return (
     <div className="mt-4 border-t border-slate-100 pt-4 w-full">
       <h4 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2.5">Technical Specifications</h4>
-      <div className="bg-slate-50/60 rounded-md p-3.5 border border-slate-100 space-y-2">
+      <div className="grid grid-cols-1 gap-2 text-xs text-slate-600 leading-relaxed">
         {rawItems.map((item, i) => {
           const cleanItem = item.replace(/\*\*/g, "").trim();
           if (!cleanItem) return null;
@@ -125,7 +125,7 @@ const renderSpecsDescription = (desc: string) => {
             );
           }
           return (
-            <div key={i} className="text-xs text-slate-600 font-medium">
+            <div key={i} className="text-xs text-slate-700">
               {cleanItem}
             </div>
           );
@@ -568,12 +568,12 @@ export default function Home() {
     setActiveTabState(targetTab);
   }, [pathname]);
 
-  // ── Clean RESTful URL Slug Sync Helper (Instant 0ms Switch) ──
-  const setActiveTab = useCallback((tabName: string) => {
+  // ── Clean RESTful URL Slug Sync Helper (Instant 0ms Switch with Sublink Support) ──
+  const setActiveTab = useCallback((tabName: string, subId?: string | number) => {
     setActiveTabState(tabName);
     if (typeof window !== "undefined") {
       const slugPath = REVERSE_TAB_SLUG_MAP[tabName] || "";
-      const path = slugPath ? `/${slugPath}` : "/";
+      const path = slugPath ? (subId ? `/${slugPath}/${subId}` : `/${slugPath}`) : "/";
       if (window.location.pathname !== path) {
         window.history.replaceState(null, "", path);
       }
@@ -640,6 +640,7 @@ export default function Home() {
   const [historySearchQuery, setHistorySearchQuery] = useState<string>("");
   const [historyStatusFilter, setHistoryStatusFilter] = useState<string>("ALL");
   const [historyTagFilter, setHistoryTagFilter] = useState<string>("ALL");
+  const [copiedProjectId, setCopiedProjectId] = useState<number | null>(null);
 
 
   // Multi-step wizard stepper state (1: Upload & Originality, 2: Engineering Parameters, 3: Process Sheet)
@@ -1060,13 +1061,34 @@ export default function Home() {
     fetchInitialData();
   }, []);
 
-  // Sync availableTags automatically whenever analysisHistory or API tags update
+  // Sync availableTags automatically whenever analysisHistory updates
   useEffect(() => {
     const historyTags = (analysisHistory || []).flatMap(item => item.result?.tags || []);
-    if (historyTags.length > 0) {
-      setAvailableTags(prev => Array.from(new Set([...prev, ...historyTags])).filter(Boolean));
-    }
+    setAvailableTags(Array.from(new Set(historyTags)).filter(Boolean));
   }, [analysisHistory]);
+
+  // ── Sync URL Project ID sublinks (e.g. /process-sheet/2) ── One-shot on initial load
+  const deepLinkHandledRef = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !pathname || analysisHistory.length === 0) return;
+    if (deepLinkHandledRef.current) return;
+    const segments = window.location.pathname.replace(/^\//, "").split("/");
+    const seg = segments[0];
+    const idStr = segments[1];
+    if (idStr && !isNaN(Number(idStr))) {
+      const targetId = Number(idStr);
+      const foundProject = analysisHistory.find(item => Number(item.id) === targetId);
+      if (foundProject) {
+        deepLinkHandledRef.current = true;
+        if (seg === "projects") {
+          setActiveTechPackData(foundProject.result);
+          setShowTechPackModal(true);
+        } else if (seg === "process-sheet") {
+          handleLoadProject(foundProject);
+        }
+      }
+    }
+  }, [analysisHistory, pathname]);
 
   // Sync componentsState with selected dollType required garments and default fabric weights
   useEffect(() => {
@@ -1533,7 +1555,8 @@ export default function Home() {
     }
     
     setIsQuizSubmitted(true);
-    setActiveTab("design-input-view");
+    setCurrentStep(3);
+    setActiveTab("design-input-view", project.id);
   };
 
   // Pre-populate historical search results on mount from database
@@ -1736,7 +1759,7 @@ export default function Home() {
 
     if (text.includes("zipper")) {
       return (
-        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+        <div className="bg-white border border-slate-100 rounded-md p-2">
           <svg className="w-full h-32" viewBox="0 0 400 110">
             {/* Background Pattern Grid */}
             <defs>
@@ -1775,7 +1798,7 @@ export default function Home() {
 
     if (text.includes("hem") || text.includes("edge")) {
       return (
-        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+        <div className="bg-white border border-slate-100 rounded-md p-2">
           <svg className="w-full h-32" viewBox="0 0 400 110">
             <defs>
               <pattern id="cadGridHem" width="10" height="10" patternUnits="userSpaceOnUse">
@@ -1805,7 +1828,7 @@ export default function Home() {
 
     if (text.includes("pocket") || text.includes("flap")) {
       return (
-        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+        <div className="bg-white border border-slate-100 rounded-md p-2">
           <svg className="w-full h-32" viewBox="0 0 400 110">
             <defs>
               <pattern id="cadGridPocket" width="10" height="10" patternUnits="userSpaceOnUse">
@@ -1836,7 +1859,7 @@ export default function Home() {
 
     // Default: Front & Back Garment Pattern CAD Pieces
     return (
-      <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+      <div className="bg-white border border-slate-100 rounded-md p-2">
         <svg className="w-full h-32" viewBox="0 0 400 110">
           <defs>
             <pattern id="cadGridDefault" width="10" height="10" patternUnits="userSpaceOnUse">
@@ -2047,7 +2070,7 @@ export default function Home() {
 
                   {/* Calendar Popover Dialog */}
                   {showCalendarPopover && (
-                    <div className="absolute top-full left-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-4 w-72 sm:w-80 animate-in fade-in duration-150">
+                    <div className="absolute top-full left-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-md shadow-xl p-4 w-72 sm:w-80 animate-in fade-in duration-150">
                       {/* Presets Row */}
                       <div className="flex flex-wrap gap-1 mb-3 pb-3 border-b border-slate-100">
                         <button
@@ -2210,7 +2233,7 @@ export default function Home() {
 
             {/* Engineering KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Total Analyses</span>
                   <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
@@ -2223,7 +2246,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Engineering runs logged</p>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Unique Designs</span>
                   <div className="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
@@ -2241,7 +2264,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Approved original patterns</p>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Historical Matches</span>
                   <div className="w-8 h-8 rounded-md bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
@@ -2259,7 +2282,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Vector DB reference records</p>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Avg. Est. SMV</span>
                   <div className="w-8 h-8 rounded-md bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
@@ -2286,7 +2309,7 @@ export default function Home() {
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left: System Workflow Guide */}
-              <div className="lg:col-span-2 bg-white border border-slate-100 rounded-xl p-7 shadow-2xs">
+              <div className="lg:col-span-2 bg-white border border-slate-100 rounded-md p-7 shadow-2xs">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="font-golden-heading-bold text-slate-900">Engineering Workflow</h2>
                   <button
@@ -2324,7 +2347,7 @@ export default function Home() {
                   const rejected = total - approved;
                   const approvedPct = Math.round((approved / total) * 100);
                   return (
-                    <div className="mt-6 pt-6 border-t border-slate-100">
+                    <div className="mt-4">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Originality Ratio</span>
                         <span className="text-xs font-bold text-emerald-600">{approvedPct}% Approved</span>
@@ -2345,7 +2368,7 @@ export default function Home() {
               </div>
 
               {/* Right: Activity Feed */}
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs flex flex-col">
+              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs flex flex-col">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="font-golden-heading-bold text-slate-900">Activity Feed</h2>
                 </div>
@@ -2496,7 +2519,7 @@ export default function Home() {
                               setProjectMode("single");
                               setCurrentStep(2);
                             }}
-                            className="p-8 rounded-xl border border-slate-200/90 bg-white hover:border-[#155DFC] hover:bg-blue-50/30 shadow-2xs hover:shadow-md group transition-all cursor-pointer flex flex-col justify-between gap-6"
+                            className="p-8 rounded-md border border-slate-200/90 bg-white hover:border-[#155DFC] hover:bg-blue-50/30 shadow-2xs hover:shadow-md group transition-all cursor-pointer flex flex-col justify-between gap-6"
                           >
                             <div className="flex items-center justify-between">
                               <div className="w-12 h-12 rounded-md bg-slate-100 text-slate-600 group-hover:bg-[#155DFC] group-hover:text-white transition-colors flex items-center justify-center">
@@ -2525,7 +2548,7 @@ export default function Home() {
                               setProjectMode("doll");
                               setCurrentStep(2);
                             }}
-                            className="p-8 rounded-xl border border-slate-200/90 bg-white hover:border-[#155DFC] hover:bg-blue-50/30 shadow-2xs hover:shadow-md group transition-all cursor-pointer flex flex-col justify-between gap-6"
+                            className="p-8 rounded-md border border-slate-200/90 bg-white hover:border-[#155DFC] hover:bg-blue-50/30 shadow-2xs hover:shadow-md group transition-all cursor-pointer flex flex-col justify-between gap-6"
                           >
                             <div className="flex items-center justify-between">
                               <div className="w-12 h-12 rounded-md bg-slate-100 text-slate-600 group-hover:bg-[#155DFC] group-hover:text-white transition-colors flex items-center justify-center">
@@ -2568,7 +2591,7 @@ export default function Home() {
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
                                 onClick={triggerFileSelect}
-                                className={`border-2 border-dashed rounded-xl flex flex-col items-center justify-center min-h-72 text-center cursor-pointer transition-all ${
+                                className={`border-2 border-dashed rounded-md flex flex-col items-center justify-center min-h-72 text-center cursor-pointer transition-all ${
                                   isDragOver
                                     ? "border-[#155DFC] bg-blue-50/50"
                                     : previewUrl
@@ -2607,7 +2630,7 @@ export default function Home() {
                               </div>
                               {/* DINOv2 Grade Card — SecurityHeaders style */}
                               {previewUrl && (
-                                <div className={`border rounded-xl overflow-hidden text-xs transition-all ${grade ? grade.cardBorder : "border-slate-200"} ${grade ? grade.cardBg : "bg-slate-50"}`}>
+                                <div className={`border rounded-md overflow-hidden text-xs transition-all ${grade ? grade.cardBorder : "border-slate-200"} ${grade ? grade.cardBg : "bg-slate-50"}`}>
                                   {/* Header row with big badge */}
                                   <div className="flex items-stretch">
                                     <div className={`flex items-center justify-center w-16 flex-shrink-0 ${grade ? grade.bg : "bg-[#155DFC]"}`}>
@@ -2712,7 +2735,7 @@ export default function Home() {
                           {showReusePrompt && result && projectMode === "single" && (() => {
                             const topMatch = result.top_3_saved_projects?.[0];
                             return (
-                              <div className="border border-[#155DFC]/30 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50/80 to-indigo-50/60 shadow-sm">
+                              <div className="border border-[#155DFC]/30 rounded-md overflow-hidden bg-gradient-to-br from-blue-50/80 to-indigo-50/60 shadow-sm">
                                 {/* Header */}
                                 <div className="flex items-center gap-3 px-4 py-3 bg-[#155DFC] text-white">
                                   <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -2933,27 +2956,7 @@ export default function Home() {
                             />
                           </div>
                           
-                          {/* Workflow Status - shown only when no reuse prompt is active */}
-                          {!showReusePrompt && (
-                          <div className={`border rounded-md overflow-hidden mt-auto transition-all ${
-                            grade?.letter === "C" ? "border-orange-200" : grade?.letter === "B" ? "border-amber-200" : grade ? "border-emerald-200" : "border-slate-200"
-                          }`}>
-                            <div className={`flex items-center justify-between px-4 py-2.5 text-xs ${wfBg} ${wfTxt}`}>
-                              <span className="font-semibold">Workflow Status</span>
-                              <span className="font-bold">
-                                {grade ? "Ready for Compilation" : "Awaiting Pattern Scan"}
-                              </span>
-                            </div>
-                            <p className={`text-xs px-4 py-2.5 leading-relaxed ${
-                              grade?.letter === "C" ? "bg-orange-50 text-orange-800" : grade?.letter === "B" ? "bg-amber-50 text-amber-800" : grade ? "bg-emerald-50 text-emerald-800" : "bg-slate-50 text-slate-500"
-                            }`}>
-                              {grade
-                                ? "Pattern passed originality check. Fill in the project details and click Generate Process Sheet."
-                                : "Upload a garment sketch to run the DINOv2 originality scan before proceeding."}
-                            </p>
-                          </div>
-                          )}
-                        </form>
+                         </form>
                       </div>
                     </div>
                     {/* ── ANCHORED BOTTOM ACTION BAR — Step 2 ── */}
@@ -3118,7 +3121,7 @@ export default function Home() {
                           <h1 className="font-bold text-2xl text-slate-900 mt-0.5">{quizName}</h1>
                         </div>
                         <div className="text-right font-mono text-xs text-slate-600 space-y-0.5">
-                          <div><span className="font-bold">STATUS:</span> FINALIZED &amp; LOCKED</div>
+                          <div><span className="font-bold">STATUS:</span> APPROVED</div>
                           <div><span className="font-bold">CATEGORY:</span> {quizGarment} ({quizFabric})</div>
                           <div><span className="font-bold">SPEC ID:</span> FF-SPEC-#{Math.floor(100000 + Math.random() * 900000)}</div>
                         </div>
@@ -3130,12 +3133,6 @@ export default function Home() {
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest">
                             {fullResult.is_doll_project ? "Doll Outfit Process Sheet Set" : "Process Specification Sheet"}
-                          </span>
-                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200 flex items-center gap-1.5">
-                            <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                            </svg>
-                            FINALIZED &amp; LOCKED
                           </span>
                         </div>
                         <h1 className="font-sans font-bold text-2xl md:text-3xl text-slate-900">{quizName}</h1>
@@ -3161,7 +3158,7 @@ export default function Home() {
                   {/* Left Column: Image, stats overlays and technical tags */}
                   <div className="xl:col-span-2 flex flex-col gap-6">
                     {fullResult.is_doll_project ? (
-                      <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs">
+                      <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs">
                         <h2 className="font-bold text-slate-900 text-base mb-4 font-display">Doll Outfit Components</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Array.isArray(fullResult.classification) && fullResult.classification.map((comp: any, idx: number) => {
@@ -3173,7 +3170,7 @@ export default function Home() {
                                   <span className="text-xs font-bold text-[#155DFC] uppercase font-mono">{compKey}</span>
                                   <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">Approved</span>
                                 </div>
-                                <div className="aspect-video bg-white border border-slate-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                <div className="aspect-video bg-white border border-slate-100 rounded-md flex items-center justify-center overflow-hidden">
                                   <img src={compImg} alt={compKey} className="max-w-full max-h-full object-contain" />
                                 </div>
                                 <div className="text-xs text-slate-600 font-semibold truncate mt-1">
@@ -3185,13 +3182,13 @@ export default function Home() {
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-white border border-slate-100 rounded-xl p-6 md:p-8 shadow-2xs relative">
+                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs relative">
                         <h2 className="font-bold text-slate-900 text-base mb-6 font-display leading-tight">Visual Layout Analysis</h2>
                         <div className="relative w-full flex items-center justify-center pt-0 px-1 pb-1">
                           <img
                             src={fullResult.preview_image}
                             alt="Garment Preview"
-                            className="max-h-[520px] w-auto rounded-xl object-contain shadow-xs"
+                            className="max-h-[520px] w-auto rounded-md object-contain shadow-xs"
                           />
                           {fullResult.yolo_detections && fullResult.yolo_detections.map((det: any, idx: number) => (
                             <div
@@ -3213,7 +3210,7 @@ export default function Home() {
                       </div>
                     )}
 
-                    <div className="bg-white border border-slate-100 rounded-xl p-6 md:p-8 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs">
                       <h3 className="font-bold text-slate-900 text-sm mb-4 font-display">
                         {fullResult.is_doll_project ? "Doll Project Metadata" : "Pattern Metadata"}
                       </h3>
@@ -3262,8 +3259,20 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
-                              <span className="text-slate-400 font-medium">Similarity Score:</span>
-                              <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">{fullResult.similarity_percentage}% (Approved)</span>
+                              <span className="text-slate-400 font-medium">Originality Verification:</span>
+                              {fullResult.similarity_percentage >= 90 ? (
+                                <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                                  Reused Spec (#{fullResult.top_3_saved_projects?.[0]?.id || "Catalog"}) · {fullResult.similarity_percentage}%
+                                </span>
+                              ) : fullResult.similarity_percentage >= 30 ? (
+                                <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                  Partial Overlap · {fullResult.similarity_percentage}%
+                                </span>
+                              ) : (
+                                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                  100% Original Pattern (0% Overlap)
+                                </span>
+                              )}
                             </div>
                             <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
                               <span className="text-slate-400 font-medium">Garment Category:</span>
@@ -3280,7 +3289,7 @@ export default function Home() {
 
                     {/* Step 3 Designer & Engineering Notes Card */}
                     {fullResult?.designer_notes && (
-                      <div className="bg-white border border-slate-100 rounded-xl p-6 md:p-8 shadow-2xs overflow-hidden">
+                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs overflow-hidden">
                         <h3 className="font-bold text-slate-900 text-sm mb-2 font-display flex items-center gap-2">
                           <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                           Designer &amp; Pattern Notes
@@ -3294,12 +3303,12 @@ export default function Home() {
 
                   {/* Right Column: Step-by-Step Sewing Flow Table & Tooling */}
                   <div className="xl:col-span-3 flex flex-col gap-8">
-                    <div className="bg-white border border-slate-100 rounded-xl p-6 md:p-8 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs">
                       <h2 className="font-bold text-base text-slate-900 mb-6 font-display leading-tight">
                         STEP-BY-STEP SEWING FLOW
                       </h2>
                       
-                      <div className="overflow-hidden border border-slate-100 rounded-xl">
+                      <div className="overflow-hidden border border-slate-100 rounded-md">
                         <table className="w-full table-fixed text-left text-sm text-slate-600 border-collapse">
                           <thead className="bg-slate-50/70 text-xs font-mono text-slate-400 uppercase border-b border-slate-100">
                             <tr>
@@ -3363,9 +3372,9 @@ export default function Home() {
 
                                     {/* Expanded Sub-Step & Technical Detail Drawer */}
                                     {isExpanded && (
-                                      <tr className="bg-slate-50/80 border-b border-blue-100">
-                                        <td colSpan={4} className="p-5">
-                                          <div className="flex flex-col gap-5 font-sans text-xs">
+                                      <tr className="bg-slate-50/50 border-b border-slate-100">
+                                        <td colSpan={4} className="p-4">
+                                          <div className="flex flex-col gap-4 font-sans text-xs">
                                             {/* Dynamic Sub-steps 1.1, 1.2, 1.3... */}
                                             {step.sub_steps && step.sub_steps.length > 0 && (
                                               <div>
@@ -3377,10 +3386,10 @@ export default function Home() {
                                                     Target Speed: {step.speed || "3,000 sti/min"}
                                                   </span>
                                                 </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                                                   {step.sub_steps.map((sub: any, sIdx: number) => (
-                                                    <div key={sIdx} className="bg-white border border-slate-200 rounded-md p-3 shadow-2xs">
-                                                      <span className="font-mono text-blue-600 font-bold block text-xs mb-1">
+                                                    <div key={sIdx} className="space-y-0.5">
+                                                      <span className="font-mono text-slate-900 font-bold block text-xs">
                                                         Step {stepKey}.{sub.sub_num || sIdx + 1} — {sub.title}
                                                       </span>
                                                       <span className="text-slate-600 text-xs leading-relaxed block">
@@ -3394,14 +3403,14 @@ export default function Home() {
 
                                             {/* Visual Technical Seam Diagram (SVG) */}
                                             <div>
-                                              <span className="text-xs font-mono text-slate-400 uppercase font-bold tracking-wider block mb-2">
+                                              <span className="text-xs font-mono text-slate-400 uppercase font-bold tracking-wider block mb-1.5">
                                                 Technical Seam &amp; Stitch Path Diagram
                                               </span>
                                               {renderSeamTechnicalDiagram(step.operation)}
                                             </div>
 
                                             {/* Workstation Technical Specs & Work-Aid Attachment */}
-                                            <div className="flex flex-col sm:flex-row gap-4 justify-between bg-white p-3.5 rounded-md border border-slate-200 shadow-2xs">
+                                            <div className="flex flex-col sm:flex-row gap-4 justify-between border-t border-slate-200/60 pt-3">
                                               <div>
                                                 <span className="text-xs font-mono text-slate-400 uppercase font-bold block mb-1">Workstation Technical Specs</span>
                                                 <div className="flex items-center gap-2 flex-wrap text-xs font-mono text-slate-700">
@@ -3417,7 +3426,7 @@ export default function Home() {
 
                                               {step.work_aid && (
                                                 <div className="border-t sm:border-t-0 sm:border-l border-slate-200 pt-2 sm:pt-0 sm:pl-4">
-                                                  <span className="text-xs font-mono text-emerald-600 font-bold uppercase block mb-1">Assigned Work-Aid Attachment</span>
+                                                  <span className="text-xs font-mono text-emerald-600 font-bold uppercase block mb-1">Assigned Work-Aid Tooling</span>
                                                   <div className="flex items-center gap-2">
                                                     <span className="font-bold text-slate-900 text-xs">{step.work_aid.attachment_name}</span>
                                                     <span className="text-xs font-mono uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">{step.work_aid.aid_type}</span>
@@ -3446,13 +3455,13 @@ export default function Home() {
                     </div>
 
                     {/* Tooling Grid Recommendations */}
-                    <div className="bg-white border border-slate-100 rounded-xl p-8 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-md p-8 shadow-2xs">
                       <h2 className="font-bold text-base text-slate-900 mb-6 font-display">
                         RECOMMENDED MACHINERY
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {fullResult.tooling_recommendations && fullResult.tooling_recommendations.map((tool: any, idx: number) => (
-                          <div key={idx} className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
+                          <div key={idx} className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
                             <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-4 relative overflow-hidden">
                               <img 
                                 src={`/image/${tool.file}`} 
@@ -3470,7 +3479,7 @@ export default function Home() {
                     </div>
 
                     {/* SMV & COMPLEXITY SUMMARY */}
-                    <div className="bg-white border border-slate-100 rounded-xl p-8 shadow-2xs flex flex-col gap-6">
+                    <div className="bg-white border border-slate-100 rounded-md p-8 shadow-2xs flex flex-col gap-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">
@@ -3507,14 +3516,12 @@ export default function Home() {
                       {fullResult.batch_production && (
                         <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono text-[#155DFC] font-bold uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
-                                Batch Production Scaling
-                              </span>
-                              <span className="text-xs font-semibold text-slate-700">
-                                Run Size: <strong className="font-mono text-slate-900">{fullResult.batch_production.batch_quantity ?? 100} pcs</strong>
-                              </span>
-                            </div>
+                            <span className="text-xs font-mono text-slate-400 font-bold uppercase tracking-widest">
+                              Batch Production Scaling
+                            </span>
+                            <span className="text-xs font-semibold text-slate-700">
+                              Run Size: <strong className="font-mono text-slate-900">{fullResult.batch_production.batch_quantity ?? 100} pcs</strong>
+                            </span>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
@@ -3543,7 +3550,7 @@ export default function Home() {
                       {fullResult.line_balancing && (
                         <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-mono text-indigo-600 font-bold uppercase tracking-widest bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200/60">
+                            <span className="text-xs font-mono text-slate-400 font-bold uppercase tracking-widest">
                               Factory Line Balancing Allocation (500 pcs/day Target)
                             </span>
                             <span className="text-xs font-mono text-slate-500">
@@ -3558,7 +3565,7 @@ export default function Home() {
                                   <span className="text-xs font-bold font-mono text-slate-900 block">{alloc.machine_model}</span>
                                   <span className="text-xs text-slate-500 font-mono">Total SMV: {alloc.total_smv_mins}m ({alloc.utilization_pct}% Util)</span>
                                 </div>
-                                <span className="inline-flex items-center rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold font-mono text-indigo-700 border border-indigo-200">
+                                <span className="inline-flex items-center rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-bold font-mono text-indigo-700 border border-indigo-200">
                                   {alloc.required_units} {alloc.required_units === 1 ? 'Unit' : 'Units'}
                                 </span>
                               </div>
@@ -3788,10 +3795,35 @@ export default function Home() {
 
               {(() => {
                 const filtered = (defaultMachines || []).filter(tool => {
-                  const matchesSearch = tool.name.toLowerCase().includes(machinerySearch.toLowerCase()) || 
-                    (tool.desc || "").toLowerCase().includes(machinerySearch.toLowerCase());
-                  if (selectedMachineCategory === "All Categories") return matchesSearch;
-                  return matchesSearch && (tool.name.toLowerCase().includes(selectedMachineCategory.toLowerCase()) || (tool.desc || "").toLowerCase().includes(selectedMachineCategory.toLowerCase()));
+                  const sTerm = machinerySearch.trim().toLowerCase();
+                  const matchesSearch = !sTerm || 
+                    tool.name.toLowerCase().includes(sTerm) || 
+                    (tool.desc || "").toLowerCase().includes(sTerm) ||
+                    (tool.type || "").toLowerCase().includes(sTerm);
+
+                  if (!matchesSearch) return false;
+                  if (selectedMachineCategory === "All Categories") return true;
+
+                  const cat = selectedMachineCategory.toLowerCase();
+                  const combined = `${tool.name} ${tool.desc || ''} ${tool.type || ''} ${tool.category || ''} ${tool.application || ''}`.toLowerCase();
+
+                  if (cat === "lockstitch") {
+                    return combined.includes("lockstitch") || combined.includes("ddl") || combined.includes("dln") || combined.includes("dlu") || combined.includes("lh-") || combined.includes("lz-");
+                  }
+                  if (cat === "overlock") {
+                    return combined.includes("overlock") || combined.includes("serger") || combined.includes("mo-") || combined.includes("mou") || combined.includes("mor");
+                  }
+                  if (cat === "buttonholing") {
+                    return combined.includes("button") || combined.includes("bartack") || combined.includes("lbh") || combined.includes("lk-") || combined.includes("meb") || combined.includes("mb-");
+                  }
+                  if (cat === "pattern sewer") {
+                    return combined.includes("pattern") || combined.includes("cycle") || combined.includes("ams") || combined.includes("ps-");
+                  }
+                  if (cat === "heavy duty") {
+                    return combined.includes("heavy") || combined.includes("walking") || combined.includes("lu-") || combined.includes("plc") || combined.includes("tsu");
+                  }
+
+                  return combined.includes(cat);
                 });
 
                 if (!defaultMachines || defaultMachines.length === 0) {
@@ -3896,13 +3928,13 @@ export default function Home() {
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1 font-bold">Machine RPM</span>
                   <span className="font-display font-bold text-lg text-slate-900">4,500 - 5,500</span>
                 </div>
-                <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
+                <div className="border border-slate-100 rounded-md p-4 bg-slate-50/50">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1 font-bold">Estimated Efficiency</span>
                   <span className="font-display font-bold text-lg text-[#155DFC]">85% (Target)</span>
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 pt-4 text-xs text-slate-500 leading-relaxed">
+              <div className="mt-4 text-xs text-slate-400 leading-relaxed">
                 Estimations are dynamically matched with sewing process history using the vector database. Execute <strong>Create Process Sheet</strong> to receive garment-specific calculations.
               </div>
             </div>
@@ -3928,18 +3960,18 @@ export default function Home() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search historical databases by style, fabric type or tooling (e.g. Oxford, Denim)..."
-                className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-4 text-xs font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
+                className="w-full bg-white border border-slate-200/80 rounded-md py-2.5 px-4 text-xs font-sans focus:outline-none focus:border-[#155DFC] text-slate-900 shadow-2xs"
               />
               <button
                 onClick={handleSearch}
-                className="py-2.5 px-6 rounded-xl bg-[#155DFC] hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex-shrink-0"
+                className="py-2.5 px-6 rounded-md bg-[#155DFC] hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex-shrink-0"
               >
                 Search
               </button>
             </div>
 
             {/* Results Grid */}
-            <div className="border border-slate-100 rounded-xl p-6 bg-white min-h-80 shadow-2xs flex flex-col justify-center">
+            <div className="border border-slate-100 rounded-md p-6 bg-white min-h-80 shadow-2xs flex flex-col justify-center">
               {searchResults.length === 0 ? (
                 <p className="text-slate-400 text-center text-xs">
                   No historical entries in database. Add items to database to search.
@@ -3951,7 +3983,7 @@ export default function Home() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {searchResults.map((match, idx) => (
-                      <div key={idx} className="bg-slate-50 border border-slate-100 rounded-xl p-5 shadow-2xs">
+                      <div key={idx} className="bg-slate-50 border border-slate-100 rounded-md p-5 shadow-2xs">
                         <div className="flex justify-between items-start mb-3">
                           <h3 className="font-display font-bold text-slate-900 text-xs">
                             {match.title}
@@ -4000,10 +4032,11 @@ export default function Home() {
               onCategoryChange={(val) => setSelectedKnowledgeCategory(val)}
               categoryOptions={[
                 { value: "All Categories", label: "All Categories" },
-                { value: "Shirt", label: "Formal & Casual Shirts" },
-                { value: "Pants", label: "Trousers & Pants" },
-                { value: "Jacket", label: "Outerwear & Jackets" },
-                { value: "Doll", label: "Doll Apparel Standards" },
+                { value: "Cotton & Linen", label: "Cotton & Linen Wovens" },
+                { value: "Denim & Heavy Duty", label: "Denim, Corduroy & Heavy" },
+                { value: "Wool & Outerwear", label: "Wool, Flannel & Suiting" },
+                { value: "Knits & Stretch", label: "Jersey & Stretch Knits" },
+                { value: "Silk & Delicate", label: "Silk, Satin & Synthetics" },
               ]}
               showAutocomplete={showKnowledgeAutocomplete && knowledgeSearch.trim().length > 0}
               onFocus={() => setShowKnowledgeAutocomplete(true)}
@@ -4026,24 +4059,48 @@ export default function Home() {
 
             <div className="w-full">
               {knowledgeBase.length === 0 ? (
-                <div className="bg-white border border-slate-100 rounded-xl p-8 text-center text-slate-500 text-sm shadow-2xs">
+                <div className="bg-white border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm shadow-2xs">
                   Loading corporate reference guides and sewing parameters from database...
                 </div>
               ) : (
                 (() => {
                   const filtered = knowledgeBase.filter((k: any) => {
-                    const term = knowledgeSearch.toLowerCase();
-                    const matchesSearch = k.title.toLowerCase().includes(term) ||
+                    const term = knowledgeSearch.trim().toLowerCase();
+                    const matchesSearch = !term ||
+                      k.title.toLowerCase().includes(term) ||
                       k.ref.toLowerCase().includes(term) ||
                       (k.features && k.features.toLowerCase().includes(term)) ||
+                      (k.tooling && k.tooling.toLowerCase().includes(term)) ||
                       (k.learnings && k.learnings.toLowerCase().includes(term));
-                    if (selectedKnowledgeCategory === "All Categories") return matchesSearch;
-                    return matchesSearch && k.title.toLowerCase().includes(selectedKnowledgeCategory.toLowerCase());
+
+                    if (!matchesSearch) return false;
+                    if (selectedKnowledgeCategory === "All Categories") return true;
+
+                    const cat = selectedKnowledgeCategory.toLowerCase();
+                    const combined = `${k.title} ${k.ref} ${k.features || ''} ${k.tooling || ''} ${k.learnings || ''}`.toLowerCase();
+
+                    if (cat.includes("cotton")) {
+                      return combined.includes("cotton") || combined.includes("linen") || combined.includes("calico") || combined.includes("chambray") || combined.includes("gingham") || combined.includes("muslin") || combined.includes("madras");
+                    }
+                    if (cat.includes("denim")) {
+                      return combined.includes("denim") || combined.includes("corduroy") || combined.includes("heavy") || combined.includes("jeans");
+                    }
+                    if (cat.includes("wool")) {
+                      return combined.includes("wool") || combined.includes("flannel") || combined.includes("tweed") || combined.includes("tartan") || combined.includes("suiting") || combined.includes("cashmere") || combined.includes("gabardine") || combined.includes("mohair");
+                    }
+                    if (cat.includes("knits")) {
+                      return combined.includes("jersey") || combined.includes("knit") || combined.includes("stretch") || combined.includes("ballpoint");
+                    }
+                    if (cat.includes("silk")) {
+                      return combined.includes("silk") || combined.includes("satin") || combined.includes("chiffon") || combined.includes("crepe") || combined.includes("velvet") || combined.includes("organza") || combined.includes("taffeta") || combined.includes("polyester") || combined.includes("rayon") || combined.includes("acrylic") || combined.includes("synthetic");
+                    }
+
+                    return combined.includes(cat);
                   });
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="bg-white border border-slate-100 rounded-xl p-8 text-center text-slate-500 text-sm shadow-2xs">
+                      <div className="bg-white border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm shadow-2xs">
                         No reference logs match your search criteria.
                       </div>
                     );
@@ -4052,7 +4109,7 @@ export default function Home() {
                   return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {filtered.map((k: any, idx: number) => (
-                        <div key={idx} className="bg-white border border-slate-100 rounded-xl p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300 flex flex-col justify-between">
+                        <div key={idx} className="bg-white border border-slate-100 rounded-md p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300 flex flex-col justify-between">
                           <div>
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
                               <div>
@@ -4060,7 +4117,7 @@ export default function Home() {
                                 <p className="text-xs text-slate-400 font-mono mt-0.5">{k.ref}</p>
                               </div>
                               {k.smv && k.smv !== "N/A" && (
-                                <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 text-xs font-mono font-bold text-[#155DFC]">
+                                <div className="bg-slate-50 border border-slate-100 rounded-md px-3 py-1 text-xs font-mono font-bold text-[#155DFC]">
                                   SMV: <span>{k.smv}</span>
                                 </div>
                               )}
@@ -4131,7 +4188,7 @@ export default function Home() {
 
                   {/* Calendar Popover Dialog */}
                   {showCalendarPopover && (
-                    <div className="absolute top-full right-0 sm:left-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-4 w-72 sm:w-80 animate-in fade-in duration-150">
+                    <div className="absolute top-full right-0 sm:left-0 mt-1.5 z-50 bg-white border border-slate-200 rounded-md shadow-xl p-4 w-72 sm:w-80 animate-in fade-in duration-150">
                       {/* Presets Row */}
                       <div className="flex flex-wrap gap-1 mb-3 pb-3 border-b border-slate-100">
                         <button
@@ -4289,7 +4346,7 @@ export default function Home() {
                 </select>
               </SearchToolbar>
 
-              <div className="bg-white border border-slate-100 rounded-xl overflow-visible shadow-2xs">
+              <div className="bg-white border border-slate-100 rounded-md overflow-visible shadow-2xs">
                 <table className="w-full text-left text-xs text-slate-600 border-collapse">
                   <thead className="bg-slate-50/70 font-mono text-xs text-slate-400 uppercase border-b border-slate-100">
                     <tr>
@@ -4437,7 +4494,7 @@ export default function Home() {
                                     e.stopPropagation();
                                     setActiveMenuId(activeMenuId === item.id ? null : item.id);
                                   }}
-                                  className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
+                                  className="text-slate-400 hover:text-slate-800 p-1.5 rounded-md hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
                                   aria-label="Actions Menu"
                                 >
                                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -4454,7 +4511,7 @@ export default function Home() {
                                         setActiveMenuId(null);
                                       }} 
                                     />
-                                    <div className={`absolute right-0 ${filteredHistory.length >= 4 && idx >= filteredHistory.length - 1 ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100`}>
+                                    <div className={`absolute right-0 ${filteredHistory.length >= 4 && idx >= filteredHistory.length - 1 ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-white border border-slate-200 rounded-md shadow-xl py-1.5 w-40 text-left animate-in fade-in duration-100`}>
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -4468,6 +4525,36 @@ export default function Home() {
                                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                         Load Specs
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const shareUrl = `${window.location.origin}/process-sheet/${item.id}`;
+                                          navigator.clipboard.writeText(shareUrl).then(() => {
+                                            setCopiedProjectId(item.id);
+                                            setTimeout(() => {
+                                              setCopiedProjectId(null);
+                                              setActiveMenuId(null);
+                                            }, 1800);
+                                          });
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer border-b border-slate-100"
+                                      >
+                                        {copiedProjectId === item.id ? (
+                                          <>
+                                            <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                            </svg>
+                                            <span className="text-emerald-600 font-semibold">Copied!</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186l.04.022a2.25 2.25 0 002.186 0l.04-.022m-2.266 2.186l.04-.022a2.25 2.25 0 012.186 0l.04.022m1.161-4.707A2.25 2.25 0 1115.75 6a2.25 2.25 0 01-5.146 1.393L10.36 7.42m0 9.16l.244-.122a2.25 2.25 0 113.882 1.942a2.25 2.25 0 01-3.882-1.942zm0 0l-.244.122" />
+                                            </svg>
+                                            Copy Share Link
+                                          </>
+                                        )}
                                       </button>
                                       <button
                                         onClick={(e) => {
@@ -4525,7 +4612,7 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* GitHub Promotional Banner Card */}
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs flex flex-col justify-between relative overflow-hidden">
+              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs flex flex-col justify-between relative overflow-hidden">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 text-xs font-mono font-semibold">
@@ -4533,14 +4620,14 @@ export default function Home() {
                       GitHub Repository
                     </span>
                   </div>
-                  <h2 className="font-display font-bold text-xl text-slate-900 tracking-tight mb-2">
+                  <h2 className="font-golden-heading-bold text-slate-900 mb-2">
                     SapiOwO / FashionFlowAI
                   </h2>
-                  <p className="text-slate-500 text-xs leading-relaxed mb-6">
+                  <p className="text-slate-500 text-xs leading-relaxed">
                     FashionFlow AI is open-source! Star the repository, report issues, or contribute release pull requests.
                   </p>
                 </div>
-                <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                <div className="pt-4 flex items-center">
                   <a
                     href={systemInfo.github_url}
                     target="_blank"
@@ -4554,7 +4641,7 @@ export default function Home() {
               </div>
 
               {/* Runtime Environment & Database Status Card */}
-              <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs flex flex-col justify-between">
+              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 text-[#155DFC] text-xs font-mono font-semibold">
@@ -4573,10 +4660,10 @@ export default function Home() {
                       )}
                     </span>
                   </div>
-                  <h2 className="font-golden-heading-bold text-slate-900 tracking-tight mb-2">
+                  <h2 className="font-golden-heading-bold text-slate-900 mb-2">
                     {systemInfo.is_docker ? "Deployment Container Status" : "Local System Deployment Status"}
                   </h2>
-                  <div className="space-y-2.5 my-4">
+                  <div className="space-y-2.5 mt-4">
                     <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2">
                       <span className="text-slate-500 font-medium">API Server Host</span>
                       <span className="font-mono font-semibold text-slate-800">http://127.0.0.1:8000</span>
@@ -4593,7 +4680,7 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <div className="text-xs font-mono text-slate-400 bg-slate-50 p-2.5 rounded-md border border-slate-100">
+                <div className="text-xs font-mono text-slate-400 pt-4">
                   {systemInfo.is_docker
                     ? "Containerized via Docker Compose · Port 3000 (UI) & Port 8000 (API)"
                     : "Running via Local Python venv & Node.js · Port 3000 (UI) & Port 8000 (API)"}
@@ -4602,8 +4689,8 @@ export default function Home() {
             </div>
 
             {/* System Update Notifier Card */}
-            <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-2xs max-w-5xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+            <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs max-w-5xl space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="font-golden-heading-bold text-slate-900">System Updates</h2>
@@ -4627,11 +4714,11 @@ export default function Home() {
                     type="button"
                     onClick={handleCheckUpdate}
                     disabled={updateState.checking || updateState.applying}
-                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-md transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                    className="px-4 py-2.5 bg-[#155DFC] hover:bg-blue-700 text-white font-bold text-xs rounded-md shadow-2xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
                   >
                     {updateState.checking ? (
                       <>
-                        <svg className="w-3.5 h-3.5 animate-spin text-slate-600" fill="none" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -4639,7 +4726,7 @@ export default function Home() {
                       </>
                     ) : (
                       <>
-                        <svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                         </svg>
                         Check for Updates
@@ -4649,20 +4736,13 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Formatted Release Notes Box */}
+              {/* Clean Release Notes Section (Standardized with Knowledge & Machinery layout) */}
               {(updateState.updateAvailable || updateState.releaseNotes) && (
-                <div className="bg-slate-50 border border-slate-100 rounded-xl p-5 space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-slate-900 bg-blue-100 text-[#155DFC] px-2 py-0.5 rounded">
-                        {updateState.latestVersion}
-                      </span>
-                      {updateState.releaseName && updateState.releaseName !== updateState.latestVersion && (
-                        <span className="font-bold text-xs text-slate-900">
-                          {updateState.releaseName}
-                        </span>
-                      )}
-                    </div>
+                <div className="pt-2 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-golden-heading-bold text-slate-900 text-sm">
+                      {updateState.releaseName || updateState.latestVersion}
+                    </h3>
                     <a
                       href={updateState.downloadUrl}
                       target="_blank"
@@ -4678,7 +4758,7 @@ export default function Home() {
 
               {/* Status Message Notification (Shown only when a new update is available or during active action) */}
               {updateState.updateAvailable && updateState.message && (
-                <div className="p-3.5 rounded-xl border text-xs font-medium flex items-center gap-2.5 bg-amber-50 text-amber-800 border-amber-200">
+                <div className="p-3.5 rounded-md border text-xs font-medium flex items-center gap-2.5 bg-amber-50 text-amber-800 border-amber-200">
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12v-.008z" />
                   </svg>
@@ -4755,36 +4835,36 @@ export default function Home() {
           </div>
         )}
 
-        {/* Confirmation Modal before returning to Step 1 */}
+        {/* Return to Step 1 Mode Choice Confirmation Modal */}
         {showBackConfirmModal && (
-          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl border border-slate-100 flex flex-col gap-4">
-              <div className="flex items-start gap-3 text-amber-600">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white border border-slate-200 rounded-md shadow-2xl max-w-md w-full p-6 space-y-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">Return to Step 1 Mode Choice?</h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  <h3 className="font-golden-heading-bold text-slate-900 text-base">Return to Step 1 Mode Choice?</h3>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                     Going back to Step 1 will reset your current sketch upload and filled engineering parameters.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 mt-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowBackConfirmModal(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-all cursor-pointer"
                 >
                   Cancel &amp; Keep Progress
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmBackToStep1}
-                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm cursor-pointer"
+                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-all shadow-xs cursor-pointer"
                 >
                   Yes, Return to Step 1
                 </button>
@@ -4796,7 +4876,7 @@ export default function Home() {
         {/* Enterprise Tech Pack Printable Modal */}
         {showTechPackModal && activeTechPackData && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-xl max-w-4xl w-full shadow-2xl overflow-hidden my-8 border border-slate-200 print:shadow-none print:border-none print:m-0 print:w-full print:max-w-none">
+            <div className="bg-white rounded-md max-w-4xl w-full shadow-2xl overflow-hidden my-8 border border-slate-200 print:shadow-none print:border-none print:m-0 print:w-full print:max-w-none">
               {/* Action Bar (Hidden on print) */}
               <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between print:hidden">
                 <div className="flex items-center gap-2">
@@ -4805,8 +4885,23 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-3">
                   <button
+                    onClick={() => {
+                      const found = analysisHistory.find(item => item.result === activeTechPackData);
+                      const id = found ? found.id : "";
+                      const shareUrl = `${window.location.origin}/projects/${id}`;
+                      navigator.clipboard.writeText(shareUrl);
+                      alert("Share link copied to clipboard:\n" + shareUrl);
+                    }}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-md shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                    </svg>
+                    Copy Share Link
+                  </button>
+                  <button
                     onClick={() => window.print()}
-                    className="px-4 py-2 bg-[#155DFC] hover:bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                    className="px-4 py-2 bg-[#155DFC] hover:bg-blue-600 text-white text-xs font-bold rounded-md shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -4815,131 +4910,151 @@ export default function Home() {
                   </button>
                   <button
                     onClick={() => setShowTechPackModal(false)}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-md transition-colors cursor-pointer"
                   >
                     Close
                   </button>
                 </div>
               </div>
 
-              {/* Printable Tech Pack Body */}
-              <div className="p-8 sm:p-10 space-y-8 print:p-0 print:space-y-6 text-slate-900 font-sans">
-                {/* Header */}
-                <div className="border-b-2 border-slate-900 pb-6 flex items-start justify-between">
+              {/* Printable Body Content */}
+              <div className="p-8 space-y-8 font-sans">
+                {/* Header Info Banner */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-slate-900 pb-6 gap-4">
                   <div>
-                    <span className="text-xs font-mono text-slate-500 uppercase tracking-widest block font-bold">FashionFlow AI — Industrial Engineering Specification Sheet</span>
-                    <h1 className="text-3xl font-display font-extrabold text-slate-900 mt-1">
-                      {activeTechPackData?.project_details?.name || activeTechPackData?.classification?.[0]?.class_name || "Garment Production Specification"}
-                    </h1>
-                    <div className="flex items-center gap-3 mt-2 text-xs font-mono text-slate-600">
-                      <span>Category: <strong>{activeTechPackData?.project_details?.garment_type || activeTechPackData?.project_details?.doll_type || "Garment"}</strong></span>
-                      <span>•</span>
-                      <span>Fabric: <strong>{activeTechPackData?.project_details?.fabric_weight || "Medium-weight"}</strong></span>
-                      <span>•</span>
-                      <span>Date: <strong>{new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</strong></span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h1 className="text-xl font-bold text-slate-900 font-display uppercase tracking-tight">
+                        {activeTechPackData?.title || "Garment Engineering Tech Pack"}
+                      </h1>
                     </div>
+                    <p className="text-xs text-slate-500 font-mono">
+                      SPEC ID: #{activeTechPackData?.id || "FF-2026-ENG"} · COMPILED: {formatDateDisplay(activeTechPackData?.timestamp || new Date().toISOString())}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-300">
-                      APPROVED (Pre-Production)
+                    <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-3 py-1.5 rounded border border-slate-200 block">
+                      STATUS: APPROVED
                     </span>
-                    <span className="block text-xs font-mono text-slate-400 mt-2">DINOv2 Hash Verified</span>
+                    <span className="text-xs text-slate-400 font-mono mt-1 block">CONFIDENTIAL · FOR FACTORY USE ONLY</span>
                   </div>
                 </div>
 
-                {/* Section 1: Pre-Production Readiness Checklist */}
-                <div>
-                  <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">1. FexQMS Pre-Production Readiness Checklist</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    {(activeTechPackData?.engineering_checklist || []).map((item: any) => (
-                      <div key={item.id} className="flex items-center gap-2 text-xs">
-                        <span className="text-emerald-600 font-bold">✓</span>
-                        <span className="font-semibold text-slate-800">{item.label}</span>
-                      </div>
-                    ))}
+                {/* Technical Overview Matrix */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-md border border-slate-200 text-xs font-mono">
+                  <div>
+                    <span className="text-slate-400 block uppercase text-xs">Garment Type:</span>
+                    <strong className="text-slate-900 text-xs font-bold">{activeTechPackData?.garment_type || "N/A"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block uppercase text-xs">Fabric Weight:</span>
+                    <strong className="text-slate-900 text-xs font-bold">{activeTechPackData?.fabric_type || "Standard"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block uppercase text-xs">Batch Run:</span>
+                    <strong className="text-[#155DFC] text-xs font-bold">{activeTechPackData?.batch_quantity || 100} pcs</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block uppercase text-xs">Originality Rating:</span>
+                    <strong className="text-emerald-700 text-xs font-bold">{activeTechPackData?.similarity_percentage || 0}% Match</strong>
                   </div>
                 </div>
 
-                {/* Section 2: Step-by-Step Sewing Flow Table */}
-                <div>
-                  <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">2. Step-by-Step Sewing Sequence &amp; Machinery Specs</h3>
-                  <div className="border border-slate-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-100 border-b border-slate-200 text-xs font-mono uppercase text-slate-600">
-                          <th className="py-2.5 px-3">Step</th>
-                          <th className="py-2.5 px-3">Operation</th>
-                          <th className="py-2.5 px-3">Machine Model</th>
-                          <th className="py-2.5 px-3">Needle</th>
-                          <th className="py-2.5 px-3">Presser Foot</th>
-                          <th className="py-2.5 px-3">Stitch Spec</th>
-                          <th className="py-2.5 px-3 text-right">SMV</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 font-mono">
-                        {(activeTechPackData?.sewing_sequence_detailed || []).map((step: any, i: number) => (
-                          <tr key={i} className="hover:bg-slate-50/50">
-                            <td className="py-2.5 px-3 font-bold text-slate-900">#{step.step_num || i + 1}</td>
-                            <td className="py-2.5 px-3 font-sans font-medium text-slate-800">{step.operation}</td>
-                            <td className="py-2.5 px-3 font-bold text-blue-700">{step.recommended_model}</td>
-                            <td className="py-2.5 px-3 text-slate-600">{step.needle || "DBx1 (#11)"}</td>
-                            <td className="py-2.5 px-3 text-slate-600">{step.presser_foot || "Standard Foot"}</td>
-                            <td className="py-2.5 px-3 text-slate-600">{step.stitch_spec || "2.5mm/10 SPI"}</td>
-                            <td className="py-2.5 px-3 text-right font-bold text-slate-900">{step.smv_mins || "1.5"}m</td>
+                {/* Detailed Sections */}
+                <div className="space-y-6">
+                  {/* Section 1: Pre-Production Readiness Checklist */}
+                  <div>
+                    <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">1. FexQMS Pre-Production Readiness Checklist</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-4 rounded-md border border-slate-200">
+                      {(activeTechPackData?.engineering_checklist || []).map((item: any) => (
+                        <div key={item.id} className="flex items-center gap-2 text-xs">
+                          <span className="text-emerald-600 font-bold">✓</span>
+                          <span className="font-semibold text-slate-800">{item.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Section 2: Step-by-Step Sewing Flow Table */}
+                  <div>
+                    <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">2. Step-by-Step Sewing Sequence &amp; Machinery Specs</h3>
+                    <div className="border border-slate-200 rounded-md overflow-hidden">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-100 border-b border-slate-200 text-xs font-mono uppercase text-slate-600">
+                            <th className="py-2.5 px-3">Step</th>
+                            <th className="py-2.5 px-3">Operation</th>
+                            <th className="py-2.5 px-3">Machine Model</th>
+                            <th className="py-2.5 px-3">Needle</th>
+                            <th className="py-2.5 px-3">Presser Foot</th>
+                            <th className="py-2.5 px-3">Stitch Spec</th>
+                            <th className="py-2.5 px-3 text-right">SMV</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Section 3: Factory Line Balancing & Work-Aids */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">3. Line Balancing Machine Unit Allocations</h3>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-                      <div className="flex justify-between text-xs font-mono border-b border-slate-200 pb-2 mb-2">
-                        <span className="text-slate-500">Target Volume:</span>
-                        <strong className="text-slate-900">{activeTechPackData?.line_balancing?.target_daily_units || 500} pcs/day</strong>
-                      </div>
-                      <div className="flex justify-between text-xs font-mono border-b border-slate-200 pb-2 mb-2">
-                        <span className="text-slate-500">Takt Time:</span>
-                        <strong className="text-slate-900">{activeTechPackData?.line_balancing?.takt_time_mins || 0.96} mins/unit</strong>
-                      </div>
-                      {(activeTechPackData?.line_balancing?.machine_allocations || []).map((m: any, i: number) => (
-                        <div key={i} className="flex justify-between text-xs font-mono">
-                          <span className="text-slate-700">{m.machine_model}</span>
-                          <strong className="text-blue-700">{m.required_units} Units ({m.utilization_pct}%)</strong>
-                        </div>
-                      ))}
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-mono">
+                          {(activeTechPackData?.sewing_sequence_detailed || []).map((step: any, i: number) => (
+                            <tr key={i} className="hover:bg-slate-50/50">
+                              <td className="py-2.5 px-3 font-bold text-slate-900">#{step.step_num || i + 1}</td>
+                              <td className="py-2.5 px-3 font-sans font-medium text-slate-800">{step.operation}</td>
+                              <td className="py-2.5 px-3 font-bold text-blue-700">{step.recommended_model}</td>
+                              <td className="py-2.5 px-3 text-slate-600">{step.needle || "DBx1 (#11)"}</td>
+                              <td className="py-2.5 px-3 text-[#155DFC]">{step.presser_foot || "Standard Foot"}</td>
+                              <td className="py-2.5 px-3 text-slate-600">{step.stitch_spec || "2.5mm/10 SPI"}</td>
+                              <td className="py-2.5 px-3 text-right font-bold text-slate-900">{step.smv_mins || "1.5"}m</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">4. Work-Aid Tooling Attachments &amp; Jigs</h3>
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-                      {(activeTechPackData?.work_aids || []).map((aid: any, i: number) => (
-                        <div key={i} className="border-b border-slate-200/60 pb-2 last:border-0 last:pb-0 text-xs">
-                          <div className="flex justify-between font-semibold text-slate-900">
-                            <span>{aid.attachment_name}</span>
-                            <span className="text-xs font-mono bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">{aid.aid_type}</span>
+                  {/* Section 3: Factory Line Balancing & Work-Aids */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">3. Line Balancing Machine Unit Allocations</h3>
+                      <div className="bg-slate-50 p-4 rounded-md border border-slate-200 space-y-2">
+                        <div className="flex justify-between text-xs font-mono border-b border-slate-200 pb-2 mb-2">
+                          <span className="text-slate-500">Target Volume:</span>
+                          <strong className="text-slate-900">{activeTechPackData?.line_balancing?.target_daily_units || 500} pcs/day</strong>
+                        </div>
+                        <div className="flex justify-between text-xs font-mono border-b border-slate-200 pb-2 mb-2">
+                          <span className="text-slate-500">Takt Time:</span>
+                          <strong className="text-slate-900">{activeTechPackData?.line_balancing?.takt_time_mins || 0.96} mins/unit</strong>
+                        </div>
+                        {(activeTechPackData?.line_balancing?.machine_allocations || []).map((m: any, i: number) => (
+                          <div key={i} className="flex justify-between text-xs font-mono">
+                            <span className="text-slate-700">{m.machine_model}</span>
+                            <strong className="text-blue-700">{m.required_units} Units ({m.utilization_pct}%)</strong>
                           </div>
-                          <p className="text-xs text-slate-500 font-sans leading-tight mt-0.5">{aid.purpose}</p>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">4. Work-Aid Tooling Attachments &amp; Jigs</h3>
+                      <div className="bg-slate-50 p-4 rounded-md border border-slate-200 space-y-2">
+                        {(activeTechPackData?.work_aids || []).map((aid: any, i: number) => (
+                          <div key={i} className="border-b border-slate-200/60 pb-2 last:border-0 last:pb-0 text-xs">
+                            <div className="flex justify-between font-semibold text-slate-900">
+                              <span>{aid.attachment_name}</span>
+                              <span className="text-xs font-mono bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">{aid.aid_type}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 font-sans leading-tight mt-0.5">{aid.purpose}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Sign-off Block */}
+                {/* Footer Signoff */}
                 <div className="border-t-2 border-slate-900 pt-6 flex items-center justify-between text-xs font-mono">
                   <div>
-                    <span className="text-slate-400 block uppercase text-xs">Prepared By</span>
-                    <strong className="text-slate-900">FashionFlow AI Engineering Copilot</strong>
+                    <span className="text-slate-400 block uppercase">ENGINEERING APPROVAL</span>
+                    <strong className="text-slate-900 uppercase">FASHIONFLOW AUTOMATED SPEC ENGINE v0.1.8</strong>
                   </div>
                   <div className="text-right">
-                    <span className="text-slate-400 block uppercase text-xs">Lead Production Engineer Sign-off</span>
-                    <span className="inline-block border-b border-slate-400 w-48 mt-4 text-center text-slate-300 font-sans italic">Approved for Factory Hand-off</span>
+                    <span className="text-slate-400 block uppercase">DOCUMENT HASH</span>
+                    <strong className="text-slate-900">SHA256: 8F3A2...E91</strong>
                   </div>
                 </div>
               </div>
@@ -4950,48 +5065,60 @@ export default function Home() {
         {/* Step 2 Process Sheet Compilation Confirmation Review Modal */}
         {showProcessSheetConfirmModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="bg-white border border-slate-200 rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-5">
+            <div className="bg-white border border-slate-200 rounded-md shadow-2xl max-w-lg w-full p-6 space-y-5">
               <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#155DFC] flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-md bg-blue-50 text-[#155DFC] flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
                 <div>
-                  <h3 className="font-display font-bold text-base text-slate-900">Compile Process Sheet?</h3>
+                  <h3 className="font-golden-heading-bold text-slate-900 text-base">Compile Process Sheet?</h3>
                   <p className="text-xs text-slate-500">Please review engineering parameters before compiling final sheet.</p>
                 </div>
               </div>
 
-              <div className="space-y-3 bg-slate-50/70 border border-slate-200/80 rounded-xl p-4 text-xs overflow-hidden">
-                <div className="flex justify-between items-center gap-2">
+              <div className="space-y-2.5 text-xs py-1">
+                <div className="flex justify-between items-center gap-2 border-b border-slate-100 pb-2">
                   <span className="text-slate-500 shrink-0">Project / Batch Name:</span>
                   <strong className="text-slate-900 font-bold break-words break-all text-right max-w-xs">
                     {quizName.trim() || result?.top_3_saved_projects?.[0]?.title || "New Pattern Project"}
                   </strong>
                 </div>
-                <div className="flex justify-between items-center"><span className="text-slate-500">Garment Category:</span><strong className="text-slate-900 font-semibold">{quizGarment}</strong></div>
-                <div className="flex justify-between items-center"><span className="text-slate-500">Fabric Application:</span><strong className="text-slate-900 font-semibold">{quizFabric}</strong></div>
-                <div className="flex justify-between items-center"><span className="text-slate-500">Production Run Quantity:</span><strong className="text-[#155DFC] font-mono font-bold">{batchQuantity} pcs</strong></div>
-                <div className="flex justify-between items-start gap-2">
-                  <span className="text-slate-500 shrink-0">Project Tags:</span>
-                  <span className="font-semibold text-slate-800 text-right break-words break-all max-w-xs">
-                    {selectedTags.length > 0 ? selectedTags.join(", ") : "None"}
-                  </span>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Garment Category:</span><strong className="text-slate-900 font-semibold">{quizGarment}</strong></div>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Fabric Application:</span><strong className="text-slate-900 font-semibold">{quizFabric}</strong></div>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Production Run Quantity:</span><strong className="text-[#155DFC] font-mono font-bold">{batchQuantity} pcs</strong></div>
+                <div className="flex justify-between items-start gap-2 text-xs">
+                  <span className="text-slate-500 shrink-0 pt-0.5">Project Tags:</span>
+                  <div className="flex flex-wrap gap-1 justify-end max-w-xs">
+                    {selectedTags.length > 0 ? (
+                      selectedTags.map((t: string) => (
+                        <span key={t} className="inline-flex items-center gap-1 text-xs font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
+                          <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+                          </svg>
+                          {t}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="font-semibold text-slate-400 italic">None</span>
+                    )}
+                  </div>
                 </div>
                 {designerNotes && (
-                  <div className="border-t border-slate-200/60 pt-2.5 mt-2 overflow-hidden">
-                    <span className="text-slate-500 block mb-1">Designer Notes:</span>
-                    <p className="text-slate-700 italic font-sans bg-white p-2.5 rounded-lg border border-slate-200/60 break-words break-all whitespace-pre-wrap max-h-32 overflow-y-auto leading-relaxed">
+                  <div className="pt-2 text-xs overflow-hidden border-t border-slate-100 mt-2">
+                    <span className="text-slate-400 font-mono font-bold uppercase tracking-wider block mb-1">Designer Notes</span>
+                    <p className="text-slate-700 italic font-sans leading-relaxed break-words break-all whitespace-pre-wrap max-h-32 overflow-y-auto">
                       &quot;{designerNotes}&quot;
                     </p>
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowProcessSheetConfirmModal(false)}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-md transition-colors cursor-pointer"
                 >
                   Back to Edit
                 </button>
@@ -5001,7 +5128,7 @@ export default function Home() {
                     setShowProcessSheetConfirmModal(false);
                     executeCompilation();
                   }}
-                  className="px-6 py-2.5 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm flex items-center gap-2"
+                  className="px-6 py-2.5 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-md transition-all cursor-pointer shadow-sm flex items-center gap-2"
                 >
                   <span>Confirm &amp; Compile Sheet</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
