@@ -99,6 +99,17 @@ const formatActivityDate = (item: any): string => {
   }
 };
 
+const formatDateDisplay = (dateStr?: string): string => {
+  if (!dateStr) return new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  try {
+    const d = new Date(dateStr.replace(" ", "T"));
+    if (isNaN(d.getTime())) return new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  } catch {
+    return dateStr;
+  }
+};
+
 
 const renderSpecsDescription = (desc: string) => {
   if (!desc) return null;
