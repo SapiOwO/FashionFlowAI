@@ -640,7 +640,7 @@ export default function Home() {
   const [historySearchQuery, setHistorySearchQuery] = useState<string>("");
   const [historyStatusFilter, setHistoryStatusFilter] = useState<string>("ALL");
   const [historyTagFilter, setHistoryTagFilter] = useState<string>("ALL");
-  const [copiedProjectId, setCopiedProjectId] = useState<number | null>(null);
+  const [copiedProjectId, setCopiedProjectId] = useState<string | number | null>(null);
 
 
   // Multi-step wizard stepper state (1: Upload & Originality, 2: Engineering Parameters, 3: Process Sheet)
