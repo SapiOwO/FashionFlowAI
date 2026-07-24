@@ -1634,7 +1634,7 @@ def get_local_git_version() -> str:
             return tags[-1].strip()
     except Exception:
         pass
-    return "v0.1.8"
+    return "v0.1.9"
 
 APP_VERSION = get_local_git_version()
 GITHUB_REPO = "SapiOwO/FashionFlowAI"
@@ -1734,7 +1734,7 @@ def check_system_update(force: bool = False):
                 req_raw = urllib.request.Request(raw_url, headers={"User-Agent": "FashionFlowAI-System"})
                 with urllib.request.urlopen(req_raw, timeout=4) as raw_resp:
                     pkg_data = json.loads(raw_resp.read().decode("utf-8"))
-                    raw_ver = f"v{pkg_data.get('version', '0.1.8')}"
+                    raw_ver = f"v{pkg_data.get('version', '0.1.9')}"
                     latest_tag = raw_ver
                     release_name = f"Release {raw_ver}"
                     body = "Fetched latest version info via GitHub Raw mirror (bypassed GitHub API rate limit)."

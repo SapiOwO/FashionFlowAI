@@ -5061,7 +5061,7 @@ export default function Home() {
                 <div className="border-t-2 border-slate-900 pt-6 flex items-center justify-between text-xs font-mono">
                   <div>
                     <span className="text-slate-400 block uppercase">ENGINEERING APPROVAL</span>
-                    <strong className="text-slate-900 uppercase">FASHIONFLOW AUTOMATED SPEC ENGINE v0.1.8</strong>
+                    <strong className="text-slate-900 uppercase">FASHIONFLOW AUTOMATED SPEC ENGINE v0.1.9</strong>
                   </div>
                   <div className="text-right">
                     <span className="text-slate-400 block uppercase">DOCUMENT HASH</span>
