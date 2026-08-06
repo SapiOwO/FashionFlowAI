@@ -460,9 +460,6 @@ def clean_image_filename(model_name: str) -> str:
     clean = re.sub(r'[\/\\]', '-', model_name.strip())
     m = re.match(r'^([A-Z]{2,4}-[0-9]{3,4}[A-Z]?)', clean)
     base_name = m.group(1) if m else clean
-    # Use clean bright Juki lockstitch photo asset instead of dark blank DDL-9000C asset
-    if base_name == "DDL-9000C":
-        return "DDL-8700L.png"
     return f"{base_name}.png"
 
 
