@@ -1,0 +1,23 @@
+# Git & IDE
+.git
+.gitignore
+.github
+.vscode
+.agents
+
+# Python virtualenvs & cache
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+
+# Node / Frontend build artifacts
+frontend/node_modules
+frontend/.next
+frontend/out
+
+# Graphify & system outputs
+graphify-out
+.gemini

@@ -735,11 +735,15 @@ class TestTagsAndDesignerNotes(unittest.TestCase):
         fake_mp4_bytes = b"\x00\x00\x00\x20ftypisom\x00\x00\x02\x00isomiso2avc1mp41"
         fake_file = UploadFile(filename="exploit_video.mp4", file=io.BytesIO(fake_mp4_bytes), headers={"content-type": "video/mp4"})
         
-        loop = asyncio.get_event_loop()
-        with self.assertRaises(HTTPException) as ctx:
-            loop.run_until_complete(backend_app.predict_garment(image=fake_file, model_name="../../etc/passwd", use_ensemble=False))
-        self.assertEqual(ctx.exception.status_code, 400)
-        self.assertIn("Unsupported file format", ctx.exception.detail)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            with self.assertRaises(HTTPException) as ctx:
+                loop.run_until_complete(backend_app.predict_garment(image=fake_file, model_name="../../etc/passwd", use_ensemble=False))
+            self.assertEqual(ctx.exception.status_code, 400)
+            self.assertIn("Unsupported file format", ctx.exception.detail)
+        finally:
+            loop.close()
 
     def test_sql_injection_payload_safety(self):
         """SQL injection characters in project names, tags, and notes must be safely parameterized without syntax errors."""

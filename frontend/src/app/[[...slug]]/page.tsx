@@ -2,6 +2,16 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const MannequinViewer = dynamic(() => import("@/components/MannequinViewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-80 rounded-xl bg-slate-900 flex items-center justify-center text-slate-500 font-mono text-xs">
+      Loading 3D Mannequin Engine...
+    </div>
+  ),
+});
 
 // Definitions
 interface YoloDetection {
@@ -108,6 +118,13 @@ const formatDateDisplay = (dateStr?: string): string => {
   } catch {
     return dateStr;
   }
+};
+
+const formatOriginalityStatus = (simPct: number): string => {
+  const score = Number(simPct) || 0;
+  if (score >= 90) return `High Overlap (${score.toFixed(1)}%) · Catalog Match`;
+  if (score >= 30) return `Partial Overlap (${score.toFixed(1)}%)`;
+  return `Original Pattern (${score.toFixed(1)}%)`;
 };
 
 
@@ -611,6 +628,8 @@ export default function Home() {
   const [activeTechPackData, setActiveTechPackData] = useState<any>(null);
   const [expandedSteps, setExpandedSteps] = useState<Record<number, boolean>>({});
   const [visibleMachineryCount, setVisibleMachineryCount] = useState(16);
+
+  const [viewMode3D, setViewMode3D] = useState<"2d" | "3d">("3d");
 
   const toggleStep = (stepNum: number) => {
     setExpandedSteps(prev => ({ ...prev, [stepNum]: !prev[stepNum] }));
@@ -2483,23 +2502,29 @@ export default function Home() {
                 ].map(({ n, label }) => {
                   const active = cpStep === n;
                   const done   = cpStep > n;
+                  const isStep2Unlocked = Boolean(previewUrl || Object.values(componentsState).some((c: any) => c.previewUrl) || isQuizSubmitted || fullResult || cpStep >= 2);
+                  const isStep3Unlocked = Boolean(isQuizSubmitted || fullResult);
+                  const canClick = n === 1 || (n === 2 && isStep2Unlocked) || (n === 3 && isStep3Unlocked);
+
                   return (
                     <button
                       key={n}
                       type="button"
+                      disabled={!canClick}
                       onClick={() => {
-                        if (n === 1 && cpStep === 2) {
+                        if (!canClick) return;
+                        if (n === 1 && cpStep >= 2) {
                           handleSafeBackToStep1();
-                        } else if (done || (n === 2 && !isQuizSubmitted)) {
+                        } else {
                           setCurrentStep(n);
                         }
                       }}
-                      className={`flex-1 py-3.5 text-xs font-bold rounded-t-xl select-none text-center font-mono transition-all cursor-pointer ${
+                      className={`flex-1 py-3.5 text-xs font-bold rounded-t-xl select-none text-center font-mono transition-all ${
                         active
-                          ? "bg-white text-[#155DFC] relative z-10"
-                          : done
-                          ? "bg-[#1249cc] text-blue-100 hover:bg-[#1249cc]"
-                          : "bg-[#1249cc]/60 text-blue-200 cursor-default"
+                          ? "bg-white text-[#155DFC] relative z-10 cursor-default"
+                          : canClick
+                          ? "bg-[#1249cc] text-blue-100 hover:bg-[#103eb3] cursor-pointer"
+                          : "bg-[#1249cc]/40 text-blue-200/50 cursor-not-allowed"
                       }`}
                     >
                       {label}
@@ -2590,55 +2615,107 @@ export default function Home() {
                 {/* ── STEP 2: Pattern Sketch & Engineering Specifications ── */}
                 {cpStep === 2 && !isQuizSubmitted && (
                   <div className="flex-1 flex flex-col justify-between">
-                    <div className="p-10 grid grid-cols-1 lg:grid-cols-2 gap-10 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
-                      {/* Left — Upload & DINOv2 Scan */}
-                      <div className="flex flex-col gap-6 lg:pr-6">
+                    <div className="p-10 grid grid-cols-1 lg:grid-cols-12 gap-10 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+                      {/* Left — Upload & DINOv2 Scan (Portrait Column ~30-35%) */}
+                      <div className="lg:col-span-4 flex flex-col gap-6 lg:pr-8">
                         <div>
-                          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">GARMENT SKETCH</h2>
-                          {projectMode === "single" ? (
-                            <div className="flex flex-col gap-5">
-                              <div
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={handleDrop}
-                                onClick={triggerFileSelect}
-                                className={`border-2 border-dashed rounded-md flex flex-col items-center justify-center min-h-72 text-center cursor-pointer transition-all ${
-                                  isDragOver
-                                    ? "border-[#155DFC] bg-blue-50/50"
-                                    : previewUrl
-                                    ? "border-slate-200 bg-slate-50/50"
-                                    : "border-slate-200 hover:border-[#155DFC] bg-slate-50/30"
+                          <div className="flex items-center justify-between mb-4 h-9">
+                            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">GARMENT SKETCH</h2>
+                            {previewUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setViewMode3D(viewMode3D === "3d" ? "2d" : "3d")}
+                                title={viewMode3D === "3d" ? "Switch to 2D Sketch" : "Switch to 3D Mannequin"}
+                                className={`w-9 h-9 rounded-md text-xs font-bold transition-all cursor-pointer border flex items-center justify-center ${
+                                  viewMode3D === "3d"
+                                    ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
+                                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-[#155DFC] hover:text-[#155DFC]"
                                 }`}
                               >
-                                <input
-                                  type="file"
-                                  ref={fileInputRef}
-                                  onChange={(e) => { if (e.target.files?.[0]) processFile(e.target.files[0]); }}
-                                  accept="image/*"
-                                  className="hidden"
-                                />
-                                {!previewUrl ? (
-                                  <div className="flex flex-col items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-blue-50 text-[#155DFC] flex items-center justify-center">
-                                      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                                      </svg>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-semibold text-slate-700">Click or drag garment sketch here</p>
-                                      <p className="text-xs text-slate-400 mt-1">PNG, JPG or WEBP — DINOv2 scan runs automatically</p>
-                                    </div>
+                                3D
+                              </button>
+                            )}
+                          </div>
+
+                          {projectMode === "single" ? (
+                            <div className="flex flex-col gap-5">
+                               {previewUrl && viewMode3D === "3d" ? (
+                                <div className="flex flex-col gap-2">
+                                  <MannequinViewer textureUrl={previewUrl} className="w-full aspect-[9/16]" />
+                                  <div className="flex justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={triggerFileSelect}
+                                      className="inline-block text-xs font-semibold text-[#155DFC] border-b border-transparent hover:border-[#155DFC] cursor-pointer transition-colors"
+                                    >
+                                      Change garment sketch
+                                    </button>
                                   </div>
-                                ) : (
-                                  <div className="relative w-full flex items-center justify-center p-3">
-                                    <img
-                                      src={result ? result.preview_image : previewUrl}
-                                      alt="Garment Sketch"
-                                      className="max-h-[250px] object-contain rounded-lg"
+                                  <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={(e) => { if (e.target.files?.[0]) processFile(e.target.files[0]); }}
+                                    accept="image/*"
+                                    className="hidden"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex flex-col gap-2">
+                                  <div
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    onClick={triggerFileSelect}
+                                    className={`border-2 border-dashed rounded-md flex flex-col items-center justify-center aspect-square w-full text-center cursor-pointer transition-all ${
+                                      isDragOver
+                                        ? "border-[#155DFC] bg-blue-50/50"
+                                        : previewUrl
+                                        ? "border-slate-200 bg-slate-50/50"
+                                        : "border-slate-200 hover:border-[#155DFC] bg-slate-50/30"
+                                    }`}
+                                  >
+                                    <input
+                                      type="file"
+                                      ref={fileInputRef}
+                                      onChange={(e) => { if (e.target.files?.[0]) processFile(e.target.files[0]); }}
+                                      accept="image/*"
+                                      className="hidden"
                                     />
+                                    {!previewUrl ? (
+                                      <div className="flex flex-col items-center gap-3 p-6">
+                                        <div className="w-12 h-12 rounded-full bg-blue-50 text-[#155DFC] flex items-center justify-center">
+                                          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                          </svg>
+                                        </div>
+                                        <div>
+                                          <p className="text-sm font-semibold text-slate-700">Click or drag garment sketch here</p>
+                                          <p className="text-xs text-slate-400 mt-1">PNG, JPG or WEBP — DINOv2 scan runs automatically</p>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="relative w-full h-full flex items-center justify-center p-3">
+                                        <img
+                                          src={result ? result.preview_image : previewUrl}
+                                          alt="Garment Sketch"
+                                          className="max-h-full max-w-full object-contain rounded-lg"
+                                        />
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
+                                  {previewUrl && (
+                                    <div className="flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={triggerFileSelect}
+                                        className="inline-block text-xs font-semibold text-[#155DFC] border-b border-transparent hover:border-[#155DFC] cursor-pointer transition-colors"
+                                      >
+                                        Change garment sketch
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                               {/* DINOv2 Grade Card — SecurityHeaders style */}
                               {previewUrl && (
                                 <div className={`border rounded-md overflow-hidden text-xs transition-all ${grade ? grade.cardBorder : "border-slate-200"} ${grade ? grade.cardBg : "bg-slate-50"}`}>
@@ -2737,9 +2814,11 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Right — Engineering Specifications */}
-                      <div className="flex flex-col gap-5 lg:pl-6">
-                        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">ENGINEERING SPECIFICATIONS</h2>
+                      {/* Right — Engineering Specifications (Wide Column ~65-70%) */}
+                      <div className="lg:col-span-8 flex flex-col gap-5 lg:pl-8">
+                        <div className="flex items-center justify-between mb-4 h-9">
+                          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">ENGINEERING SPECIFICATIONS</h2>
+                        </div>
                         <form id="process-sheet-form" onSubmit={projectMode === "doll" ? handleGenerateDollProcessSheet : handleGenerateProcessSheet} className="flex flex-col gap-5 flex-1">
                           
                           {/* ── CATALOG REUSE PROMPT — shown when DINOv2 similarity >= 90% ── */}
@@ -3040,7 +3119,7 @@ export default function Home() {
                           <h1 className="text-xl font-bold text-slate-900 mt-0.5">{quizName}</h1>
                         </div>
                         <div className="text-right text-xs font-mono text-slate-600 space-y-0.5">
-                          <div><strong>SPEC ID:</strong> FF-SPEC-#{Math.floor(100000 + Math.random() * 900000)}</div>
+                          <div><strong>SPEC ID:</strong> FF-SPEC-#{fullResult?.id || activeTechPackData?.id || 1}</div>
                           <div><strong>DATE:</strong> {new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}</div>
                           <div><strong>STATUS:</strong> APPROVED &amp; LOCKED</div>
                         </div>
@@ -3059,7 +3138,7 @@ export default function Home() {
                           <span className="text-xs font-bold font-mono text-slate-500 uppercase mb-2">Engineering &amp; Originality Parameters</span>
                           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
                             <div><span className="text-slate-500">Project Tags:</span> <strong className="text-blue-700">{fullResult?.tags && fullResult.tags.length > 0 ? fullResult.tags.join(", ") : "Standard Production"}</strong></div>
-                            <div><span className="text-slate-500">DINOv2 Score:</span> <strong className="text-emerald-700">{fullResult.similarity_percentage}% (Original)</strong></div>
+                            <div><span className="text-slate-500">Originality Verification:</span> <strong className="text-emerald-700">{formatOriginalityStatus(fullResult.similarity_percentage)}</strong></div>
                             <div><span className="text-slate-500">Target Line Efficiency:</span> <strong className="text-slate-900">85%</strong></div>
                             <div><span className="text-slate-500">Standard Operator Rate:</span> <strong className="text-slate-900">60 Pcs / Hr</strong></div>
                           </div>
@@ -3074,50 +3153,111 @@ export default function Home() {
                         </div>
                       )}
 
-                      {/* Bento Card 3: Industrial Sewing Sequence Table */}
+                      {/* Bento Card 3: Industrial Sewing Sequence & Machine Specs Table */}
                       <div className="border border-slate-300 rounded-lg p-3 bg-white">
-                        <span className="text-xs font-bold font-mono text-slate-500 uppercase mb-2 block">Industrial Sewing Sequence &amp; Machine Allocation Table</span>
+                        <span className="text-xs font-bold font-mono text-slate-500 uppercase mb-2 block">1. Industrial Sewing Operations &amp; Machine Specifications</span>
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
                             <tr className="bg-slate-100 font-bold font-mono text-xs text-slate-700">
-                              <th className="p-1.5 border border-slate-300 w-12 text-center">Step</th>
-                              <th className="p-1.5 border border-slate-300">Operation / Step Name</th>
-                              <th className="p-1.5 border border-slate-300 w-16 text-center">Component</th>
+                              <th className="p-1.5 border border-slate-300 w-10 text-center">Step</th>
+                              <th className="p-1.5 border border-slate-300">Operation / Step Description</th>
                               <th className="p-1.5 border border-slate-300">Allocated Machine Model</th>
-                              <th className="p-1.5 border border-slate-300 w-16 text-right">SMV (Min)</th>
+                              <th className="p-1.5 border border-slate-300">Needle Code</th>
+                              <th className="p-1.5 border border-slate-300">Presser Foot / Work-Aid</th>
+                              <th className="p-1.5 border border-slate-300">Stitch Spec</th>
+                              <th className="p-1.5 border border-slate-300 w-14 text-right">SMV</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {fullResult.sewing_steps && fullResult.sewing_steps.map((step: any, i: number) => (
+                            {((fullResult?.sewing_sequence_detailed && fullResult.sewing_sequence_detailed.length > 0)
+                              ? fullResult.sewing_sequence_detailed
+                              : (fullResult.sewing_steps || [])
+                            ).map((step: any, i: number) => (
                               <tr key={i} className="text-xs hover:bg-slate-50">
-                                <td className="p-1.5 border border-slate-200 text-center font-mono font-bold">{step.step}</td>
-                                <td className="p-1.5 border border-slate-200 font-medium text-slate-900">{step.action}</td>
-                                <td className="p-1.5 border border-slate-200 text-center font-mono text-xs">{step.part || "Main"}</td>
-                                <td className="p-1.5 border border-slate-200 font-mono text-xs text-blue-800">{step.recommended_model || "Lockstitch DDL-9000C"}</td>
-                                <td className="p-1.5 border border-slate-200 text-right font-mono font-semibold">{(0.45 + (i % 3) * 0.15).toFixed(2)}</td>
+                                <td className="p-1.5 border border-slate-200 text-center font-mono font-bold">#{step.step_num || step.step || i + 1}</td>
+                                <td className="p-1.5 border border-slate-200 font-medium text-slate-900">{step.operation || step.action}</td>
+                                <td className="p-1.5 border border-slate-200 font-mono text-xs font-bold text-blue-800">{step.recommended_model || "Lockstitch DDL-9000C"}</td>
+                                <td className="p-1.5 border border-slate-200 font-mono text-xs text-slate-700">{step.needle || "DBx1 (#11)"}</td>
+                                <td className="p-1.5 border border-slate-200 font-mono text-xs text-[#155DFC]">{step.presser_foot || "Standard Foot"}</td>
+                                <td className="p-1.5 border border-slate-200 font-mono text-xs text-slate-600">{step.stitch_spec || "2.5mm / 12 SPI"}</td>
+                                <td className="p-1.5 border border-slate-200 text-right font-mono font-semibold">{step.smv_mins || (0.45 + (i % 3) * 0.15).toFixed(2)}m</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
 
-                      {/* Bento Card 4: Summary Footers */}
+                      {/* Bento Card 4: Detailed Factory Machine Allocations & Work-Aids (Easy-Reading Bullet Format) */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="border border-slate-300 rounded-lg p-3 bg-white">
+                          <span className="text-xs font-bold font-mono text-slate-500 uppercase mb-2 block">2. Workstation Machine Requirements</span>
+                          <ul className="space-y-1.5 text-xs font-mono text-slate-800">
+                            {((fullResult?.line_balancing?.machine_allocations && fullResult.line_balancing.machine_allocations.length > 0)
+                              ? fullResult.line_balancing.machine_allocations
+                              : [
+                                  { machine_model: "JUKI DDL-9000C-PBN (1-Needle Lockstitch)", required_units: 2, utilization_pct: 92 },
+                                  { machine_model: "JUKI MO-6814S (4-Thread Overlock)", required_units: 1, utilization_pct: 85 },
+                                  { machine_model: "JUKI MF-7923D (Coverstitch / Interlock)", required_units: 1, utilization_pct: 78 }
+                                ]
+                            ).map((m: any, i: number) => (
+                              <li key={i} className="flex items-start gap-1.5">
+                                <span className="text-blue-600 font-bold">•</span>
+                                <div className="flex-1 flex justify-between">
+                                  <span>{m.machine_model}</span>
+                                  <strong className="text-blue-700 ml-2">{m.required_units} Unit{m.required_units > 1 ? 's' : ''} ({m.utilization_pct || 85}%)</strong>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="border border-slate-300 rounded-lg p-3 bg-white">
+                          <span className="text-xs font-bold font-mono text-slate-500 uppercase mb-2 block">3. Required Work-Aid Attachments &amp; Jigs</span>
+                          <ul className="space-y-1.5 text-xs font-mono text-slate-800">
+                            {((fullResult?.work_aids && fullResult.work_aids.length > 0)
+                              ? fullResult.work_aids
+                              : [
+                                  { attachment_name: "Hinged Piping & Hemming Foot", aid_type: "Presser Foot", purpose: "Clean edge stitching on collar and hem" },
+                                  { attachment_name: "Right-Angle Tape Folder / Binder", aid_type: "Folder Attachment", purpose: "Uniform neck and sleeve binding" }
+                                ]
+                            ).map((aid: any, i: number) => (
+                              <li key={i} className="flex items-start gap-1.5">
+                                <span className="text-emerald-600 font-bold">•</span>
+                                <div className="flex-1">
+                                  <div className="flex justify-between">
+                                    <strong className="text-slate-900">{aid.attachment_name}</strong>
+                                    <span className="text-xs text-slate-500">[{aid.aid_type}]</span>
+                                  </div>
+                                  <p className="text-xs text-slate-500 italic font-sans leading-tight mt-0.5">{aid.purpose}</p>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      {/* Bento Card 5: Factory Summary Footer Cards */}
                       <div className="grid grid-cols-4 gap-3 text-center">
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
                           <div className="text-xs font-mono text-slate-500 uppercase">Total Operations</div>
-                          <div className="text-sm font-bold text-slate-900">{fullResult.sewing_steps?.length || 0} Steps</div>
+                          <div className="text-sm font-bold text-slate-900">{fullResult?.sewing_sequence_detailed?.length || fullResult?.sewing_steps?.length || 8} Steps</div>
                         </div>
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
                           <div className="text-xs font-mono text-slate-500 uppercase">Estimated Total SMV</div>
-                          <div className="text-sm font-bold text-[#155DFC]">3.45 Minutes</div>
+                          <div className="text-sm font-bold text-[#155DFC]">
+                            {(fullResult?.sewing_sequence_detailed
+                              ? fullResult.sewing_sequence_detailed.reduce((acc: number, s: any) => acc + (parseFloat(s.smv_mins) || 1.5), 0).toFixed(2)
+                              : "3.45"
+                            )} Mins
+                          </div>
                         </div>
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
                           <div className="text-xs font-mono text-slate-500 uppercase">Target Line Output</div>
-                          <div className="text-sm font-bold text-emerald-700">104 Pcs / Hour</div>
+                          <div className="text-sm font-bold text-emerald-700">{fullResult?.line_balancing?.target_daily_units || 500} Pcs / Day</div>
                         </div>
                         <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
-                          <div className="text-xs font-mono text-slate-500 uppercase">Recommended Machine Line</div>
-                          <div className="text-sm font-bold text-slate-900">4 Ops / 3 Machines</div>
+                          <div className="text-xs font-mono text-slate-500 uppercase">Takt Time / Unit</div>
+                          <div className="text-sm font-bold text-slate-900">{fullResult?.line_balancing?.takt_time_mins || 0.96} Mins</div>
                         </div>
                       </div>
                     </div>
@@ -3194,7 +3334,28 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs relative">
-                        <h2 className="font-bold text-slate-900 text-base mb-6 font-display leading-tight">Visual Layout Analysis</h2>
+                        <div className="flex items-center justify-between mb-6 h-9">
+                          <h2 className="font-bold text-slate-900 text-base font-display leading-tight">Visual Layout Analysis</h2>
+                          {/* 2D / 3D Toggle Button */}
+                          <button
+                            type="button"
+                            onClick={() => setViewMode3D(viewMode3D === "3d" ? "2d" : "3d")}
+                            title={viewMode3D === "3d" ? "Switch to 2D Layout" : "Switch to 3D Mannequin"}
+                            className={`w-9 h-9 rounded-md text-xs font-bold transition-all cursor-pointer border flex items-center justify-center ${
+                              viewMode3D === "3d"
+                                ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
+                                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-[#155DFC] hover:text-[#155DFC]"
+                            }`}
+                          >
+                            3D
+                          </button>
+                        </div>
+
+                        {viewMode3D === "3d" ? (
+                          <div className="w-full">
+                            <MannequinViewer textureUrl={fullResult.preview_image} className="w-full aspect-[9/16]" />
+                          </div>
+                        ) : (
                         <div className="relative w-full flex items-center justify-center pt-0 px-1 pb-1">
                           <img
                             src={fullResult.preview_image}
@@ -3218,6 +3379,7 @@ export default function Home() {
                             </div>
                           ))}
                         </div>
+                        )}
                       </div>
                     )}
 
@@ -3273,15 +3435,15 @@ export default function Home() {
                               <span className="text-slate-400 font-medium">Originality Verification:</span>
                               {fullResult.similarity_percentage >= 90 ? (
                                 <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
-                                  Reused Spec (#{fullResult.top_3_saved_projects?.[0]?.id || "Catalog"}) · {fullResult.similarity_percentage}%
+                                  High Overlap ({fullResult.similarity_percentage.toFixed(1)}%) · Catalog Match
                                 </span>
                               ) : fullResult.similarity_percentage >= 30 ? (
                                 <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                                  Partial Overlap · {fullResult.similarity_percentage}%
+                                  Partial Overlap ({fullResult.similarity_percentage.toFixed(1)}%)
                                 </span>
                               ) : (
                                 <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                                  100% Original Pattern (0% Overlap)
+                                  Original Pattern ({fullResult.similarity_percentage.toFixed(1)}%)
                                 </span>
                               )}
                             </div>
@@ -3300,13 +3462,12 @@ export default function Home() {
 
                     {/* Step 3 Designer & Engineering Notes Card */}
                     {fullResult?.designer_notes && (
-                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs overflow-hidden">
-                        <h3 className="font-bold text-slate-900 text-sm mb-2 font-display flex items-center gap-2">
-                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs">
+                        <h3 className="font-bold text-slate-900 text-sm mb-2 font-display">
                           Designer &amp; Pattern Notes
                         </h3>
-                        <p className="text-xs text-slate-700 font-sans leading-relaxed italic bg-slate-50 p-3.5 rounded-md border border-slate-200/60 break-words break-all whitespace-pre-wrap">
-                          &quot;{fullResult.designer_notes}&quot;
+                        <p className="text-sm text-slate-600 font-sans leading-relaxed break-words whitespace-pre-wrap">
+                          {fullResult.designer_notes}
                         </p>
                       </div>
                     )}
@@ -3619,17 +3780,9 @@ export default function Home() {
                       className="px-4 py-2.5 text-xs font-bold rounded-md bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      EXPORT TECH PACK
-                    </button>
-                    <button className="px-4 py-2.5 text-xs font-semibold rounded-md bg-[#155DFC] text-white shadow-xs">FRONT</button>
-                    <button className="px-4 py-2.5 text-xs font-semibold rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">BACK</button>
-                    <button className="px-4 py-2.5 text-xs font-semibold rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 cursor-pointer">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
-                      </svg>
-                      3D VIEW
+                      VIEW TECH PACK
                     </button>
                   </div>
                 </header>
@@ -3804,7 +3957,7 @@ export default function Home() {
                 }))}
             />
 
-              {(() => {
+            {(() => {
                 const filtered = (defaultMachines || []).filter(tool => {
                   const sTerm = machinerySearch.trim().toLowerCase();
                   const matchesSearch = !sTerm || 
@@ -4939,7 +5092,7 @@ export default function Home() {
                       </h1>
                     </div>
                     <p className="text-xs text-slate-500 font-mono">
-                      SPEC ID: #{activeTechPackData?.id || "FF-2026-ENG"} · COMPILED: {formatDateDisplay(activeTechPackData?.timestamp || new Date().toISOString())}
+                      SPEC ID: FF-SPEC-#{activeTechPackData?.id || fullResult?.id || 1} · COMPILED: {formatDateDisplay(activeTechPackData?.timestamp || new Date().toISOString())}
                     </p>
                   </div>
                   <div className="text-right">
@@ -4965,8 +5118,8 @@ export default function Home() {
                     <strong className="text-[#155DFC] text-xs font-bold">{activeTechPackData?.batch_quantity || 100} pcs</strong>
                   </div>
                   <div>
-                    <span className="text-slate-400 block uppercase text-xs">Originality Rating:</span>
-                    <strong className="text-emerald-700 text-xs font-bold">{activeTechPackData?.similarity_percentage || 0}% Match</strong>
+                    <span className="text-slate-400 block uppercase text-xs">Originality Verification:</span>
+                    <strong className="text-emerald-700 text-xs font-bold">{formatOriginalityStatus(activeTechPackData?.similarity_percentage || 0)}</strong>
                   </div>
                 </div>
 
@@ -5061,7 +5214,7 @@ export default function Home() {
                 <div className="border-t-2 border-slate-900 pt-6 flex items-center justify-between text-xs font-mono">
                   <div>
                     <span className="text-slate-400 block uppercase">ENGINEERING APPROVAL</span>
-                    <strong className="text-slate-900 uppercase">FASHIONFLOW AUTOMATED SPEC ENGINE v0.1.9</strong>
+                    <strong className="text-slate-900 uppercase">FASHIONFLOW AUTOMATED SPEC ENGINE v0.1.10</strong>
                   </div>
                   <div className="text-right">
                     <span className="text-slate-400 block uppercase">DOCUMENT HASH</span>
