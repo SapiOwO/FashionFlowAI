@@ -308,6 +308,7 @@ const renderReleaseNotesMarkdown = (text: string) => {
 interface CustomDropdownOption {
   value: string;
   label: string;
+  group?: string;
 }
 
 interface CustomDropdownProps {
@@ -380,29 +381,36 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-md shadow-xl z-50 py-1 max-h-60 overflow-y-auto">
-          {normalizedOptions.map((opt) => {
+          {normalizedOptions.map((opt, idx) => {
             const isSelected = opt.value === value;
+            const showGroupHeader = Boolean(opt.group && (idx === 0 || normalizedOptions[idx - 1].group !== opt.group));
             return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer flex items-center justify-between block ${
-                  isSelected
-                    ? "bg-slate-100 font-semibold text-slate-900"
-                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                <span className="truncate">{opt.label}</span>
-                {isSelected && (
-                  <svg className="w-4 h-4 text-[#155DFC] shrink-0 ml-2" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
+              <React.Fragment key={opt.value}>
+                {showGroupHeader && (
+                  <div className="px-3.5 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border-y border-slate-100 first:border-t-0 select-none">
+                    {opt.group}
+                  </div>
                 )}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer flex items-center justify-between block ${
+                    isSelected
+                      ? "bg-slate-100 font-semibold text-slate-900"
+                      : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="truncate">{opt.label}</span>
+                  {isSelected && (
+                    <svg className="w-4 h-4 text-[#155DFC] shrink-0 ml-2" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  )}
+                </button>
+              </React.Fragment>
             );
           })}
         </div>
@@ -3236,73 +3244,62 @@ export default function Home() {
                             <>
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-sm font-semibold text-slate-700">Garment Category</label>
-                                <select value={quizGarment} onChange={(e) => setQuizGarment(e.target.value)}
-                                  className="bg-white border border-slate-200/80 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
-                                  <optgroup label="Tops">
-                                    <option value="Shirt">Kemeja (Shirt) — 8 Sewing Steps</option>
-                                    <option value="T-Shirt">Kaos (T-Shirt) — 4 Sewing Steps</option>
-                                    <option value="Jacket">Jaket / Outerwear — 6 Sewing Steps</option>
-                                  </optgroup>
-                                  <optgroup label="Bottoms">
-                                    <option value="Pants">Celana Panjang (Pants) — 6 Sewing Steps</option>
-                                    <option value="Skirt">Rok (Skirt) — 4 Sewing Steps</option>
-                                  </optgroup>
-                                  <optgroup label="Full-body">
-                                    <option value="Dress">Gaun / Dress — 5 Sewing Steps</option>
-                                    <option value="Hat">Topi / Hat — 5 Sewing Steps</option>
-                                  </optgroup>
-                                </select>
+                                <CustomDropdown
+                                  value={quizGarment}
+                                  onChange={setQuizGarment}
+                                  options={[
+                                    { value: "Shirt", label: "Kemeja (Shirt) — 8 Sewing Steps", group: "Tops" },
+                                    { value: "T-Shirt", label: "Kaos (T-Shirt) — 4 Sewing Steps", group: "Tops" },
+                                    { value: "Jacket", label: "Jaket / Outerwear — 6 Sewing Steps", group: "Tops" },
+                                    { value: "Pants", label: "Celana Panjang (Pants) — 6 Sewing Steps", group: "Bottoms" },
+                                    { value: "Skirt", label: "Rok (Skirt) — 4 Sewing Steps", group: "Bottoms" },
+                                    { value: "Dress", label: "Gaun / Dress — 5 Sewing Steps", group: "Full-body" },
+                                    { value: "Hat", label: "Topi / Hat — 5 Sewing Steps", group: "Full-body" },
+                                  ]}
+                                />
                               </div>
                               <div className="flex flex-col gap-1.5">
                                 <label className="text-sm font-semibold text-slate-700">Fabric Application / Weight</label>
-                                <select value={quizFabric} onChange={(e) => setQuizFabric(e.target.value)}
-                                  className="bg-white border border-slate-200/80 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
-                                  <optgroup label="Light-weight">
-                                    <option value="Silk (Light-weight)">Sutra / Silk</option>
-                                    <option value="Chiffon (Light-weight)">Sifon / Chiffon</option>
-                                    <option value="Organza (Light-weight)">Organza</option>
-                                    <option value="Crepe (Light-weight)">Krep / Crepe</option>
-                                    <option value="Rayon (Light-weight)">Rayon / Viscose</option>
-                                  </optgroup>
-                                  <optgroup label="Medium-weight">
-                                    <option value="Cotton (Medium-weight)">Katun / Cotton</option>
-                                    <option value="Batik (Medium-weight)">Batik Tulis &amp; Cap</option>
-                                    <option value="Linen (Medium-weight)">Linen</option>
-                                    <option value="Satin (Medium-weight)">Satin / Duchess</option>
-                                    <option value="Flannel (Medium-weight)">Flanel / Flannel</option>
-                                    <option value="Polyester (Medium-weight)">Polyester</option>
-                                  </optgroup>
-                                  <optgroup label="Heavy-weight">
-                                    <option value="Denim (Heavy-weight)">Denim / Jeans (14oz)</option>
-                                    <option value="Corduroy (Heavy-weight)">Corduroy</option>
-                                    <option value="Tweed (Heavy-weight)">Tweed / Wool</option>
-                                    <option value="Gabardine (Heavy-weight)">Gabardine</option>
-                                    <option value="Synthetic Fur (Heavy-weight)">Synthetic Furs / Canvas</option>
-                                  </optgroup>
-                                </select>
+                                <CustomDropdown
+                                  value={quizFabric}
+                                  onChange={setQuizFabric}
+                                  options={[
+                                    { value: "Silk (Light-weight)", label: "Sutra / Silk", group: "Light-weight" },
+                                    { value: "Chiffon (Light-weight)", label: "Sifon / Chiffon", group: "Light-weight" },
+                                    { value: "Organza (Light-weight)", label: "Organza", group: "Light-weight" },
+                                    { value: "Crepe (Light-weight)", label: "Krep / Crepe", group: "Light-weight" },
+                                    { value: "Rayon (Light-weight)", label: "Rayon / Viscose", group: "Light-weight" },
+                                    { value: "Cotton (Medium-weight)", label: "Katun / Cotton", group: "Medium-weight" },
+                                    { value: "Batik (Medium-weight)", label: "Batik Tulis & Cap", group: "Medium-weight" },
+                                    { value: "Linen (Medium-weight)", label: "Linen", group: "Medium-weight" },
+                                    { value: "Satin (Medium-weight)", label: "Satin / Duchess", group: "Medium-weight" },
+                                    { value: "Flannel (Medium-weight)", label: "Flanel / Flannel", group: "Medium-weight" },
+                                    { value: "Polyester (Medium-weight)", label: "Polyester", group: "Medium-weight" },
+                                    { value: "Denim (Heavy-weight)", label: "Denim / Jeans (14oz)", group: "Heavy-weight" },
+                                    { value: "Corduroy (Heavy-weight)", label: "Corduroy", group: "Heavy-weight" },
+                                    { value: "Tweed (Heavy-weight)", label: "Tweed / Wool", group: "Heavy-weight" },
+                                    { value: "Gabardine (Heavy-weight)", label: "Gabardine", group: "Heavy-weight" },
+                                    { value: "Synthetic Fur (Heavy-weight)", label: "Synthetic Furs / Canvas", group: "Heavy-weight" },
+                                  ]}
+                                />
                               </div>
                             </>
                           ) : (
                             <div className="flex flex-col gap-1.5">
                               <label className="text-sm font-semibold text-slate-700">Doll Type Template</label>
-                              <select value={dollType} onChange={(e) => setDollType(e.target.value)}
-                                className="bg-white border border-slate-200/80 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full">
-                                {Object.keys(DOLL_TYPES).map(t => (
-                                  <option key={t} value={t}>{t} — ({DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})</option>
-                                ))}
-                              </select>
+                              <CustomDropdown
+                                value={dollType}
+                                onChange={setDollType}
+                                options={Object.keys(DOLL_TYPES).map(t => ({
+                                  value: t,
+                                  label: `${t} — (${DOLL_TYPES[t].map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(" + ")})`
+                                }))}
+                              />
                             </div>
                           )}
 
                           <div className="flex flex-col gap-2">
-                            {/* Header row with Title and Live Calculated Target */}
-                            <div className="flex items-center justify-between">
-                              <label className="text-sm font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200/80">
-                                <span className="text-slate-400">Target:</span>
-                                <strong className="text-[#155DFC] font-bold">{batchQuantity.toLocaleString()} pcs</strong>
-                              </span>
-                            </div>
+                            <label className="text-sm font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
 
                             {/* Standard Production Volume Presets */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
