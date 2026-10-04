@@ -484,7 +484,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
     <div className="relative w-full" ref={dropdownRef}>
       <label className="text-sm font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
         <span>Project Tags</span>
-        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">Recommended</span>
+        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60">Recommended</span>
       </label>
       
       {/* Embedded Tag Pills + Direct Type Input Container */}
@@ -493,7 +493,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onChange, avail
         className="bg-white border border-slate-200/80 rounded-md py-2 px-3 min-h-[40px] flex flex-wrap items-center gap-1.5 focus-within:bg-white focus-within:border-[#155DFC] focus-within:ring-1 focus-within:ring-[#155DFC] transition-colors cursor-text"
       >
         {selectedTags.map(tag => (
-          <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-[#155DFC] border border-blue-200/60 shadow-2xs">
+          <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-blue-50 text-[#155DFC] border border-blue-200/60 shadow-2xs">
             <svg className="w-3 h-3 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
             <span>{tag}</span>
             <button
@@ -2661,7 +2661,7 @@ export default function Home() {
 
             {/* Engineering KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs hover:border-[#155DFC]/30 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Total Analyses</span>
                   <div className="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
@@ -2674,7 +2674,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Engineering runs logged</p>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs hover:border-emerald-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Unique Designs</span>
                   <div className="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
@@ -2692,7 +2692,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Approved original patterns</p>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs hover:border-amber-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Historical Matches</span>
                   <div className="w-8 h-8 rounded-md bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
@@ -2710,7 +2710,7 @@ export default function Home() {
                 <p className="text-xs text-slate-400 mt-1">Vector DB reference records</p>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
+              <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs hover:border-purple-300/60 transition-all duration-300 group">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono text-slate-400 uppercase tracking-wider font-bold">Avg. Est. SMV</span>
                   <div className="w-8 h-8 rounded-md bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
@@ -2796,7 +2796,7 @@ export default function Home() {
               </div>
 
               {/* Right: Activity Feed */}
-              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs flex flex-col">
+              <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs flex flex-col">
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="font-golden-heading-bold text-slate-900">Activity Feed</h2>
                 </div>
@@ -2953,7 +2953,7 @@ export default function Home() {
                               setProjectMode("single");
                               setCurrentStep(2);
                             }}
-                            className="p-8 rounded-md border border-slate-200/90 bg-white hover:border-[#155DFC] hover:bg-blue-50/30 shadow-2xs hover:shadow-md group transition-all cursor-pointer flex flex-col justify-between gap-6"
+                            className="p-8 rounded-lg border border-slate-200/90 bg-white hover:border-[#155DFC] hover:bg-blue-50/30 shadow-2xs hover:shadow-md group transition-all cursor-pointer flex flex-col justify-between gap-6"
                           >
                             <div className="flex items-center justify-between">
                               <div className="w-12 h-12 rounded-md bg-slate-100 text-slate-600 group-hover:bg-[#155DFC] group-hover:text-white transition-colors flex items-center justify-center">
@@ -2982,7 +2982,7 @@ export default function Home() {
                               setProjectMode("doll");
                               setCurrentStep(2);
                             }}
-                            className="p-8 rounded-md border border-slate-200/90 bg-white hover:border-[#155DFC] hover:bg-blue-50/30 shadow-2xs hover:shadow-md group transition-all cursor-pointer flex flex-col justify-between gap-6"
+                            className="p-8 rounded-lg border border-slate-200/90 bg-white hover:border-[#155DFC] hover:bg-blue-50/30 shadow-2xs hover:shadow-md group transition-all cursor-pointer flex flex-col justify-between gap-6"
                           >
                             <div className="flex items-center justify-between">
                               <div className="w-12 h-12 rounded-md bg-slate-100 text-slate-600 group-hover:bg-[#155DFC] group-hover:text-white transition-colors flex items-center justify-center">
@@ -3223,7 +3223,7 @@ export default function Home() {
                           {showReusePrompt && result && projectMode === "single" && (() => {
                             const topMatch = result.top_3_saved_projects?.[0];
                             return (
-                              <div className="border border-[#155DFC]/30 rounded-md overflow-hidden bg-gradient-to-br from-blue-50/80 to-indigo-50/60 shadow-sm">
+                              <div className="border border-[#155DFC]/30 rounded-lg overflow-hidden bg-gradient-to-br from-blue-50/80 to-indigo-50/60 shadow-sm">
                                 {/* Header */}
                                 <div className="flex items-center gap-3 px-4 py-3 bg-[#155DFC] text-white">
                                   <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -3235,7 +3235,7 @@ export default function Home() {
                                     <p className="font-bold text-xs uppercase tracking-widest text-blue-100">Existing Master Pattern Found in Catalog</p>
                                     <p className="font-semibold text-sm text-white truncate">ID #{topMatch?.id} — {topMatch?.title || "Matched Pattern"}</p>
                                   </div>
-                                  <span className="text-xs font-mono font-bold bg-white/20 px-2 py-1 rounded-lg flex-shrink-0">{(result.similarity_percentage || 0).toFixed(1)}%</span>
+                                  <span className="text-xs font-mono font-bold bg-white/20 px-2 py-1 rounded flex-shrink-0">{(result.similarity_percentage || 0).toFixed(1)}%</span>
                                 </div>
 
                                 {/* Matched project preview */}
@@ -3385,7 +3385,7 @@ export default function Home() {
                           )}
 
                           {/* Pattern Size Run & Grading Selection with Interactive Size Toggles & Custom Quantities */}
-                          <div className="flex flex-col gap-3 p-4 bg-slate-50/80 border border-slate-200/90 rounded-md">
+                          <div className="flex flex-col gap-3 p-4 bg-slate-50/80 border border-slate-200/90 rounded-lg">
                             <div className="flex items-center justify-between">
                               <div>
                                 <label className="text-sm font-semibold text-slate-800 block">
@@ -3397,11 +3397,11 @@ export default function Home() {
                               </div>
                               <div className="flex items-center gap-2">
                                 {totalBatchQuantity > 0 && (
-                                  <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md">
+                                  <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded">
                                     Total: {totalBatchQuantity.toLocaleString()} pcs
                                   </span>
                                 )}
-                                <span className="text-xs font-mono font-bold text-[#155DFC] bg-blue-50 border border-blue-200/70 px-2.5 py-1 rounded-md">
+                                <span className="text-xs font-mono font-bold text-[#155DFC] bg-blue-50 border border-blue-200/70 px-2.5 py-1 rounded">
                                   {selectedSizes.length} {selectedSizes.length === 1 ? "Size" : "Sizes"} Selected
                                 </span>
                               </div>
@@ -3417,7 +3417,7 @@ export default function Home() {
                                     key={sz}
                                     type="button"
                                     onClick={() => toggleSize(sz)}
-                                    className={`py-1.5 px-3 rounded-md text-xs font-mono font-bold border transition-all cursor-pointer ${
+                                    className={`py-1.5 px-3 rounded text-xs font-mono font-bold border transition-all cursor-pointer ${
                                       isChecked
                                         ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
                                         : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
@@ -3432,7 +3432,7 @@ export default function Home() {
 
                             {/* Size Allocation Inputs Grid or Empty State Placeholder */}
                             {selectedSizes.length === 0 ? (
-                              <div className="py-6 px-4 text-center border border-dashed border-slate-300 rounded-md bg-white">
+                              <div className="py-6 px-4 text-center border border-dashed border-slate-300 rounded-lg bg-white">
                                 <p className="text-xs font-medium text-slate-500">
                                   Select at least one active size above to configure production quantities.
                                 </p>
@@ -3532,7 +3532,7 @@ export default function Home() {
                           </div>
 
                           {/* Advanced Plant Settings (Collapsible Dropdown - Testing & Simulation Only) */}
-                          <div className="border border-slate-200/90 rounded-md overflow-hidden bg-slate-50/50">
+                          <div className="border border-slate-200/90 rounded-lg overflow-hidden bg-slate-50/50">
                             <button
                               type="button"
                               onClick={() => setShowAdvancedPlantSettings(!showAdvancedPlantSettings)}
@@ -4052,7 +4052,7 @@ export default function Home() {
                   {/* Left Column: Image, stats overlays and technical tags */}
                   <div className="xl:col-span-2 flex flex-col gap-6">
                     {fullResult.is_doll_project ? (
-                      <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs">
+                      <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs">
                         <h2 className="font-bold text-slate-900 text-base mb-4 font-display">Doll Outfit Components</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Array.isArray(fullResult.classification) && fullResult.classification.map((comp: any, idx: number) => {
@@ -4062,7 +4062,7 @@ export default function Home() {
                               <div key={idx} className="border border-slate-100 rounded-md overflow-hidden p-3 bg-slate-50/60 flex flex-col gap-2">
                                 <div className="flex justify-between items-center">
                                   <span className="text-xs font-bold text-[#155DFC] uppercase font-mono">{compKey}</span>
-                                  <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">Approved</span>
+                                  <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Approved</span>
                                 </div>
                                 <div className="aspect-video bg-white border border-slate-100 rounded-md flex items-center justify-center overflow-hidden">
                                   <img src={compImg} alt={compKey} className="max-w-full max-h-full object-contain" />
@@ -4076,7 +4076,7 @@ export default function Home() {
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs relative">
+                      <div className="bg-white border border-slate-100 rounded-lg p-6 md:p-8 shadow-2xs relative">
                         <div className="flex items-center justify-between mb-6 h-9">
                           <h2 className="font-bold text-slate-900 text-base font-display leading-tight">Visual Layout Analysis</h2>
                           {/* 2D / 3D Toggle Button */}
@@ -4126,7 +4126,7 @@ export default function Home() {
                       </div>
                     )}
 
-                    <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-lg p-6 md:p-8 shadow-2xs">
                       <h3 className="font-bold text-slate-900 text-sm mb-4 font-display">
                         {fullResult.is_doll_project ? "Doll Project Metadata" : "Pattern Metadata"}
                       </h3>
@@ -4146,7 +4146,7 @@ export default function Home() {
                               <div className="flex flex-wrap gap-1 justify-end">
                                 {fullResult?.tags && fullResult.tags.length > 0 ? (
                                   fullResult.tags.map((t: string) => (
-                                    <span key={t} className="inline-flex items-center gap-1 text-xs font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
+                                    <span key={t} className="inline-flex items-center gap-1 text-xs font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded border border-blue-200/50">
                                       <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
                                       {t}
                                     </span>
@@ -4164,7 +4164,7 @@ export default function Home() {
                               <div className="flex flex-wrap gap-1 justify-end">
                                 {fullResult?.tags && fullResult.tags.length > 0 ? (
                                   fullResult.tags.map((t: string) => (
-                                    <span key={t} className="inline-flex items-center gap-1 text-xs font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
+                                    <span key={t} className="inline-flex items-center gap-1 text-xs font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded border border-blue-200/50">
                                       <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
                                       {t}
                                     </span>
@@ -4177,15 +4177,15 @@ export default function Home() {
                             <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
                               <span className="text-slate-400 font-medium">Originality Verification:</span>
                               {fullResult.similarity_percentage >= 90 ? (
-                                <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                                <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                                   High Overlap ({fullResult.similarity_percentage.toFixed(1)}%) · Catalog Match
                                 </span>
                               ) : fullResult.similarity_percentage >= 30 ? (
-                                <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                                   Partial Overlap ({fullResult.similarity_percentage.toFixed(1)}%)
                                 </span>
                               ) : (
-                                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                                   Original Pattern ({fullResult.similarity_percentage.toFixed(1)}%)
                                 </span>
                               )}
@@ -4237,7 +4237,7 @@ export default function Home() {
 
                     {/* Step 3 Designer & Engineering Notes Card */}
                     {fullResult?.designer_notes && (
-                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs">
+                      <div className="bg-white border border-slate-100 rounded-lg p-6 md:p-8 shadow-2xs">
                         <h3 className="font-bold text-slate-900 text-sm mb-2 font-display">
                           Designer &amp; Pattern Notes
                         </h3>
@@ -4249,7 +4249,7 @@ export default function Home() {
 
                     {/* Pattern Size Grading & Yardage Planning Card */}
                     {fullResult?.size_run_breakdown && (
-                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs flex flex-col gap-5">
+                      <div className="bg-white border border-slate-100 rounded-lg p-6 md:p-8 shadow-2xs flex flex-col gap-5">
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-0.5">
@@ -4265,7 +4265,7 @@ export default function Home() {
                         </div>
 
                         {/* Breakdown table */}
-                        <div className="overflow-hidden border border-slate-100 rounded-md">
+                        <div className="overflow-hidden border border-slate-100 rounded-lg">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead className="bg-slate-50 text-xs font-mono text-slate-400 uppercase border-b border-slate-100">
                               <tr>
@@ -4311,7 +4311,7 @@ export default function Home() {
 
                     {/* Pre-Sewing: Cutting Department Allocation Card */}
                     {fullResult?.cutting_specification && (
-                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs flex flex-col gap-5">
+                      <div className="bg-white border border-slate-100 rounded-lg p-6 md:p-8 shadow-2xs flex flex-col gap-5">
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-0.5">
@@ -4369,12 +4369,12 @@ export default function Home() {
 
                   {/* Right Column: Step-by-Step Sewing Flow Table & Tooling */}
                   <div className="xl:col-span-3 flex flex-col gap-8">
-                    <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-lg p-6 md:p-8 shadow-2xs">
                       <h2 className="font-bold text-base text-slate-900 mb-6 font-display leading-tight">
                         STEP-BY-STEP SEWING FLOW
                       </h2>
                       
-                      <div className="overflow-hidden border border-slate-100 rounded-md">
+                      <div className="overflow-hidden border border-slate-100 rounded-lg">
                         <table className="w-full table-fixed text-left text-sm text-slate-600 border-collapse">
                           <thead className="bg-slate-50/70 text-xs font-mono text-slate-400 uppercase border-b border-slate-100">
                             <tr>
@@ -4409,7 +4409,7 @@ export default function Home() {
                                       </td>
                                       <td className="py-4 px-4 font-medium text-slate-700 truncate">
                                         {step.component && (
-                                          <span className="inline-flex items-center text-xs uppercase font-mono font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 text-[#155DFC] rounded-md mr-2 align-middle">
+                                          <span className="inline-flex items-center text-xs uppercase font-mono font-bold px-2 py-0.5 bg-blue-50 border border-blue-200 text-[#155DFC] rounded mr-2 align-middle">
                                             {step.component}
                                           </span>
                                         )}
@@ -4429,7 +4429,7 @@ export default function Home() {
                                             </div>
                                             <span className="text-xs text-slate-400 font-mono truncate">{step.machine_type}</span>
                                           </div>
-                                          <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md shrink-0 whitespace-nowrap">
+                                          <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded shrink-0 whitespace-nowrap">
                                             {step.smv_mins || "1.5"} mins
                                           </span>
                                         </div>
@@ -4521,13 +4521,13 @@ export default function Home() {
                     </div>
 
                     {/* Tooling Grid Recommendations */}
-                    <div className="bg-white border border-slate-100 rounded-md p-8 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-lg p-8 shadow-2xs">
                       <h2 className="font-bold text-base text-slate-900 mb-6 font-display">
                         RECOMMENDED MACHINERY
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {fullResult.tooling_recommendations && fullResult.tooling_recommendations.map((tool: any, idx: number) => (
-                          <div key={idx} className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
+                          <div key={idx} className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
                             <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-4 relative overflow-hidden">
                               <img 
                                 src={`/image/${tool.file}`} 
@@ -4545,7 +4545,7 @@ export default function Home() {
                     </div>
 
                     {/* SMV & COMPLEXITY SUMMARY */}
-                    <div className="bg-white border border-slate-100 rounded-md p-8 shadow-2xs flex flex-col gap-6">
+                    <div className="bg-white border border-slate-100 rounded-lg p-8 shadow-2xs flex flex-col gap-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">
@@ -4562,7 +4562,7 @@ export default function Home() {
                         <div className="flex gap-8">
                           <div>
                             <span className="text-xs font-mono text-slate-400 uppercase block mb-1">Complexity</span>
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
+                            <span className={`inline-flex items-center rounded px-2.5 py-0.5 text-xs font-semibold border ${
                               fullResult.complexity === "High" 
                                 ? "bg-red-50 text-red-700 border-red-200" 
                                 : "bg-blue-50 text-blue-700 border-blue-200"
@@ -4572,7 +4572,7 @@ export default function Home() {
                           </div>
                           <div>
                             <span className="text-xs font-mono text-slate-400 uppercase block mb-1">Confidence</span>
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                            <span className="inline-flex items-center rounded bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
                               High (Verified)
                             </span>
                           </div>
@@ -4631,7 +4631,7 @@ export default function Home() {
                                   <span className="text-xs font-bold font-mono text-slate-900 block">{alloc.machine_model}</span>
                                   <span className="text-xs text-slate-500 font-mono">Total SMV: {alloc.total_smv_mins}m ({alloc.utilization_pct}% Util)</span>
                                 </div>
-                                <span className="inline-flex items-center rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-bold font-mono text-indigo-700 border border-indigo-200">
+                                <span className="inline-flex items-center rounded bg-indigo-50 px-2.5 py-1 text-xs font-bold font-mono text-indigo-700 border border-indigo-200">
                                   {alloc.required_units} {alloc.required_units === 1 ? 'Unit' : 'Units'}
                                 </span>
                               </div>
@@ -4643,7 +4643,7 @@ export default function Home() {
 
                     {/* MANUFACTURING PRE-COSTING & THREAD CONSUMPTION CARD (DUAL CURRENCY USD + IDR) */}
                     {fullResult.pre_costing && (
-                      <div className="bg-white border border-slate-100 rounded-md p-8 shadow-2xs flex flex-col gap-6">
+                      <div className="bg-white border border-slate-100 rounded-lg p-8 shadow-2xs flex flex-col gap-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
                             <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">
@@ -4654,7 +4654,7 @@ export default function Home() {
                                 ${fullResult.pre_costing.unit_total_manufacturing_usd.toFixed(2)}
                               </span>
                               <span className="text-sm font-semibold text-slate-400">/ unit estimated</span>
-                              <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-md">
+                              <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded">
                                 ≈ Rp {(fullResult.pre_costing.unit_total_manufacturing_idr ?? Math.round(fullResult.pre_costing.unit_total_manufacturing_usd * 16000)).toLocaleString("id-ID")}
                               </span>
                             </div>
@@ -4713,7 +4713,7 @@ export default function Home() {
                                 <span className="text-xs text-slate-500 font-mono">ASTM D3823 standard</span>
                               </div>
                               <div className="text-right flex flex-col items-end">
-                                <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold font-mono text-blue-700 border border-blue-200">
+                                <span className="inline-flex items-center rounded bg-blue-50 px-2.5 py-1 text-xs font-bold font-mono text-blue-700 border border-blue-200">
                                   ${fullResult.pre_costing.unit_thread_cost_usd}
                                 </span>
                                 <span className="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -4728,7 +4728,7 @@ export default function Home() {
                                 <span className="text-xs text-slate-500 font-mono">SMV-scaled operator</span>
                               </div>
                               <div className="text-right flex flex-col items-end">
-                                <span className="inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold font-mono text-emerald-700 border border-emerald-200">
+                                <span className="inline-flex items-center rounded bg-emerald-50 px-2.5 py-1 text-xs font-bold font-mono text-emerald-700 border border-emerald-200">
                                   ${fullResult.pre_costing.unit_sewing_labour_usd}
                                 </span>
                                 <span className="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -4743,7 +4743,7 @@ export default function Home() {
                                 <span className="text-xs text-slate-500 font-mono">Machine lay &amp; cut</span>
                               </div>
                               <div className="text-right flex flex-col items-end">
-                                <span className="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold font-mono text-amber-700 border border-amber-200">
+                                <span className="inline-flex items-center rounded bg-amber-50 px-2.5 py-1 text-xs font-bold font-mono text-amber-700 border border-amber-200">
                                   ${fullResult.pre_costing.unit_cutting_labour_usd}
                                 </span>
                                 <span className="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -4753,7 +4753,7 @@ export default function Home() {
                             </div>
                           </div>
 
-                          <div className="text-[11px] font-mono text-slate-400 bg-slate-50 border border-slate-100 rounded-md px-3 py-1.5 flex items-center justify-between mt-1">
+                          <div className="text-[11px] font-mono text-slate-400 bg-slate-50 border border-slate-100 rounded px-3 py-1.5 flex items-center justify-between mt-1">
                             <span>ASTM D3823 Thread Standard &amp; GSD SMV Labour Rate Formula</span>
                             <span>Benchmark Exchange Rate: 1 USD = Rp 16.000 IDR</span>
                           </div>
@@ -4804,7 +4804,7 @@ export default function Home() {
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                   {/* Left Column: Image box with overlays */}
                   <div className="lg:col-span-2 flex flex-col gap-6">
-                    <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs relative">
+                    <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs relative">
                       <div className="relative rounded-md overflow-hidden border border-slate-100 aspect-square w-full bg-slate-50 flex items-center justify-center">
                         <img
                           src={result.preview_image}
@@ -4835,12 +4835,12 @@ export default function Home() {
 
                   {/* Right Column: Step-by-Step Sewing Flow Table */}
                   <div className="lg:col-span-3 flex flex-col gap-6">
-                    <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs">
+                    <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs">
                       <h2 className="font-golden-heading-bold text-slate-900 mb-4">
                         Step-by-Step Sewing Operations
                       </h2>
                       
-                      <div className="overflow-hidden border border-slate-100 rounded-md">
+                      <div className="overflow-hidden border border-slate-100 rounded-lg">
                         <table className="w-full text-left text-xs text-slate-600 border-collapse">
                           <thead className="bg-slate-50/70 font-mono text-xs text-slate-400 uppercase border-b border-slate-100">
                             <tr>
@@ -4859,7 +4859,7 @@ export default function Home() {
                                   <td className="py-3.5 px-4 font-medium text-slate-700">{step}</td>
                                   <td className="py-3.5 px-4 flex justify-center">{getPartIcon(step)}</td>
                                   <td className="py-3.5 px-6">
-                                    <div className="flex items-center justify-between border border-slate-200/80 rounded-md py-1.5 px-3 bg-slate-50 font-mono text-xs w-full">
+                                    <div className="flex items-center justify-between border border-slate-200/80 rounded py-1.5 px-3 bg-slate-50 font-mono text-xs w-full">
                                       <span>{machineLabel}</span>
                                       <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -4875,7 +4875,7 @@ export default function Home() {
                     </div>
 
                     {/* ESTIMATED SMV CARD */}
-                    <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs flex items-center justify-between">
+                    <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs flex items-center justify-between">
                       <div>
                         <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1 font-bold">
                           ESTIMATED SMV
@@ -4895,7 +4895,7 @@ export default function Home() {
                         </div>
                         <div>
                           <span className="text-xs font-mono text-slate-400 uppercase block mb-1 font-bold">Confidence</span>
-                          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                          <span className="inline-flex items-center rounded bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
                             High
                           </span>
                         </div>
@@ -4905,7 +4905,7 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white border border-slate-100 rounded-md p-16 flex items-center justify-center text-center shadow-2xs min-h-96">
+              <div className="bg-white border border-slate-100 rounded-lg p-16 flex items-center justify-center text-center shadow-2xs min-h-96">
                 <div>
                   <svg className="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -5007,7 +5007,7 @@ export default function Home() {
                 if (!defaultMachines || defaultMachines.length === 0) {
                   return (
                     <div className="col-span-full py-12 flex flex-col items-center justify-center space-y-6">
-                      <div className="w-full max-w-md bg-white border border-slate-100 rounded-md p-6 text-center shadow-2xs">
+                      <div className="w-full max-w-md bg-white border border-slate-100 rounded-lg p-6 text-center shadow-2xs">
                         <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-2">
                           <span className="flex items-center gap-2">
                             <svg className="w-3.5 h-3.5 animate-spin text-[#155DFC]" fill="none" viewBox="0 0 24 24">
@@ -5034,7 +5034,7 @@ export default function Home() {
                   <>
                     <div className="col-span-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                       {filtered.slice(0, visibleMachineryCount).map((tool, idx) => (
-                        <div key={idx} className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
+                        <div key={idx} className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-2xs flex flex-col h-full hover:border-[#155DFC]/40 transition-all duration-300">
                           {/* Machine Photo Rendering — Progressive Lazy Loading */}
                           <div className="bg-slate-50/70 border-b border-slate-100 aspect-[4/3] flex items-center justify-center p-3 relative overflow-hidden">
                             <img 
@@ -5089,7 +5089,7 @@ export default function Home() {
               </p>
             </header>
 
-            <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs max-w-4xl space-y-6">
+            <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs max-w-4xl space-y-6">
               <h2 className="font-golden-heading-bold text-slate-900">Standard Allowed Minutes Formula</h2>
               <div className="bg-slate-50 rounded-md p-5 font-mono text-xs text-slate-700 border border-slate-100 leading-relaxed">
                 SMV = (Basic Time) + (Bundle Allowance) + (Machine Allowance) + (Personal Allowance)<br />
@@ -5149,7 +5149,7 @@ export default function Home() {
             </div>
 
             {/* Results Grid */}
-            <div className="border border-slate-100 rounded-md p-6 bg-white min-h-80 shadow-2xs flex flex-col justify-center">
+            <div className="border border-slate-100 rounded-lg p-6 bg-white min-h-80 shadow-2xs flex flex-col justify-center">
               {searchResults.length === 0 ? (
                 <p className="text-slate-400 text-center text-xs">
                   No historical entries in database. Add items to database to search.
@@ -5161,7 +5161,7 @@ export default function Home() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {searchResults.map((match, idx) => (
-                      <div key={idx} className="bg-slate-50 border border-slate-100 rounded-md p-5 shadow-2xs">
+                      <div key={idx} className="bg-slate-50 border border-slate-100 rounded-lg p-5 shadow-2xs">
                         <div className="flex justify-between items-start mb-3">
                           <h3 className="font-display font-bold text-slate-900 text-xs">
                             {match.title}
@@ -5237,7 +5237,7 @@ export default function Home() {
 
             <div className="w-full">
               {knowledgeBase.length === 0 ? (
-                <div className="bg-white border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm shadow-2xs">
+                <div className="bg-white border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm shadow-2xs">
                   Loading corporate reference guides and sewing parameters from database...
                 </div>
               ) : (
@@ -5278,7 +5278,7 @@ export default function Home() {
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="bg-white border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm shadow-2xs">
+                      <div className="bg-white border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm shadow-2xs">
                         No reference logs match your search criteria.
                       </div>
                     );
@@ -5287,7 +5287,7 @@ export default function Home() {
                   return (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {filtered.map((k: any, idx: number) => (
-                        <div key={idx} className="bg-white border border-slate-100 rounded-md p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300 flex flex-col justify-between">
+                        <div key={idx} className="bg-white border border-slate-100 rounded-lg p-8 shadow-2xs hover:border-[#155DFC]/40 transition-all duration-300 flex flex-col justify-between">
                           <div>
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
                               <div>
@@ -5295,7 +5295,7 @@ export default function Home() {
                                 <p className="text-xs text-slate-400 font-mono mt-0.5">{k.ref}</p>
                               </div>
                               {k.smv && k.smv !== "N/A" && (
-                                <div className="bg-slate-50 border border-slate-100 rounded-md px-3 py-1 text-xs font-mono font-bold text-[#155DFC]">
+                                <div className="bg-slate-50 border border-slate-100 rounded px-3 py-1 text-xs font-mono font-bold text-[#155DFC]">
                                   SMV: <span>{k.smv}</span>
                                 </div>
                               )}
@@ -5524,7 +5524,7 @@ export default function Home() {
                 </select>
               </SearchToolbar>
 
-              <div className="bg-white border border-slate-100 rounded-md overflow-visible shadow-2xs">
+              <div className="bg-white border border-slate-100 rounded-lg overflow-visible shadow-2xs">
                 <table className="w-full text-left text-xs text-slate-600 border-collapse">
                   <thead className="bg-slate-50/70 font-mono text-xs text-slate-400 uppercase border-b border-slate-100">
                     <tr>
@@ -5637,7 +5637,7 @@ export default function Home() {
                                   {itemTags.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mt-1">
                                       {itemTags.map(t => (
-                                        <span key={t} className="inline-flex items-center gap-1 text-xs font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
+                                        <span key={t} className="inline-flex items-center gap-1 text-xs font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded border border-blue-200/50">
                                           <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
                                           <HighlightMatch text={t} query={historySearchQuery} />
                                         </span>
@@ -5656,11 +5656,11 @@ export default function Home() {
                             <td className="py-4 px-6 font-mono text-slate-500">{formattedDate}</td>
                             <td className="py-4 px-6">
                               {isRejected ? (
-                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
+                                <span className="inline-flex items-center rounded bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
                                   Duplicate Locked
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                                <span className="inline-flex items-center rounded bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
                                   Approved
                                 </span>
                               )}
@@ -5777,10 +5777,10 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* GitHub Promotional Banner Card */}
-              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs flex flex-col justify-between relative overflow-hidden">
+              <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs flex flex-col justify-between relative overflow-hidden">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 text-xs font-mono font-semibold">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 text-slate-800 text-xs font-mono font-semibold">
                       <GitHubIcon className="w-4 h-4 text-slate-800" />
                       GitHub Repository
                     </span>
@@ -5806,10 +5806,10 @@ export default function Home() {
               </div>
 
               {/* Runtime Environment & Database Status Card */}
-              <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs flex flex-col justify-between">
+              <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 text-[#155DFC] text-xs font-mono font-semibold">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-blue-50 text-[#155DFC] text-xs font-mono font-semibold">
                       {systemInfo.is_docker ? (
                         <>
                           <DockerIcon className="w-4 h-4 text-[#155DFC]" />
@@ -5854,13 +5854,13 @@ export default function Home() {
             </div>
 
             {/* System Update Notifier Card */}
-            <div className="bg-white border border-slate-100 rounded-md p-6 shadow-2xs max-w-5xl space-y-5">
+            <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-2xs max-w-5xl space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="font-golden-heading-bold text-slate-900">System Updates</h2>
                     {updateState.updateAvailable && (
-                      <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md text-xs font-mono font-bold uppercase tracking-wider">
+                      <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider">
                         New Release Available
                       </span>
                     )}
@@ -6003,7 +6003,7 @@ export default function Home() {
         {/* Return to Step 1 Mode Choice Confirmation Modal */}
         {showBackConfirmModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="bg-white border border-slate-200 rounded-md shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div className="bg-white border border-slate-200 rounded-lg shadow-2xl max-w-md w-full p-6 space-y-5">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -6041,7 +6041,7 @@ export default function Home() {
         {/* Step 2 Reset Form & Sketch Confirmation Modal */}
         {showResetConfirmModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="bg-white border border-slate-200 rounded-md shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div className="bg-white border border-slate-200 rounded-lg shadow-2xl max-w-md w-full p-6 space-y-5">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-md bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -6082,7 +6082,7 @@ export default function Home() {
         {/* Project Rename Confirmation Modal */}
         {showRenameConfirmModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="bg-white border border-slate-200 rounded-md shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div className="bg-white border border-slate-200 rounded-lg shadow-2xl max-w-md w-full p-6 space-y-5">
               <div className="flex items-start gap-3">
                 <div className={`w-10 h-10 rounded-md ${isRenameConflict ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-[#155DFC]"} flex items-center justify-center flex-shrink-0`}>
                   {isRenameConflict ? (
@@ -6170,7 +6170,7 @@ export default function Home() {
         {/* Enterprise Tech Pack Printable Modal */}
         {showTechPackModal && activeTechPackData && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-md max-w-4xl w-full shadow-2xl overflow-hidden my-8 border border-slate-200 print:shadow-none print:border-none print:m-0 print:w-full print:max-w-none">
+            <div className="bg-white rounded-lg max-w-4xl w-full shadow-2xl overflow-hidden my-8 border border-slate-200 print:shadow-none print:border-none print:m-0 print:w-full print:max-w-none">
               {/* Action Bar (Hidden on print) */}
               <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between print:hidden">
                 <div className="flex items-center gap-2">
@@ -6359,7 +6359,7 @@ export default function Home() {
         {/* Step 2 Process Sheet Compilation Confirmation Review Modal */}
         {showProcessSheetConfirmModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="bg-white border border-slate-200 rounded-md shadow-2xl max-w-lg w-full p-6 space-y-5">
+            <div className="bg-white border border-slate-200 rounded-lg shadow-2xl max-w-lg w-full p-6 space-y-5">
               <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
                 <div className="w-10 h-10 rounded-md bg-blue-50 text-[#155DFC] flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -6388,7 +6388,7 @@ export default function Home() {
                   <div className="flex flex-wrap gap-1 justify-end max-w-xs">
                     {selectedTags.length > 0 ? (
                       selectedTags.map((t: string) => (
-                        <span key={t} className="inline-flex items-center gap-1 text-xs font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/50">
+                        <span key={t} className="inline-flex items-center gap-1 text-xs font-semibold text-[#155DFC] bg-blue-50 px-2 py-0.5 rounded border border-blue-200/50">
                           <svg className="w-2.5 h-2.5 text-[#155DFC]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />

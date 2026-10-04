@@ -35,6 +35,7 @@ status: "Completed"
 | 2026-07-21 | GitHub Primer Tokens, Outer/Inner Radius Audit & Date Range Calendar Suite: standardized all UI elements to GitHub Primer design tokens (`--github-border-radius-base: 6px`, `--github-border-radius-large: 12px`). Enforced Outer vs Inner Corner Radius rule ($R_{\text{inner}} = R_{\text{outer}} - \text{padding}$) across all views in `page.tsx` (cards `12px`, inner buttons/badges/inputs `6px`). Integrated custom Date Range Calendar Popover into Active Projects & History, fixed preset click reset behavior (`calSelStart = null`), and removed keyword searchbox from Dashboard toolbar. 55/55 backend tests PASS (100%). | AI Coding Agent |
 | 2026-07-22 | Single All-In-One Container Architecture, GHCR CI/CD Automation, Tag-Based Release Lifecycle & Docker Management Suite: configured single All-In-One Docker image (Python 3.12 + Node 20 + Postgres 16 + pgvector v0.7.4), added automatic GHCR lowercase owner workflow (`docker-publish.yml`), enforced PostgreSQL pgvector as default database mode in Docker (`IS_DOCKER=true`), added dual-layer version check fallback in `/api/system/check-update` (checking releases and `/tags`), fixed Next.js TypeScript build errors (`next.config.ts` and `SavedAnalysis`), aligned README.md & QUICKSTART.md with Open WebUI documentation style, and configured strict release tag triggers (`v*.*.*`). 55/55 backend tests PASS (100%). | AI Coding Agent |
 | 2026-10-04 | Industrial Garment Engineering Suite: Pattern Size Grading (S, M, L, XL, XXL), Cutting Machinery Allocation (CNC Laser vs Straight Knife vs Rotary Knife), and ASTM D3823 Pre-Costing & Thread Consumption Engine. Added Step 2 UI controls with dynamic AI badges, Step 2 compilation review confirmation modal, Step 3 interactive Bento cards, and matching print/PDF tech pack export cards. 63/63 backend unit tests PASS (100%), Next.js production build verified. | AI Coding Agent |
+| 2026-10-05 | Design System 8px/4px Token Harmonization Suite: Unified border radius hierarchy across all UI layers according to agent-context design rules. Enforced 8px (rounded-lg) for outer cards, bento grids, and dialog modals; 6px (rounded-md) for interactive buttons/inputs; and 4px (rounded) for micro-elements, badges, project tags, currency indicators, and SMV pills. Configured Tailwind v4 @theme radius tokens in globals.css. 66/66 backend tests PASS (100%), Next.js production build verified. | AI Coding Agent |
 
 ---
 
@@ -402,5 +403,40 @@ status: "Completed"
 * Implemented modular Python functions with regex word-boundary size parsing (`\b(XXL|XL|XS|S|M|L)\b`), updated Pydantic schemas with backwards-compatible defaults, wired Next.js state management (`quizSizeRun`, `quizCuttingMethod`, `quizStitchDensity`), and verified:
   - `pytest backend/tests/`: **63/63 tests PASS (100%)**.
   - `npm run build`: Compiled 100% cleanly with 0 TypeScript errors.
+
+---
+
+# Case Study #15: Design System 8px / 4px Token Harmonization Suite (2026-10-05)
+
+## 5W+1H Diagnostic Matrix
+
+### 1. What
+* **Problem**: 
+  - UI components had inconsistent border radii: project tags (`<span className="... rounded-md border border-blue-200/50">`), currency indicator badges (`<span className="... rounded-md">≈ Rp 18.240</span>`), and status indicators had mismatched rounding. On tiny 20px-high tag elements (`py-0.5`), `rounded-md` (6px) created awkward pseudo-capsules, while other badges used `rounded-full` or `rounded`.
+  - Outer cards and dialog modal containers were inconsistently styled with `rounded-md` (6px) instead of the 8px container design token.
+* **Resolution**:
+  - **Global CSS Token Architecture**: Configured explicit Tailwind v4 `@theme` tokens (`--radius-sm: 4px`, `--radius: 4px`, `--radius-md: 6px`, `--radius-lg: 8px`, `--radius-badge: 4px`, `--radius-card: 8px`). Added CSS custom properties `--radius-container: 8px`, `--radius-control: 6px`, and `--radius-badge: 4px`.
+  - **8px Container Rule**: Standardized all primary cards, bento grids, panels, and modals across Step 1, Step 2, Step 3, History, Knowledge Base, and Settings to `rounded-lg` (8px).
+  - **4px Micro-Element Rule**: Standardized all micro-elements, badges, project tags, currency indicators, SMV pills, and status chips to `rounded` (4px).
+  - **6px Interactive Control Rule**: Preserved `rounded-md` (6px) for standard interactive buttons, dropdowns, and form inputs.
+
+### 2. Who
+* UI/UX designers, apparel engineering operators, and frontend developers maintaining design consistency.
+
+### 3. Where
+* `frontend/src/app/globals.css`: `@theme` radius tokens and global `.gh-card, .ui-card`, `.gh-badge, .gh-tag, .ui-badge, .ui-tag`.
+* `frontend/src/app/[[...slug]]/page.tsx`: Step 1 mode cards, Step 2 engineering panels, Step 3 Bento cards and metadata badges, Project History tags and status badges, Settings view cards and badges, and dialog confirmation modals.
+
+### 4. When
+* October 5th, 2026.
+
+### 5. Why
+* Visual dissonance occurs when micro-tags and macro-cards lack hierarchical radius discipline. Aligning with the strict 8px/4px design system guidelines from `agent-context.md` guarantees crisp, cohesive interfaces without ad-hoc styling discrepancies.
+
+### 6. How
+* Audited all component classes across the codebase, mapped dependencies using graphify, updated token definitions in `globals.css`, cleanly refactored `page.tsx`, and verified:
+  - `npm run build`: Compiled 100% cleanly in 2.4s with 0 TypeScript errors.
+  - `pytest backend/tests/`: **66/66 tests PASS (100%)**.
+
 
 

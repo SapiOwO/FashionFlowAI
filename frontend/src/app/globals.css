@@ -1,13 +1,31 @@
 @import "tailwindcss";
 
+@theme {
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-badge: 4px;
+  --radius-tag: 4px;
+  --radius-card: 8px;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #1f2328;
   --brand-blue: #005cea;
   --brand-blue-hover: #004ac2;
   --border-whisper: #d0d7de;
-  --github-border-radius-base: 6px;  /* GitHub Primer standard 6px border-radius */
-  --github-border-radius-large: 12px; /* GitHub Primer 12px container border-radius */
+
+  /* ── 8px / 4px Design System Hierarchy ── */
+  --radius-container: 8px; /* 8px: Containers, Cards, Bento Grids, Modals */
+  --radius-control: 6px;   /* 6px: Buttons, Interactive Controls, Inputs */
+  --radius-badge: 4px;     /* 4px: Badges, Tags, Chips, Pills, Currency Indicators */
+
+  --github-border-radius-base: 6px;
+  --github-border-radius-large: 8px;
   --github-font-sans: var(--font-mona-sans), "Mona Sans VF", "Mona Sans", MonaSansFallback, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --github-font-mono: "Mona Sans Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
@@ -73,23 +91,22 @@ code, pre, .font-mono, time {
   font-size: 12px;
 }
 
-/* GitHub Primer Component Style Classes */
-.gh-card {
-  border-radius: var(--github-border-radius-base);
+/* GitHub Primer & Design System Component Style Classes */
+.gh-card, .ui-card {
+  border-radius: var(--radius-container);
   border: 1px solid #d0d7de;
   background-color: #ffffff;
 }
 
-.gh-btn {
-  border-radius: var(--github-border-radius-base);
+.gh-btn, .ui-btn {
+  border-radius: var(--radius-control);
   font-family: var(--github-font-sans);
   font-size: 14px;
   font-weight: 500;
 }
 
-.gh-badge, .gh-tag {
-  border-radius: var(--github-border-radius-base);
-  font-family: var(--github-font-mono);
+.gh-badge, .gh-tag, .ui-badge, .ui-tag, .tag-pill, .metric-badge {
+  border-radius: var(--radius-badge);
   font-size: 12px;
 }
 
