@@ -4,6 +4,7 @@ import psycopg2
 import csv
 from psycopg2.extras import execute_values
 import numpy as np
+import time
 import json
 from dotenv import load_dotenv
 
@@ -15,16 +16,16 @@ default_db_type = "postgresql" if is_docker_env else "sqlite"
 DB_TYPE = os.getenv("DB_TYPE", default_db_type)
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_PORT = os.getenv("DB_PORT", "5432")
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASS = os.getenv("DB_PASS", "postgres" if is_docker_env else "")
-DB_NAME = os.getenv("DB_NAME", "fashionflow_db")
+DB_USER = os.getenv("DB_USER") or os.getenv("POSTGRES_USER") or "postgres"
+DB_PASS = os.getenv("DB_PASS") or os.getenv("DB_PASSWORD") or os.getenv("POSTGRES_PASSWORD") or ("postgres" if is_docker_env else "")
+DB_NAME = os.getenv("DB_NAME") or os.getenv("POSTGRES_DB") or "fashionflow_db"
 
 def is_sqlite() -> bool:
     """Check if the configured database is SQLite."""
     return DB_TYPE.lower() in ("sqlite", "sqlite3")
 
-def get_connection():
-    """Establish connection to PostgreSQL or SQLite. Auto-creates PostgreSQL database if it does not exist."""
+def get_connection(retries: int = 1, retry_delay: float = 1.0):
+    """Establish connection to PostgreSQL or SQLite. Auto-creates PostgreSQL database if it does not exist with retry support."""
     if is_sqlite():
         # Resolve database file path relative to the project root
         db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "fashionflow.db"))
@@ -32,33 +33,41 @@ def get_connection():
     else:
         # Build PostgreSQL connection string
         conn_str = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-        try:
-            return psycopg2.connect(conn_str)
-        except psycopg2.OperationalError as e:
-            err_msg = str(e)
-            if "does not exist" in err_msg:
-                print(f"[DB] Database '{DB_NAME}' not found. Connecting to default 'postgres' database to create it...")
-                try:
-                    sys_conn_str = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/postgres"
-                    sys_conn = psycopg2.connect(sys_conn_str)
-                    sys_conn.autocommit = True
-                    sys_cursor = sys_conn.cursor()
-                    sys_cursor.execute(f'CREATE DATABASE "{DB_NAME}";')
-                    sys_cursor.close()
-                    sys_conn.close()
-                    print(f"[DB] Database '{DB_NAME}' created successfully.")
-                    return psycopg2.connect(conn_str)
-                except Exception as create_err:
-                    print(f"[DB-ERR] Failed to automatically create PostgreSQL database: {str(create_err)}")
+        last_error = None
+        for attempt in range(max(1, retries)):
+            try:
+                return psycopg2.connect(conn_str)
+            except psycopg2.OperationalError as e:
+                last_error = e
+                err_msg = str(e)
+                if "does not exist" in err_msg:
+                    print(f"[DB] Database '{DB_NAME}' not found. Connecting to default 'postgres' database to create it...")
+                    try:
+                        sys_conn_str = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/postgres"
+                        sys_conn = psycopg2.connect(sys_conn_str)
+                        sys_conn.autocommit = True
+                        sys_cursor = sys_conn.cursor()
+                        sys_cursor.execute(f'CREATE DATABASE "{DB_NAME}";')
+                        sys_cursor.close()
+                        sys_conn.close()
+                        print(f"[DB] Database '{DB_NAME}' created successfully.")
+                        return psycopg2.connect(conn_str)
+                    except Exception as create_err:
+                        print(f"[DB-ERR] Failed to automatically create PostgreSQL database: {str(create_err)}")
+                        raise e
+                elif attempt < retries - 1 and ("could not connect" in err_msg or "Connection refused" in err_msg):
+                    print(f"[DB] PostgreSQL server not ready yet (attempt {attempt + 1}/{retries}). Retrying in {retry_delay}s...")
+                    time.sleep(retry_delay)
+                else:
                     raise e
-            else:
-                raise e
+        if last_error:
+            raise last_error
 
 def init_database():
     """Create schemas and tables for both SQLite and PostgreSQL (Historical search + Analysis history)."""
     print(f"[DB] Initializing database using type: {DB_TYPE}")
     try:
-        conn = get_connection()
+        conn = get_connection(retries=5, retry_delay=1.5)
         
         if is_sqlite():
             cursor = conn.cursor()
@@ -439,7 +448,7 @@ def clear_analysis_history_in_db() -> bool:
         return False
 
 
-def save_analysis_to_db(filename: str, timestamp: str, result_data: dict):
+def save_analysis_to_db(filename: str, timestamp: str, result_data: dict) -> bool:
     """
     Save or update an analysis record in the database for persistent history logs.
 
@@ -450,7 +459,7 @@ def save_analysis_to_db(filename: str, timestamp: str, result_data: dict):
     """
     import hashlib
 
-    try:
+    def _execute_save():
         conn = get_connection()
         cursor = conn.cursor()
         result_json_str = json.dumps(result_data, ensure_ascii=False)
@@ -465,14 +474,14 @@ def save_analysis_to_db(filename: str, timestamp: str, result_data: dict):
                     (timestamp, result_json_str, existing[0])
                 )
                 conn.commit()
-                print(f"[DB] Updated existing analysis for '{filename}' (ID: {existing[0]}) in database.")
+                print(f"[DB] Updated existing analysis for '{filename}' (ID: {existing[0]}) in SQLite database.")
             else:
                 cursor.execute(
                     "INSERT INTO analysis_history (filename, timestamp, result) VALUES (?, ?, ?);",
                     (filename, timestamp, result_json_str)
                 )
                 conn.commit()
-                print(f"[DB] Saved new analysis for '{filename}' to database.")
+                print(f"[DB] Saved new analysis for '{filename}' to SQLite database.")
         else:
             # PostgreSQL: store native visual_vector and image_md5 alongside JSON blob
             conn.autocommit = True
@@ -503,7 +512,7 @@ def save_analysis_to_db(filename: str, timestamp: str, result_data: dict):
                     """,
                     (timestamp, result_json_str, vec_pg, md5_hash, existing[0])
                 )
-                print(f"[DB] Updated existing analysis for '{filename}' (ID: {existing[0]}) in database.")
+                print(f"[DB] Updated existing analysis for '{filename}' (ID: {existing[0]}) in PostgreSQL database.")
             else:
                 cursor.execute(
                     """
@@ -512,12 +521,26 @@ def save_analysis_to_db(filename: str, timestamp: str, result_data: dict):
                     """,
                     (filename, timestamp, result_json_str, vec_pg, md5_hash)
                 )
-                print(f"[DB] Saved new analysis for '{filename}' to database.")
+                print(f"[DB] Saved new analysis for '{filename}' to PostgreSQL database.")
 
         cursor.close()
         conn.close()
+
+    try:
+        _execute_save()
+        return True
     except Exception as e:
-        print(f"[DB-ERR] Failed to save analysis log: {str(e)}")
+        err_str = str(e)
+        print(f"[DB-ERR] Failed to save analysis log: {err_str}")
+        if "relation \"analysis_history\" does not exist" in err_str or "no such table: analysis_history" in err_str:
+            print("[DB] Attempting schema auto-heal for missing analysis_history table...")
+            try:
+                init_database()
+                _execute_save()
+                return True
+            except Exception as retry_err:
+                print(f"[DB-ERR] Retry after schema init failed: {retry_err}")
+        return False
 
 def get_analysis_history_from_db():
     """Retrieve all persistent upload history logs from the database."""
@@ -525,19 +548,19 @@ def get_analysis_history_from_db():
         conn = get_connection()
         cursor = conn.cursor()
         
-        if is_sqlite():
-            cursor.execute("SELECT id, filename, timestamp, result FROM analysis_history ORDER BY id DESC;")
-        else:
-            cursor.execute("SELECT id, filename, timestamp, result FROM analysis_history ORDER BY id DESC;")
-            
+        cursor.execute("SELECT id, filename, timestamp, result FROM analysis_history ORDER BY id DESC;")
         rows = cursor.fetchall()
         history = []
         for r in rows:
+            try:
+                res_obj = json.loads(r[3]) if isinstance(r[3], str) else r[3]
+            except Exception:
+                res_obj = {}
             history.append({
                 "id": str(r[0]),
                 "fileName": r[1],
                 "timestamp": r[2],
-                "result": json.loads(r[3])
+                "result": res_obj
             })
             
         cursor.close()
@@ -681,14 +704,48 @@ def delete_analysis_from_db(record_id: int) -> bool:
         return False
 
 def rename_analysis_in_db(record_id: int, new_filename: str) -> bool:
-    """Rename an analysis record in database by ID."""
+    """Rename an analysis record in database by ID, updating both filename and internal result JSON."""
     try:
         conn = get_connection()
         cursor = conn.cursor()
+
+        # 1. Fetch existing result JSON
         if is_sqlite():
-            cursor.execute("UPDATE analysis_history SET file_name = ? WHERE id = ?;", (new_filename, record_id))
+            cursor.execute("SELECT result FROM analysis_history WHERE id = ?;", (record_id,))
         else:
-            cursor.execute("UPDATE analysis_history SET file_name = %s WHERE id = %s;", (new_filename, record_id))
+            cursor.execute("SELECT result FROM analysis_history WHERE id = %s;", (record_id,))
+        row = cursor.fetchone()
+        updated_json_str = None
+        if row and row[0]:
+            try:
+                data = json.loads(row[0]) if isinstance(row[0], str) else row[0]
+                if isinstance(data, dict):
+                    if "project_details" in data and isinstance(data["project_details"], dict):
+                        data["project_details"]["name"] = new_filename
+                    data["title"] = new_filename
+                    data["name"] = new_filename
+                    updated_json_str = json.dumps(data, ensure_ascii=False)
+            except Exception as parse_err:
+                print(f"[DB-WARN] Could not update internal result JSON during rename: {parse_err}")
+
+        # 2. Update filename and result JSON
+        if updated_json_str:
+            if is_sqlite():
+                cursor.execute(
+                    "UPDATE analysis_history SET filename = ?, result = ? WHERE id = ?;",
+                    (new_filename, updated_json_str, record_id)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE analysis_history SET filename = %s, result = %s WHERE id = %s;",
+                    (new_filename, updated_json_str, record_id)
+                )
+        else:
+            if is_sqlite():
+                cursor.execute("UPDATE analysis_history SET filename = ? WHERE id = ?;", (new_filename, record_id))
+            else:
+                cursor.execute("UPDATE analysis_history SET filename = %s WHERE id = %s;", (new_filename, record_id))
+
         conn.commit()
         affected = cursor.rowcount
         cursor.close()

@@ -5,7 +5,7 @@ import re
 import json
 import urllib.request
 import subprocess
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
@@ -176,11 +176,28 @@ def delete_history_log(id: int):
         raise HTTPException(status_code=500, detail=f"Failed to delete analysis: {str(e)}")
 
 @app.put("/api/history/{id}")
-def rename_history_log(id: int, filename: str = Form(...)):
-    """Rename a persistent upload log's filename in the database."""
+async def rename_history_log(id: int, request: Request):
+    """Rename a persistent upload log's filename in the database (supports JSON or Form data)."""
+    new_filename = ""
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        body = await request.json()
+        new_filename = body.get("filename", "")
+    else:
+        form = await request.form()
+        new_filename = form.get("filename", "")
+
+    if not new_filename or not str(new_filename).strip():
+        raise HTTPException(status_code=400, detail="Filename cannot be empty")
+
+    clean_name = str(new_filename).strip()[:100]
     try:
-        rename_analysis_in_db(id, filename)
-        return {"status": "success", "message": f"Successfully renamed analysis {id} to {filename}"}
+        success = rename_analysis_in_db(id, clean_name)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Analysis with ID {id} not found")
+        return {"status": "success", "message": f"Successfully renamed analysis {id} to {clean_name}", "filename": clean_name}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to rename analysis: {str(e)}")
 
@@ -1102,18 +1119,16 @@ def generate_process_sheet(req: ProcessSheetRequest):
         }
     }
 
-    if not req.is_reuse_master:
-        # Normal mode: persist new project record to DB
-        if req.similarity_status.upper() == "REJECTED":
-            raise HTTPException(status_code=400, detail="Production Blocked: Similarity status is REJECTED. Cannot save duplicate pattern to database.")
-        timestamp_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        save_analysis_to_db(req.project_name, timestamp_str, result_payload)
-    else:
-        # Reuse mode: batch recalculation only — do NOT insert a new row
-        # Attach reuse metadata to the response so frontend can reference original master ID
+    timestamp_str = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    if req.is_reuse_master:
+        # Reuse mode: attach reuse metadata to the response & persist production batch to DB
         result_payload["reuse_master_id"] = req.reuse_master_id
         result_payload["is_reuse"] = True
-        print(f"[REUSE] Batch recalculation for master ID={req.reuse_master_id}, qty={req.batch_quantity} — no DB insert")
+        print(f"[REUSE] Batch recalculation for master ID={req.reuse_master_id}, qty={req.batch_quantity} — persisting to DB")
+    elif req.similarity_status.upper() == "REJECTED":
+        raise HTTPException(status_code=400, detail="Production Blocked: Similarity status is REJECTED. Cannot save duplicate pattern to database.")
+
+    save_analysis_to_db(req.project_name, timestamp_str, result_payload)
 
     return result_payload
 

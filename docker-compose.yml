@@ -11,14 +11,17 @@ services:
       - "3000:3000"
       - "8000:8000"
     environment:
+      - IS_DOCKER=true
       - DB_TYPE=postgresql
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres
+      - DB_PASS=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=fashionflow_db
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ./data:/app/data
     networks:
@@ -38,6 +41,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - fashionflow_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fashionflow_db"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
 networks:

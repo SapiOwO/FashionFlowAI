@@ -672,6 +672,12 @@ export default function Home() {
   const [historyTagFilter, setHistoryTagFilter] = useState<string>("ALL");
   const [copiedProjectId, setCopiedProjectId] = useState<string | number | null>(null);
 
+  // Active loaded project ID & inline rename states (for Process Sheet view)
+  const [loadedProjectId, setLoadedProjectId] = useState<string | number | null>(null);
+  const [isEditingProjectName, setIsEditingProjectName] = useState(false);
+  const [editingProjectNameValue, setEditingProjectNameValue] = useState("");
+  const [isRenamingLoading, setIsRenamingLoading] = useState(false);
+  const [showRenameConfirmModal, setShowRenameConfirmModal] = useState(false);
 
   // Multi-step wizard stepper state (1: Upload & Originality, 2: Engineering Parameters, 3: Process Sheet)
   const [currentStep, setCurrentStep] = useState(1);
@@ -1167,35 +1173,84 @@ export default function Home() {
     setActiveMenuId(null);
   };
 
-  // Handle Project Rename in DB
-  const handleRenameProject = async (id: string | number, currentName: string) => {
-    const newName = window.prompt("Enter new name for the project:", currentName);
-    if (!newName || !newName.trim()) return;
-
-    try {
-      const formData = new FormData();
-      formData.append("filename", newName.trim());
-
-      const res = await fetch(`http://127.0.0.1:8000/api/history/${id}`, {
-        method: "PUT",
-        body: formData,
-      });
-      if (res.ok) {
-        setAnalysisHistory(prev => prev.map(item => {
-          if (item.id === id) {
-            return { ...item, fileName: newName.trim() };
-          }
-          return item;
-        }));
-        alert("Project renamed successfully.");
-      } else {
-        alert("Failed to rename project in database.");
-      }
-    } catch (err) {
-      console.error("Error renaming project:", err);
-      alert("Database connection error.");
+  // Request confirmation before saving inline project rename
+  const handleRequestRename = () => {
+    const trimmed = editingProjectNameValue.trim();
+    if (!trimmed || trimmed === quizName) {
+      setIsEditingProjectName(false);
+      return;
     }
-    setActiveMenuId(null);
+    setShowRenameConfirmModal(true);
+  };
+
+  const isRenameConflict = Boolean(
+    editingProjectNameValue.trim() &&
+    analysisHistory.some(
+      item => String(item.id) !== String(loadedProjectId) &&
+        (item.fileName?.trim().toLowerCase() === editingProjectNameValue.trim().toLowerCase() ||
+         (item.result as any)?.project_details?.name?.trim().toLowerCase() === editingProjectNameValue.trim().toLowerCase())
+    )
+  );
+
+  // Inline rename function for Process Specification Sheet view
+  const handleSaveProjectNameInline = async () => {
+    const trimmed = editingProjectNameValue.trim();
+    if (!trimmed || trimmed === quizName) {
+      setIsEditingProjectName(false);
+      setShowRenameConfirmModal(false);
+      return;
+    }
+
+    // Persist to database if we have an active saved project ID
+    if (loadedProjectId) {
+      setIsRenamingLoading(true);
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/history/${loadedProjectId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: trimmed }),
+        });
+        if (res.ok) {
+          // Update local history cache
+          setAnalysisHistory(prev => prev.map(item => {
+            if (String(item.id) === String(loadedProjectId)) {
+              return {
+                ...item,
+                fileName: trimmed,
+                result: {
+                  ...item.result,
+                  title: trimmed,
+                  project_details: {
+                    ...((item.result as any)?.project_details || {}),
+                    name: trimmed,
+                  }
+                }
+              };
+            }
+            return item;
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to rename project in database:", err);
+      } finally {
+        setIsRenamingLoading(false);
+      }
+    }
+
+    // Update active view states immediately
+    setQuizName(trimmed);
+    if (fullResult) {
+      setFullResult((prev: any) => ({
+        ...prev,
+        title: trimmed,
+        project_details: {
+          ...(prev?.project_details || {}),
+          name: trimmed,
+        }
+      }));
+    }
+    setIsEditingProjectName(false);
+    setShowRenameConfirmModal(false);
   };
 
   // Handle component file upload changes and automatic motif detection/prediction
@@ -1381,6 +1436,12 @@ export default function Home() {
           if (historyRes.ok) {
             const historyData = await historyRes.json();
             setAnalysisHistory(historyData.history);
+            if (data.id) {
+              setLoadedProjectId(data.id);
+            } else if (historyData.history?.length > 0) {
+              const matched = historyData.history.find((h: any) => h.fileName === resolvedProjectName);
+              if (matched) setLoadedProjectId(matched.id);
+            }
           }
         } catch (err) {
           console.warn("Failed to refresh history.", err);
@@ -1410,6 +1471,10 @@ export default function Home() {
     setReuseMode(null);
     setSelectedTags([]);
     setDesignerNotes("");
+    setLoadedProjectId(null);
+    setIsEditingProjectName(false);
+    setEditingProjectNameValue("");
+    setShowRenameConfirmModal(false);
     setComponentsState({
       jacket: { fabricWeight: "Denim (Heavy-weight)", imageFile: null, previewUrl: null, result: null },
       pants: { fabricWeight: "Katun (Medium-weight)", imageFile: null, previewUrl: null, result: null },
@@ -1521,6 +1586,10 @@ export default function Home() {
     const rawResult = project.result;
     // Apply migration helper to ensure legacy payloads use the current schema
     const pResult = rehydrateProjectPayload({ ...rawResult });
+    setLoadedProjectId(project.id);
+    setIsEditingProjectName(false);
+    setEditingProjectNameValue("");
+    setShowRenameConfirmModal(false);
     setResult({
       preview_image: pResult.preview_image,
       similarity_percentage: pResult.similarity_percentage,
@@ -1540,10 +1609,11 @@ export default function Home() {
     setSelectedTags(pResult.tags || []);
     setDesignerNotes(pResult.designer_notes || "");
     
+    const resolvedName = project.fileName || pResult.project_details?.name || "Project";
     if (pResult.is_doll_project) {
       setProjectMode("doll");
       setDollType(pResult.doll_type);
-      setQuizName(pResult.project_details?.name || project.fileName);
+      setQuizName(resolvedName);
       
       const nextState: any = {};
       const classifications = Array.isArray(pResult.classification) ? pResult.classification : [];
@@ -1573,12 +1643,11 @@ export default function Home() {
       setComponentsState(nextState);
     } else {
       setProjectMode("single");
+      setQuizName(resolvedName);
       if (pResult.project_details) {
-        setQuizName(pResult.project_details.name || project.fileName);
         setQuizGarment(pResult.project_details.garment_type || "Shirt");
         setQuizFabric(pResult.project_details.fabric_weight || "Medium-weight");
       } else {
-        setQuizName(project.fileName);
         setQuizGarment("Shirt");
         setQuizFabric("Medium-weight");
       }
@@ -3286,7 +3355,69 @@ export default function Home() {
                             {fullResult.is_doll_project ? "Doll Outfit Process Sheet Set" : "Process Specification Sheet"}
                           </span>
                         </div>
-                        <h1 className="font-sans font-bold text-2xl md:text-3xl text-slate-900">{quizName}</h1>
+                        {isEditingProjectName ? (
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <input
+                              type="text"
+                              value={editingProjectNameValue}
+                              onChange={(e) => setEditingProjectNameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleRequestRename();
+                                if (e.key === "Escape") setIsEditingProjectName(false);
+                              }}
+                              autoFocus
+                              disabled={isRenamingLoading}
+                              placeholder="Project Name"
+                              className="font-sans font-bold text-xl md:text-2xl text-slate-900 bg-white border border-slate-300 focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] rounded-md px-2.5 py-1 outline-none shadow-xs"
+                            />
+                            <button
+                              onClick={handleRequestRename}
+                              disabled={isRenamingLoading || !editingProjectNameValue.trim()}
+                              className="p-1.5 rounded-md text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors focus:outline-none cursor-pointer disabled:opacity-50"
+                              title="Save name"
+                              aria-label="Save name"
+                            >
+                              {isRenamingLoading ? (
+                                <svg className="w-5 h-5 animate-spin text-emerald-600" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setIsEditingProjectName(false)}
+                              disabled={isRenamingLoading}
+                              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer disabled:opacity-50"
+                              title="Cancel"
+                              aria-label="Cancel"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <h1 className="font-sans font-bold text-2xl md:text-3xl text-slate-900">{quizName}</h1>
+                            <button
+                              onClick={() => {
+                                setEditingProjectNameValue(quizName);
+                                setIsEditingProjectName(true);
+                              }}
+                              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
+                              title="Rename project"
+                              aria-label="Rename project"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 no-print">
                         <button onClick={() => window.print()} className="px-5 py-2.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition-colors cursor-pointer flex items-center gap-1.5">
@@ -4702,7 +4833,7 @@ export default function Home() {
                                             }, 1800);
                                           });
                                         }}
-                                        className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer border-b border-slate-100"
+                                        className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
                                       >
                                         {copiedProjectId === item.id ? (
                                           <>
@@ -4719,19 +4850,6 @@ export default function Home() {
                                             Copy Share Link
                                           </>
                                         )}
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setActiveMenuId(null);
-                                          handleRenameProject(item.id, item.fileName || "");
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2 cursor-pointer"
-                                      >
-                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                                        </svg>
-                                        Rename
                                       </button>
                                       <button
                                         onClick={(e) => {
@@ -5031,6 +5149,94 @@ export default function Home() {
                   className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-all shadow-xs cursor-pointer"
                 >
                   Yes, Return to Step 1
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Project Rename Confirmation Modal */}
+        {showRenameConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white border border-slate-200 rounded-md shadow-2xl max-w-md w-full p-6 space-y-5">
+              <div className="flex items-start gap-3">
+                <div className={`w-10 h-10 rounded-md ${isRenameConflict ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-[#155DFC]"} flex items-center justify-center flex-shrink-0`}>
+                  {isRenameConflict ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-golden-heading-bold text-slate-900 text-base">
+                    {isRenameConflict ? "Name Conflict Detected" : "Confirm Project Rename"}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    {isRenameConflict
+                      ? "Another project already uses this name. Please verify to prevent accidental project overlaps."
+                      : "Please confirm before updating the project title across the database and specification sheet."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Comparison Box */}
+              <div className="bg-slate-50 border border-slate-200 rounded-md p-3.5 space-y-2 text-xs">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-slate-500 shrink-0">Current Name:</span>
+                  <span className="font-semibold text-slate-700 truncate max-w-[220px]" title={quizName}>
+                    {quizName}
+                  </span>
+                </div>
+                <div className="border-t border-slate-200/80 pt-2 flex justify-between items-center gap-2">
+                  <span className="text-slate-500 shrink-0">New Name:</span>
+                  <span className="font-bold text-[#155DFC] truncate max-w-[220px]" title={editingProjectNameValue.trim()}>
+                    {editingProjectNameValue.trim()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Conflict warning banner if duplicate name exists */}
+              {isRenameConflict && (
+                <div className="flex items-start gap-2.5 p-3 bg-amber-50 border border-amber-200 rounded-md text-amber-800 text-xs leading-relaxed">
+                  <svg className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
+                  <span>
+                    A project named <strong>&quot;{editingProjectNameValue.trim()}&quot;</strong> already exists in your history. Continuing will save with a duplicate name.
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  disabled={isRenamingLoading}
+                  onClick={() => setShowRenameConfirmModal(false)}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isRenamingLoading}
+                  onClick={handleSaveProjectNameInline}
+                  className={`px-5 py-2.5 ${isRenameConflict ? "bg-amber-600 hover:bg-amber-700" : "bg-[#155DFC] hover:bg-[#1249cc]"} text-white text-xs font-bold rounded-md transition-all shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50`}
+                >
+                  {isRenamingLoading ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>{isRenameConflict ? "Proceed & Rename" : "Confirm Rename"}</span>
+                  )}
                 </button>
               </div>
             </div>

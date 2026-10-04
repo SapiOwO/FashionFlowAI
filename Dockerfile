@@ -54,6 +54,7 @@ ENV DB_TYPE=postgresql
 ENV DB_HOST=127.0.0.1
 ENV DB_PORT=5432
 ENV DB_USER=postgres
+ENV DB_PASS=postgres
 ENV DB_PASSWORD=postgres
 ENV DB_NAME=fashionflow_db
 
