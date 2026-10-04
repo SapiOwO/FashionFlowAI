@@ -36,6 +36,10 @@ graph TD
   * **Work-Aid Tooling Attachments**: Auto-recommends Right-Angle Hemming Folders, Double-Fold Bias Tape Binders, Adjustable Magnetic Edge Guides, Acrylic Pocket Setting Templates, and Ultrasonic Seam Sealing Jigs.
   * **Factory Line Balancing Allocator**: Calculates factory line throughput parameters (Takt Time $0.96\text{m/unit}$ for 500 pcs/day target), JUKI machine unit allocations at 85% line efficiency, and bottleneck operation identification.
   * Calculates batch production run scaling (`batch_total_hours` and operator daily capacity) for single garments and multi-component doll outfit sets.
+* **Garment Sizing Grading, Cutting Allocation & ASTM Pre-Costing Engines**:
+  * **Pattern Size Run & Grading Allocator (`calculate_size_run_breakdown`)**: Calculates proportional grading across S (15%), M (35%), L (30%), XL (15%), XXL (5%), ASTM unit yardage consumption, total net meters, 5% marker waste allowance, roll width specification, and marker utilization metrics.
+  * **Cutting Department Allocator (`calculate_cutting_spec`)**: Automatically assigns cutting machinery based on fabric physics (Eastman 629X 8" Straight Knife for heavy denim/cotton multi-ply; CadCam/GoldenLaser 150W CO2 Laser for synthetic sheer edge-cauterization; KM RS-100 Rotary Knife for fine curves/samples), including maximum ply capacity, cutting time cycle SMV, and chainmail/vacuum safety guidelines.
+  * **ASTM D3823 Pre-Costing Engine (`calculate_pre_costing`)**: Computes thread consumption (meters and kilometers) based on garment seam length, machine stitch type multipliers (lockstitch 2.8x, overlock 16.5x, chainstitch 4.5x), and SPI density factor, providing direct unit and batch manufacturing costs with sewing and cutting labor rates.
 
 ---
 

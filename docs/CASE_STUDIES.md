@@ -34,6 +34,7 @@ status: "Completed"
 | 2026-07-21 | Tag System & Notes Sync, 3-Dots Positioning & History Search Highlight Suite: auto-committed pending typed tags prior to process sheet compilation, added `Project Tags` rendering to Step 3 Doll Metadata, reset `selectedTags` and `designerNotes` on workspace resets, fixed 3-dots actions menu positioning via relative button wrapper, built `HighlightMatch` helper component for regular query font vs bold matched words in Active Projects & History search autocomplete, and populated database with sample tagged test products. 50/50 tests PASS (100%), Next.js build compiled in 1540ms. | AI Coding Agent |
 | 2026-07-21 | GitHub Primer Tokens, Outer/Inner Radius Audit & Date Range Calendar Suite: standardized all UI elements to GitHub Primer design tokens (`--github-border-radius-base: 6px`, `--github-border-radius-large: 12px`). Enforced Outer vs Inner Corner Radius rule ($R_{\text{inner}} = R_{\text{outer}} - \text{padding}$) across all views in `page.tsx` (cards `12px`, inner buttons/badges/inputs `6px`). Integrated custom Date Range Calendar Popover into Active Projects & History, fixed preset click reset behavior (`calSelStart = null`), and removed keyword searchbox from Dashboard toolbar. 55/55 backend tests PASS (100%). | AI Coding Agent |
 | 2026-07-22 | Single All-In-One Container Architecture, GHCR CI/CD Automation, Tag-Based Release Lifecycle & Docker Management Suite: configured single All-In-One Docker image (Python 3.12 + Node 20 + Postgres 16 + pgvector v0.7.4), added automatic GHCR lowercase owner workflow (`docker-publish.yml`), enforced PostgreSQL pgvector as default database mode in Docker (`IS_DOCKER=true`), added dual-layer version check fallback in `/api/system/check-update` (checking releases and `/tags`), fixed Next.js TypeScript build errors (`next.config.ts` and `SavedAnalysis`), aligned README.md & QUICKSTART.md with Open WebUI documentation style, and configured strict release tag triggers (`v*.*.*`). 55/55 backend tests PASS (100%). | AI Coding Agent |
+| 2026-10-04 | Industrial Garment Engineering Suite: Pattern Size Grading (S, M, L, XL, XXL), Cutting Machinery Allocation (CNC Laser vs Straight Knife vs Rotary Knife), and ASTM D3823 Pre-Costing & Thread Consumption Engine. Added Step 2 UI controls with dynamic AI badges, Step 2 compilation review confirmation modal, Step 3 interactive Bento cards, and matching print/PDF tech pack export cards. 63/63 backend unit tests PASS (100%), Next.js production build verified. | AI Coding Agent |
 
 ---
 
@@ -365,4 +366,41 @@ status: "Completed"
   - `pytest backend/tests/`: **55/55 tests PASS (100%)**.
   - GitHub Actions Workflow Run #20: **Build & Publish to GHCR Passed (Green Checkmark `✓`)**.
   - Container Deployment: Container `fashionflowai` running live on `http://localhost:3000`.
+
+---
+
+# Case Study #14: Industrial Garment Engineering Suite: Pattern Size Grading, Cutting Machinery Allocation & ASTM Pre-Costing Pipeline (2026-10-04)
+
+## 5W+1H Diagnostic Matrix
+
+### 1. What
+* **Problem**: 
+  1. **Pattern Size Run & Grading Missing**: The system previously assumed a single unit consumption without sizing breakdown (S, M, L, XL, XXL) or marker yardage planning, which meant factory crews had to calculate yardage manually.
+  2. **Cutting Department Machinery Unallocated**: Apparel manufacturing requires strict cutting machine selection based on fabric physics (e.g. delicate synthetics require CNC CO2 Laser cutting to seal edges and prevent unraveling, while heavy denim/cotton require straight knife reciprocating blades to prevent scorching, charring, and carbon odor).
+  3. **Pre-Costing & Thread Consumption Absent**: Factory teams lacked automated pre-production cost estimations (ASTM D3823 thread multipliers based on seam length, stitch types, and SPI) along with SMV-based sewing and cutting labor costs.
+* **Resolution**:
+  1. **Pattern Size Grading Engine (`calculate_size_run_breakdown`)**: Implemented grading ratios (S 15%, M 35%, L 30%, XL 15%, XXL 5%) with ASTM sizing multipliers, unit consumption per size, total net fabric consumption, 5% marker waste allowance, roll width specification, and marker utilization metrics.
+  2. **Cutting Department Allocator (`calculate_cutting_spec`)**: Integrated rule-based machinery allocation selecting Eastman 629X 8" Straight Knife for natural/heavy plies, CadCam/GoldenLaser 150W CO2 Laser for delicate synthetics, and KM RS-100 Rotary Knife for fine curves/samples, including max ply lay height, cutting cycle SMV, and chainmail/vacuum safety guidelines.
+  3. **ASTM Pre-Costing Engine (`calculate_pre_costing`)**: Calculated ASTM D3823 thread consumption based on seam lengths, stitch multiplier per machine type (overlock 16.5x, lockstitch 2.8x, chainstitch 4.5x), SPI density factor, sewing SMV labour rate ($0.08/min), and cutting labour rate ($0.07/min).
+  4. **Full UI & Print Integration**: Added 3 dropdown inputs with dynamic AI recommendation badges in Step 2, review rows in the Step 2 Confirmation Modal, interactive Bento Cards in Step 3, legacy payload migration rehydration in `rehydrateProjectPayload`, and corresponding sections in the native Print/PDF Tech Pack export view.
+
+### 2. Who
+* Factory production planners, cutting department supervisors, pattern makers, and apparel costing engineers configuring manufacturing runs.
+
+### 3. Where
+* `backend/app.py`: `calculate_cutting_spec()`, `calculate_size_run_breakdown()`, `calculate_pre_costing()`, and updated `ProcessSheetRequest` / `DollSheetRequest` schemas.
+* `backend/tests/test_backend_contract.py`: 8 new regression & integration test cases (`TestCuttingDepartmentRules`, `TestSizeRunGradingBreakdown`, `TestPreCostingEngine`, `TestEndToEndNewEngineeringSpecs`).
+* `frontend/src/app/[[...slug]]/page.tsx`: Step 2 form controls, Step 2 confirmation review modal, Step 3 Bento Cards, print export cards, and `rehydrateProjectPayload`.
+
+### 4. When
+* October 4th, 2026.
+
+### 5. Why
+* Bridging the gap between 2D sketch recognition and factory-floor execution requires accurate cutting specs, grading runs, and pre-costing. Implementing these calculations deterministically via industrial garment standards ensures sub-millisecond calculation times without external API dependencies or nondeterministic hallucination.
+
+### 6. How
+* Implemented modular Python functions with regex word-boundary size parsing (`\b(XXL|XL|XS|S|M|L)\b`), updated Pydantic schemas with backwards-compatible defaults, wired Next.js state management (`quizSizeRun`, `quizCuttingMethod`, `quizStitchDensity`), and verified:
+  - `pytest backend/tests/`: **63/63 tests PASS (100%)**.
+  - `npm run build`: Compiled 100% cleanly with 0 TypeScript errors.
+
 

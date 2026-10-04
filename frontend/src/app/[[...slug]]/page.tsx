@@ -70,6 +70,10 @@ interface AnalysisResult {
   visual_vector?: number[];
   tags?: string[];
   designer_notes?: string;
+  cutting_specification?: any;
+  size_run_breakdown?: any;
+  pre_costing?: any;
+  project_details?: any;
 }
 
 interface SavedAnalysis {
@@ -653,6 +657,9 @@ export default function Home() {
   const [quizGarment, setQuizGarment] = useState("Shirt");
   const [quizFabric, setQuizFabric] = useState("Medium-weight");
   const [batchQuantity, setBatchQuantity] = useState(100);
+  const [quizSizeRun, setQuizSizeRun] = useState<string>("Full Size Run (S, M, L, XL, XXL)");
+  const [quizCuttingMethod, setQuizCuttingMethod] = useState<string>("Auto (AI Recommended based on Fabric)");
+  const [quizStitchDensity, setQuizStitchDensity] = useState<string>("10 - 12 SPI (Standard Commercial)");
   const [isQuizSubmitted, setIsQuizSubmitted] = useState(false);
   const [fullResult, setFullResult] = useState<any | null>(null);
 
@@ -1304,6 +1311,15 @@ export default function Home() {
       return;
     }
 
+    if (!showProcessSheetConfirmModal) {
+      setShowProcessSheetConfirmModal(true);
+      return;
+    }
+
+    await executeDollCompilation();
+  };
+
+  const executeDollCompilation = async () => {
     const reqGarments = DOLL_TYPES[dollType] || [];
     const componentsList: any[] = [];
 
@@ -1336,6 +1352,9 @@ export default function Home() {
         components: componentsList,
         message: `Consolidated doll clothing process sheet for ${dollType}.`,
         batch_quantity: batchQuantity,
+        pattern_size_run: quizSizeRun,
+        cutting_method: quizCuttingMethod,
+        stitch_density_spi: quizStitchDensity,
         tags: selectedTags,
         designer_notes: designerNotes,
       };
@@ -1413,6 +1432,9 @@ export default function Home() {
         // CRITICAL: send visual_vector so backend can persist it for future cosine-similarity duplicate detection
         visual_vector: targetResult.visual_vector || [],
         batch_quantity: batchQuantity,
+        pattern_size_run: quizSizeRun,
+        cutting_method: quizCuttingMethod,
+        stitch_density_spi: quizStitchDensity,
         // Reuse flag: when true backend skips inserting a new DB row and recalculates on existing master ID
         is_reuse_master: isReuse,
         reuse_master_id: isReuse && topMatch?.id ? topMatch.id : null,
@@ -1475,6 +1497,9 @@ export default function Home() {
     setIsEditingProjectName(false);
     setEditingProjectNameValue("");
     setShowRenameConfirmModal(false);
+    setQuizSizeRun("Full Size Run (S, M, L, XL, XXL)");
+    setQuizCuttingMethod("Auto (AI Recommended based on Fabric)");
+    setQuizStitchDensity("10 - 12 SPI (Standard Commercial)");
     setComponentsState({
       jacket: { fabricWeight: "Denim (Heavy-weight)", imageFile: null, previewUrl: null, result: null },
       pants: { fabricWeight: "Katun (Medium-weight)", imageFile: null, previewUrl: null, result: null },
@@ -1491,6 +1516,9 @@ export default function Home() {
     setQuizName("");
     setQuizGarment("Shirt");
     setQuizFabric("Medium-weight");
+    setQuizSizeRun("Full Size Run (S, M, L, XL, XXL)");
+    setQuizCuttingMethod("Auto (AI Recommended based on Fabric)");
+    setQuizStitchDensity("10 - 12 SPI (Standard Commercial)");
     setShowReusePrompt(false);
     setReuseMode(null);
     setSelectedTags([]);
@@ -1578,6 +1606,76 @@ export default function Home() {
       pResult.batch_production.operator_daily_capacity_pcs = pResult.batch_production.operator_daily_capacity_pcs ?? (singleSmv > 0 ? Math.round(((8.0 * 60.0) / singleSmv) * 10) / 10 : 0);
     }
 
+    // Rehydrate cutting_specification if missing or incomplete
+    if (!pResult.cutting_specification || typeof pResult.cutting_specification !== "object") {
+      const fabLower = (pResult.project_details?.fabric_weight || "").toLowerCase();
+      const isSynthetic = fabLower.includes("silk") || fabLower.includes("chiffon") || fabLower.includes("polyester") || fabLower.includes("light");
+      const batchQty = pResult.project_details?.batch_quantity || pResult.batch_production?.batch_quantity || 100;
+      const unitTime = isSynthetic ? 0.40 : 0.12;
+      const totalCutMins = Math.round(unitTime * batchQty * 100) / 100;
+      pResult.cutting_specification = {
+        recommended_method: isSynthetic ? "CNC Laser Cutting Machine" : "Manual Straight Knife Cutter",
+        selected_method: isSynthetic ? "CNC Laser Cutting Machine" : "Manual Straight Knife Cutter",
+        machine_model: isSynthetic ? "CadCam / GoldenLaser CO2 Flatbed Laser (150W)" : "Eastman 629X Blue Streak II (8-inch Cutting Machine)",
+        blade_laser_spec: isSynthetic ? "150W Sealed CO2 Laser Tube, 0.2mm Beam Focal Spot, 450 mm/s Feed Rate" : "8-inch High-Speed Steel Wave Blade, Dual-Speed 3400 RPM with Automatic Abrasive Belt Sharpener",
+        max_ply_height: isSynthetic ? "1 - 2 Plies (Single-ply high-precision tensionless lay)" : "60 - 100 Plies (High-volume multi-ply vacuum table, up to 160 mm stack)",
+        cutting_time_unit_mins: unitTime,
+        batch_cutting_time_mins: totalCutMins,
+        batch_cutting_time_hours: Math.round((totalCutMins / 60.0) * 100) / 100,
+        safety_aid: isSynthetic ? "Exhaust Fume Evacuation Hood + Honeycomb Vacuum Bed + Laser Safety Shielding" : "Stainless Steel Chainmail Protective Glove + Lower Blade Guard",
+        suitability_reason: isSynthetic ? "Thermal beam cauterizes edges automatically, preventing unraveling and fiber fraying on delicate sheer synthetics." : "High-speed reciprocating blade slices dense multi-ply stacks cleanly without edge scorching, melting, or carbon odor.",
+        warning_note: null,
+        is_laser_recommended: isSynthetic,
+      };
+    }
+
+    // Rehydrate size_run_breakdown if missing or incomplete
+    if (!pResult.size_run_breakdown || typeof pResult.size_run_breakdown !== "object") {
+      const batchQty = pResult.project_details?.batch_quantity || pResult.batch_production?.batch_quantity || 100;
+      const sizeSpecs = [
+        { size: "S", ratio_pct: 15, quantity_pcs: Math.max(1, Math.round(batchQty * 0.15)), unit_consumption_m: 1.35, subtotal_fabric_m: Math.round(1.35 * Math.max(1, Math.round(batchQty * 0.15)) * 100) / 100 },
+        { size: "M", ratio_pct: 35, quantity_pcs: Math.max(1, Math.round(batchQty * 0.35)), unit_consumption_m: 1.50, subtotal_fabric_m: Math.round(1.50 * Math.max(1, Math.round(batchQty * 0.35)) * 100) / 100 },
+        { size: "L", ratio_pct: 30, quantity_pcs: Math.max(1, Math.round(batchQty * 0.30)), unit_consumption_m: 1.73, subtotal_fabric_m: Math.round(1.73 * Math.max(1, Math.round(batchQty * 0.30)) * 100) / 100 },
+        { size: "XL", ratio_pct: 15, quantity_pcs: Math.max(1, Math.round(batchQty * 0.15)), unit_consumption_m: 1.95, subtotal_fabric_m: Math.round(1.95 * Math.max(1, Math.round(batchQty * 0.15)) * 100) / 100 },
+        { size: "XXL", ratio_pct: 5, quantity_pcs: Math.max(1, Math.round(batchQty * 0.05)), unit_consumption_m: 2.18, subtotal_fabric_m: Math.round(2.18 * Math.max(1, Math.round(batchQty * 0.05)) * 100) / 100 },
+      ];
+      const netFabric = Math.round(sizeSpecs.reduce((acc, s) => acc + s.subtotal_fabric_m, 0) * 100) / 100;
+      pResult.size_run_breakdown = {
+        pattern_size_run: "Full Size Run (S, M, L, XL, XXL)",
+        is_full_run: true,
+        base_sample_size: "M",
+        base_unit_consumption_m: 1.50,
+        breakdown: sizeSpecs,
+        total_net_fabric_m: netFabric,
+        total_gross_fabric_m: Math.round(netFabric * 1.05 * 100) / 100,
+        waste_allowance_pct: 5.0,
+        recommended_roll_width: "58 - 60 inches (150 cm standard fabric roll)",
+        marker_utilization_pct: 86.8,
+      };
+    }
+
+    // Rehydrate pre_costing if missing or incomplete
+    if (!pResult.pre_costing || typeof pResult.pre_costing !== "object") {
+      const batchQty = pResult.project_details?.batch_quantity || pResult.batch_production?.batch_quantity || 100;
+      const singleSmv = parseFloat(pResult.smv_range || "0") || 1.5;
+      const unitThreadMeters = 44.0;
+      const unitThreadCost = Math.round(unitThreadMeters * 0.0007 * 1000) / 1000;
+      const unitSewing = Math.round(singleSmv * 0.08 * 100) / 100;
+      const unitCutting = Math.round(0.12 * 0.07 * 100) / 100;
+      const unitTotal = Math.round((unitThreadCost + unitSewing + unitCutting) * 100) / 100;
+      pResult.pre_costing = {
+        stitch_density_spi: "10 - 12 SPI (Standard Commercial)",
+        base_seam_length_m: 8.5,
+        unit_thread_consumption_m: unitThreadMeters,
+        batch_thread_consumption_km: Math.round(((unitThreadMeters * batchQty) / 1000.0) * 100) / 100,
+        unit_thread_cost_usd: unitThreadCost,
+        unit_sewing_labour_usd: unitSewing,
+        unit_cutting_labour_usd: unitCutting,
+        unit_total_manufacturing_usd: unitTotal,
+        batch_total_manufacturing_usd: Math.round(unitTotal * batchQty * 100) / 100,
+      };
+    }
+
     return pResult;
   };
 
@@ -1609,6 +1707,19 @@ export default function Home() {
     setSelectedTags(pResult.tags || []);
     setDesignerNotes(pResult.designer_notes || "");
     
+    // Sync engineering specification parameters into state
+    if (pResult.project_details) {
+      setQuizSizeRun(pResult.project_details.pattern_size_run || pResult.size_run_breakdown?.pattern_size_run || "Full Size Run (S, M, L, XL, XXL)");
+      setQuizCuttingMethod(pResult.project_details.cutting_method || pResult.cutting_specification?.selected_method || "Auto (AI Recommended based on Fabric)");
+      setQuizStitchDensity(pResult.project_details.stitch_density_spi || pResult.pre_costing?.stitch_density_spi || "10 - 12 SPI (Standard Commercial)");
+      setBatchQuantity(pResult.project_details.batch_quantity || pResult.batch_production?.batch_quantity || 100);
+    } else {
+      setQuizSizeRun(pResult.size_run_breakdown?.pattern_size_run || "Full Size Run (S, M, L, XL, XXL)");
+      setQuizCuttingMethod(pResult.cutting_specification?.selected_method || "Auto (AI Recommended based on Fabric)");
+      setQuizStitchDensity(pResult.pre_costing?.stitch_density_spi || "10 - 12 SPI (Standard Commercial)");
+      setBatchQuantity(pResult.batch_production?.batch_quantity || 100);
+    }
+
     const resolvedName = project.fileName || pResult.project_details?.name || "Project";
     if (pResult.is_doll_project) {
       setProjectMode("doll");
@@ -3086,6 +3197,73 @@ export default function Home() {
                             </div>
                           </div>
 
+                          {/* Pattern Size Run & Grading Selection */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-semibold text-slate-700">Pattern Size Run &amp; Grading</label>
+                            <select
+                              value={quizSizeRun}
+                              onChange={(e) => setQuizSizeRun(e.target.value)}
+                              className="bg-white border border-slate-200/80 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                            >
+                              <option value="Full Size Run (S, M, L, XL, XXL)">Full Size Run (S, M, L, XL, XXL) — Proportional Grading</option>
+                              <option value="S — Small">S — Small Only</option>
+                              <option value="M — Medium (Sample Base)">M — Medium (Sample Master Base)</option>
+                              <option value="L — Large">L — Large Only</option>
+                              <option value="XL — Extra Large">XL — Extra Large Only</option>
+                              <option value="XXL — Double Extra Large">XXL — Double Extra Large Only</option>
+                            </select>
+                            <span className="text-xs text-slate-400">Specifies marker grading scale and fabric yardage consumption per size.</span>
+                          </div>
+
+                          {/* Cutting Department Machinery Selection with dynamic AI recommendation */}
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-semibold text-slate-700">Cutting Department Machine Allocation</label>
+                              {(() => {
+                                const fabLower = (quizFabric || "").toLowerCase();
+                                const isDelicate = fabLower.includes("silk") || fabLower.includes("chiffon") || fabLower.includes("polyester") || fabLower.includes("light");
+                                const isHeavy = fabLower.includes("denim") || fabLower.includes("corduroy") || fabLower.includes("heavy") || fabLower.includes("wool");
+                                return (
+                                  <span className={`text-[11px] font-mono font-semibold px-2 py-0.5 rounded border ${
+                                    isDelicate
+                                      ? "bg-purple-50 text-purple-700 border-purple-200"
+                                      : isHeavy
+                                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                                      : "bg-blue-50 text-[#155DFC] border-blue-200"
+                                  }`}>
+                                    AI Rec: {isDelicate ? "CNC Laser (Anti-Fray)" : isHeavy ? "Straight Knife (Multi-Ply)" : "Straight Knife (Standard)"}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                            <select
+                              value={quizCuttingMethod}
+                              onChange={(e) => setQuizCuttingMethod(e.target.value)}
+                              className="bg-white border border-slate-200/80 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                            >
+                              <option value="Auto (AI Recommended based on Fabric)">Auto (AI Recommended based on Fabric)</option>
+                              <option value="CNC Laser Cutting (Sealed Edge / Anti-Fraying)">CNC Laser Cutting (Sealed Edge / Anti-Fraying)</option>
+                              <option value="Manual Straight Knife (Eastman 629X 8&quot; Multi-Ply)">Manual Straight Knife (Eastman 629X 8&quot; Multi-Ply)</option>
+                              <option value="Manual Rotary Round Knife (KM RS-100 4&quot; Precision)">Manual Rotary Round Knife (KM RS-100 4&quot; Precision)</option>
+                            </select>
+                            <span className="text-xs text-slate-400">Controls edge thermal sealing vs. high-ply reciprocating blade slicing.</span>
+                          </div>
+
+                          {/* Stitch Density (SPI - Stitches Per Inch) */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-semibold text-slate-700">Stitch Density (SPI — Stitches Per Inch)</label>
+                            <select
+                              value={quizStitchDensity}
+                              onChange={(e) => setQuizStitchDensity(e.target.value)}
+                              className="bg-white border border-slate-200/80 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
+                            >
+                              <option value="10 - 12 SPI (Standard Commercial)">10 - 12 SPI (Standard Commercial Garment)</option>
+                              <option value="7 - 8 SPI (Heavy Denim / Canvas / Outerwear)">7 - 8 SPI (Heavy Denim / Canvas / Outerwear)</option>
+                              <option value="14 - 16 SPI (Fine Silk / Delicate / High Density)">14 - 16 SPI (Fine Silk / Delicate / High Density)</option>
+                            </select>
+                            <span className="text-xs text-slate-400">Governs ASTM thread consumption formula and structural seam tension.</span>
+                          </div>
+
                           {/* Tag Management System */}
                           <TagSelector
                             selectedTags={selectedTags}
@@ -3304,6 +3482,93 @@ export default function Home() {
                           </ul>
                         </div>
                       </div>
+
+                      {/* Bento Card: Pre-Sewing Cutting Department & Material Allocation */}
+                      {fullResult?.cutting_specification && (
+                        <div className="border border-slate-300 rounded-lg p-3 bg-white">
+                          <span className="text-xs font-bold font-mono text-slate-500 uppercase mb-2 block">4. Pre-Sewing Cutting Department Allocation</span>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                            <div><span className="text-slate-500">Allocated Method:</span> <strong className="text-blue-800">{fullResult.cutting_specification.recommended_method}</strong></div>
+                            <div><span className="text-slate-500">Machine Model:</span> <strong className="text-slate-900">{fullResult.cutting_specification.machine_model}</strong></div>
+                            <div><span className="text-slate-500">Blade / Laser Spec:</span> <span className="font-mono text-slate-800">{fullResult.cutting_specification.blade_laser_spec}</span></div>
+                            <div><span className="text-slate-500">Max Lay Capacity:</span> <strong className="text-slate-900">{fullResult.cutting_specification.max_ply_height}</strong></div>
+                            <div><span className="text-slate-500">Est. Cutting Time:</span> <strong className="font-mono text-[#155DFC]">{fullResult.cutting_specification.cutting_time_unit_mins} min/pc ({fullResult.cutting_specification.batch_cutting_time_mins} mins batch)</strong></div>
+                            <div><span className="text-slate-500">Safety &amp; Handling:</span> <span className="text-slate-800">{fullResult.cutting_specification.safety_aid}</span></div>
+                          </div>
+                          {fullResult.cutting_specification.warning_note && (
+                            <p className="mt-2 text-xs font-mono text-amber-800 bg-amber-50 border border-amber-200 p-1.5 rounded">
+                              Notice: {fullResult.cutting_specification.warning_note}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Bento Card: Pattern Size Grading & Fabric Yardage Planning */}
+                      {fullResult?.size_run_breakdown && (
+                        <div className="border border-slate-300 rounded-lg p-3 bg-white">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold font-mono text-slate-500 uppercase">5. Pattern Size Grading &amp; Fabric Yardage Planning</span>
+                            <span className="text-xs font-mono text-slate-600">Base Size: <strong>{fullResult.size_run_breakdown.base_sample_size}</strong> ({fullResult.size_run_breakdown.base_unit_consumption_m} m/pc)</span>
+                          </div>
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-slate-100 font-bold font-mono text-xs text-slate-700">
+                                <th className="p-1.5 border border-slate-300 text-center">Size</th>
+                                <th className="p-1.5 border border-slate-300 text-right">Ratio (%)</th>
+                                <th className="p-1.5 border border-slate-300 text-right">Units (Pcs)</th>
+                                <th className="p-1.5 border border-slate-300 text-right">Unit Fabric (m)</th>
+                                <th className="p-1.5 border border-slate-300 text-right">Subtotal Fabric (m)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(fullResult.size_run_breakdown.breakdown || []).map((row: any, i: number) => (
+                                <tr key={i} className="hover:bg-slate-50 font-mono">
+                                  <td className="p-1.5 border border-slate-200 text-center font-bold text-slate-900">{row.size}</td>
+                                  <td className="p-1.5 border border-slate-200 text-right">{row.ratio_pct}%</td>
+                                  <td className="p-1.5 border border-slate-200 text-right font-semibold">{row.quantity_pcs} pcs</td>
+                                  <td className="p-1.5 border border-slate-200 text-right">{row.unit_consumption_m} m</td>
+                                  <td className="p-1.5 border border-slate-200 text-right font-bold text-blue-800">{row.subtotal_fabric_m} m</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          <div className="mt-2 flex justify-between items-center text-xs font-mono bg-slate-50 p-1.5 border border-slate-200 rounded">
+                            <span>Total Net Fabric: <strong>{fullResult.size_run_breakdown.total_net_fabric_m} m</strong></span>
+                            <span>Gross (+5% Waste): <strong className="text-blue-800">{fullResult.size_run_breakdown.total_gross_fabric_m} m</strong></span>
+                            <span>Roll Width: <strong>{fullResult.size_run_breakdown.recommended_roll_width}</strong></span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Bento Card: Manufacturing Pre-Costing & Thread Consumption */}
+                      {fullResult?.pre_costing && (
+                        <div className="border border-slate-300 rounded-lg p-3 bg-white">
+                          <span className="text-xs font-bold font-mono text-slate-500 uppercase mb-2 block">6. Manufacturing Pre-Costing &amp; ASTM Thread Consumption</span>
+                          <div className="grid grid-cols-4 gap-2 text-center text-xs font-mono">
+                            <div className="p-2 border border-slate-200 rounded bg-slate-50">
+                              <span className="text-slate-500 block">Stitch SPI</span>
+                              <strong className="text-slate-900 text-xs">{fullResult.pre_costing.stitch_density_spi}</strong>
+                            </div>
+                            <div className="p-2 border border-slate-200 rounded bg-slate-50">
+                              <span className="text-slate-500 block">Thread / Unit</span>
+                              <strong className="text-[#155DFC]">{fullResult.pre_costing.unit_thread_consumption_m} m ({fullResult.pre_costing.batch_thread_consumption_km} km total)</strong>
+                            </div>
+                            <div className="p-2 border border-slate-200 rounded bg-slate-50">
+                              <span className="text-slate-500 block">Unit Mfg. Cost</span>
+                              <strong className="text-emerald-700">${fullResult.pre_costing.unit_total_manufacturing_usd}</strong>
+                            </div>
+                            <div className="p-2 border border-slate-200 rounded bg-slate-50">
+                              <span className="text-slate-500 block">Batch Mfg. Cost</span>
+                              <strong className="text-emerald-800">${fullResult.pre_costing.batch_total_manufacturing_usd}</strong>
+                            </div>
+                          </div>
+                          <div className="mt-2 flex justify-between text-[11px] font-mono text-slate-600 px-1">
+                            <span>Thread Cost: ${fullResult.pre_costing.unit_thread_cost_usd}/pc</span>
+                            <span>Sewing Labour: ${fullResult.pre_costing.unit_sewing_labour_usd}/pc</span>
+                            <span>Cutting Labour: ${fullResult.pre_costing.unit_cutting_labour_usd}/pc</span>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Bento Card 5: Factory Summary Footer Cards */}
                       <div className="grid grid-cols-4 gap-3 text-center">
@@ -3602,6 +3867,125 @@ export default function Home() {
                         </p>
                       </div>
                     )}
+
+                    {/* Pattern Size Grading & Yardage Planning Card */}
+                    {fullResult?.size_run_breakdown && (
+                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs flex flex-col gap-5">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-0.5">
+                              PATTERN SIZE GRADING &amp; YARDAGE
+                            </span>
+                            <h3 className="font-bold text-slate-900 text-sm font-display">
+                              {fullResult.size_run_breakdown.pattern_size_run}
+                            </h3>
+                          </div>
+                          <span className="text-xs font-mono font-semibold text-[#155DFC] bg-blue-50 border border-blue-200/80 px-2 py-0.5 rounded">
+                            Base: Size {fullResult.size_run_breakdown.base_sample_size} ({fullResult.size_run_breakdown.base_unit_consumption_m}m)
+                          </span>
+                        </div>
+
+                        {/* Breakdown table */}
+                        <div className="overflow-hidden border border-slate-100 rounded-md">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead className="bg-slate-50 text-xs font-mono text-slate-400 uppercase border-b border-slate-100">
+                              <tr>
+                                <th className="py-2.5 px-3 font-bold text-center">Size</th>
+                                <th className="py-2.5 px-3 font-bold text-right">Ratio</th>
+                                <th className="py-2.5 px-3 font-bold text-right">Units</th>
+                                <th className="py-2.5 px-3 font-bold text-right">Unit Fabric</th>
+                                <th className="py-2.5 px-3 font-bold text-right">Subtotal</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 bg-white font-mono">
+                              {(fullResult.size_run_breakdown.breakdown || []).map((row: any, i: number) => (
+                                <tr key={i} className="hover:bg-slate-50/50">
+                                  <td className="py-2 px-3 text-center font-bold text-slate-900">{row.size}</td>
+                                  <td className="py-2 px-3 text-right text-slate-500">{row.ratio_pct}%</td>
+                                  <td className="py-2 px-3 text-right font-semibold text-slate-800">{row.quantity_pcs} pcs</td>
+                                  <td className="py-2 px-3 text-right text-slate-600">{row.unit_consumption_m} m</td>
+                                  <td className="py-2 px-3 text-right font-bold text-[#155DFC]">{row.subtotal_fabric_m} m</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Yardage metric footer */}
+                        <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+                          <div className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-md">
+                            <span className="text-slate-400 block text-[11px] uppercase">Net Consumption</span>
+                            <strong className="text-slate-900 text-sm">{fullResult.size_run_breakdown.total_net_fabric_m} meters</strong>
+                          </div>
+                          <div className="bg-slate-50/80 border border-slate-100 p-2.5 rounded-md">
+                            <span className="text-slate-400 block text-[11px] uppercase">Gross (+5% Waste)</span>
+                            <strong className="text-emerald-700 text-sm">{fullResult.size_run_breakdown.total_gross_fabric_m} meters</strong>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs font-mono text-slate-500 pt-1 border-t border-slate-100">
+                          <span>Marker Util: <strong className="text-slate-900">{fullResult.size_run_breakdown.marker_utilization_pct}%</strong></span>
+                          <span>Roll: <strong className="text-slate-900">{fullResult.size_run_breakdown.recommended_roll_width}</strong></span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pre-Sewing: Cutting Department Allocation Card */}
+                    {fullResult?.cutting_specification && (
+                      <div className="bg-white border border-slate-100 rounded-md p-6 md:p-8 shadow-2xs flex flex-col gap-5">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-0.5">
+                              PRE-SEWING CUTTING ALLOCATION
+                            </span>
+                            <h3 className="font-bold text-slate-900 text-sm font-display">
+                              {fullResult.cutting_specification.machine_model}
+                            </h3>
+                          </div>
+                          <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded border ${
+                            fullResult.cutting_specification.is_laser_recommended
+                              ? "bg-purple-50 text-purple-700 border-purple-200"
+                              : "bg-blue-50 text-[#155DFC] border-blue-200"
+                          }`}>
+                            {fullResult.cutting_specification.recommended_method}
+                          </span>
+                        </div>
+
+                        {/* Specs grid */}
+                        <div className="grid grid-cols-1 gap-2.5 text-xs font-sans">
+                          <div className="flex justify-between items-start border-b border-slate-100 pb-2">
+                            <span className="text-slate-400 font-mono text-xs">Blade / Laser Spec:</span>
+                            <span className="font-mono text-slate-800 text-xs text-right max-w-[260px] font-medium">{fullResult.cutting_specification.blade_laser_spec}</span>
+                          </div>
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <span className="text-slate-400 font-mono text-xs">Max Ply Lay Capacity:</span>
+                            <span className="font-mono text-slate-800 text-xs font-bold">{fullResult.cutting_specification.max_ply_height}</span>
+                          </div>
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <span className="text-slate-400 font-mono text-xs">Est. Cutting Time:</span>
+                            <span className="font-mono text-[#155DFC] text-xs font-bold">
+                              {fullResult.cutting_specification.cutting_time_unit_mins} min/pc ({fullResult.cutting_specification.batch_cutting_time_mins} mins total)
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-start border-b border-slate-100 pb-2">
+                            <span className="text-slate-400 font-mono text-xs">Safety Equipment:</span>
+                            <span className="text-slate-700 text-xs text-right max-w-[260px] font-medium">{fullResult.cutting_specification.safety_aid}</span>
+                          </div>
+                        </div>
+
+                        <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-100 font-mono leading-relaxed">
+                          <span className="text-slate-400 font-bold uppercase tracking-wider block text-[10px] mb-1">Industrial Suitability</span>
+                          {fullResult.cutting_specification.suitability_reason}
+                        </div>
+
+                        {fullResult.cutting_specification.warning_note && (
+                          <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 p-3 rounded-md font-mono">
+                            <span className="font-bold block mb-0.5">⚠️ Handling Caution</span>
+                            {fullResult.cutting_specification.warning_note}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Right Column: Step-by-Step Sewing Flow Table & Tooling */}
@@ -3877,6 +4261,98 @@ export default function Home() {
                         </div>
                       )}
                     </div>
+
+                    {/* MANUFACTURING PRE-COSTING & THREAD CONSUMPTION CARD */}
+                    {fullResult.pre_costing && (
+                      <div className="bg-white border border-slate-100 rounded-md p-8 shadow-2xs flex flex-col gap-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">
+                              MANUFACTURING PRE-COSTING &amp; THREAD CONSUMPTION
+                            </span>
+                            <div className="flex items-baseline gap-2">
+                              <span className="font-display font-bold text-3xl text-emerald-700">
+                                ${fullResult.pre_costing.unit_total_manufacturing_usd.toFixed(2)}
+                              </span>
+                              <span className="text-sm font-semibold text-slate-400">/ unit estimated</span>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="text-xs font-mono text-slate-400 uppercase block mb-1">Batch Total Mfg. Cost</span>
+                            <span className="font-display font-bold text-xl text-slate-900 font-mono">
+                              ${fullResult.pre_costing.batch_total_manufacturing_usd.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* ASTM Thread Consumption Metric Tiles */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                          <div className="bg-slate-50/70 border border-slate-100 rounded-md p-3">
+                            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Stitch Density (SPI)</span>
+                            <span className="font-display font-bold text-base text-slate-900 font-mono">
+                              {fullResult.pre_costing.stitch_density_spi}
+                            </span>
+                          </div>
+                          <div className="bg-slate-50/70 border border-slate-100 rounded-md p-3">
+                            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Thread / Garment</span>
+                            <span className="font-display font-bold text-base text-[#155DFC] font-mono">
+                              {fullResult.pre_costing.unit_thread_consumption_m} <span className="text-xs font-normal text-slate-400">meters</span>
+                            </span>
+                          </div>
+                          <div className="bg-slate-50/70 border border-slate-100 rounded-md p-3">
+                            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Batch Thread Yardage</span>
+                            <span className="font-display font-bold text-base text-indigo-700 font-mono">
+                              {fullResult.pre_costing.batch_thread_consumption_km} <span className="text-xs font-normal text-slate-400">km total</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Unit Cost Breakdown Table */}
+                        <div className="border-t border-slate-100 pt-4 flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-mono text-slate-400 font-bold uppercase tracking-widest">
+                              Direct Manufacturing Cost Breakdown (Per Unit)
+                            </span>
+                            <span className="text-xs font-mono text-slate-500">
+                              Base Seam Length: <strong className="text-slate-900">{fullResult.pre_costing.base_seam_length_m} m</strong>
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="bg-slate-50/80 border border-slate-200/70 rounded-md p-3 flex items-center justify-between">
+                              <div>
+                                <span className="text-xs font-bold font-mono text-slate-900 block">Thread Material</span>
+                                <span className="text-xs text-slate-500 font-mono">ASTM D3823 standard</span>
+                              </div>
+                              <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold font-mono text-blue-700 border border-blue-200">
+                                ${fullResult.pre_costing.unit_thread_cost_usd}
+                              </span>
+                            </div>
+
+                            <div className="bg-slate-50/80 border border-slate-200/70 rounded-md p-3 flex items-center justify-between">
+                              <div>
+                                <span className="text-xs font-bold font-mono text-slate-900 block">Sewing Assembly Labour</span>
+                                <span className="text-xs text-slate-500 font-mono">SMV-scaled operator</span>
+                              </div>
+                              <span className="inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold font-mono text-emerald-700 border border-emerald-200">
+                                ${fullResult.pre_costing.unit_sewing_labour_usd}
+                              </span>
+                            </div>
+
+                            <div className="bg-slate-50/80 border border-slate-200/70 rounded-md p-3 flex items-center justify-between">
+                              <div>
+                                <span className="text-xs font-bold font-mono text-slate-900 block">Cutting Dept Labour</span>
+                                <span className="text-xs text-slate-500 font-mono">Machine lay &amp; cut</span>
+                              </div>
+                              <span className="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold font-mono text-amber-700 border border-amber-200">
+                                ${fullResult.pre_costing.unit_cutting_labour_usd}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -5453,9 +5929,12 @@ export default function Home() {
                     {quizName.trim() || result?.top_3_saved_projects?.[0]?.title || "New Pattern Project"}
                   </strong>
                 </div>
-                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Garment Category:</span><strong className="text-slate-900 font-semibold">{quizGarment}</strong></div>
-                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Fabric Application:</span><strong className="text-slate-900 font-semibold">{quizFabric}</strong></div>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Garment Category:</span><strong className="text-slate-900 font-semibold">{projectMode === "doll" ? `Doll Outfit (${dollType})` : quizGarment}</strong></div>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Fabric Application:</span><strong className="text-slate-900 font-semibold">{projectMode === "doll" ? "Multi-component Ensemble" : quizFabric}</strong></div>
                 <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Production Run Quantity:</span><strong className="text-[#155DFC] font-mono font-bold">{batchQuantity} pcs</strong></div>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Pattern Size Run:</span><strong className="text-slate-900 font-semibold">{quizSizeRun}</strong></div>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Cutting Allocation:</span><strong className="text-slate-900 font-semibold">{quizCuttingMethod}</strong></div>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Stitch Density (SPI):</span><strong className="text-slate-900 font-semibold">{quizStitchDensity}</strong></div>
                 <div className="flex justify-between items-start gap-2 text-xs">
                   <span className="text-slate-500 shrink-0 pt-0.5">Project Tags:</span>
                   <div className="flex flex-wrap gap-1 justify-end max-w-xs">
@@ -5496,7 +5975,11 @@ export default function Home() {
                   type="button"
                   onClick={() => {
                     setShowProcessSheetConfirmModal(false);
-                    executeCompilation();
+                    if (projectMode === "doll") {
+                      executeDollCompilation();
+                    } else {
+                      executeCompilation();
+                    }
                   }}
                   className="px-6 py-2.5 bg-[#155DFC] hover:bg-[#1249cc] text-white font-bold text-xs rounded-md transition-all cursor-pointer shadow-sm flex items-center gap-2"
                 >

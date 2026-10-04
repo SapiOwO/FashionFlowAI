@@ -845,6 +845,125 @@ class TestSystemVersionAndUpdates(unittest.TestCase):
         self.assertEqual(res["stage"], 2)
 
 
+class TestCuttingDepartmentRules(unittest.TestCase):
+    """Validate cutting method selection rules based on fabric weight and type."""
+
+    def test_synthetic_fabric_selects_cnc_laser(self):
+        spec = backend_app.calculate_cutting_spec("Silk (Light-weight)", "Auto (AI Recommended based on Fabric)", "Dress", 100)
+        self.assertIn("Laser", spec["recommended_method"])
+        self.assertTrue(spec["is_laser_recommended"])
+        self.assertIn("cauterizes edges", spec["suitability_reason"])
+
+    def test_denim_fabric_selects_straight_knife(self):
+        spec = backend_app.calculate_cutting_spec("Denim (Heavy-weight)", "Auto (AI Recommended based on Fabric)", "Pants", 500)
+        self.assertIn("Straight Knife", spec["recommended_method"])
+        self.assertFalse(spec["is_laser_recommended"])
+        self.assertIn("Eastman", spec["machine_model"])
+
+    def test_rotary_knife_selection(self):
+        spec = backend_app.calculate_cutting_spec("Cotton (Medium-weight)", "Manual Rotary Round Knife (Sample / Fine Curve)", "Shirt", 50)
+        self.assertIn("Rotary", spec["recommended_method"])
+        self.assertEqual(spec["cutting_time_unit_mins"], 0.20)
+
+
+class TestSizeRunGradingBreakdown(unittest.TestCase):
+    """Validate garment sizing grading distribution and yardage calculation."""
+
+    def test_full_size_run_breakdown(self):
+        res = backend_app.calculate_size_run_breakdown("shirt", "Cotton (Medium-weight)", "Full Size Run (S, M, L, XL, XXL)", 100)
+        self.assertTrue(res["is_full_run"])
+        self.assertEqual(len(res["breakdown"]), 5)
+        sizes = [b["size"] for b in res["breakdown"]]
+        self.assertEqual(sizes, ["S", "M", "L", "XL", "XXL"])
+        total_pcs = sum(b["quantity_pcs"] for b in res["breakdown"])
+        self.assertEqual(total_pcs, 100)
+        self.assertGreater(res["total_net_fabric_m"], 0)
+        self.assertGreater(res["total_gross_fabric_m"], res["total_net_fabric_m"])
+
+    def test_single_sample_size_allocation(self):
+        res = backend_app.calculate_size_run_breakdown("jacket", "Denim", "M — Sample Base (Standard Fit)", 50)
+        self.assertFalse(res["is_full_run"])
+        self.assertEqual(len(res["breakdown"]), 1)
+        self.assertEqual(res["breakdown"][0]["size"], "M")
+        self.assertEqual(res["breakdown"][0]["quantity_pcs"], 50)
+
+
+class TestPreCostingEngine(unittest.TestCase):
+    """Validate thread consumption and labour manufacturing costing."""
+
+    def test_pre_costing_calculations(self):
+        dummy_seq = [
+            {"recommended_model": "DDL-8700", "step_num": 1},
+            {"recommended_model": "MO-6714S", "step_num": 2},
+        ]
+        costing = backend_app.calculate_pre_costing(dummy_seq, 3.5, 100, "10 - 12 SPI (Standard Commercial)", 0.15, "shirt")
+        self.assertGreater(costing["unit_thread_consumption_m"], 0)
+        self.assertGreater(costing["batch_thread_consumption_km"], 0)
+        self.assertGreater(costing["unit_thread_cost_usd"], 0)
+        self.assertGreater(costing["unit_sewing_labour_usd"], 0)
+        self.assertGreater(costing["unit_total_manufacturing_usd"], 0)
+        self.assertEqual(
+            costing["batch_total_manufacturing_usd"],
+            round(costing["unit_total_manufacturing_usd"] * 100, 2)
+        )
+
+
+class TestEndToEndNewEngineeringSpecs(unittest.TestCase):
+    """Validate that generate_process_sheet and generate_doll_process_sheet include all 3 new specs."""
+
+    def test_single_process_sheet_contains_all_three_specs(self):
+        req = backend_app.ProcessSheetRequest(
+            project_name="Integration Test Shirt",
+            garment_type="Shirt",
+            fabric_weight="Silk (Light-weight)",
+            preview_image="globe.svg",
+            similarity_percentage=95.0,
+            similarity_status="APPROVED",
+            classification_name="Shirt",
+            message="Test integration specs",
+            batch_quantity=150,
+            pattern_size_run="Full Size Run (S, M, L, XL, XXL)",
+            cutting_method="Auto (AI Recommended based on Fabric)",
+            stitch_density_spi="14 - 16 SPI (Fine Silk / Delicate / High Density)",
+        )
+        res = backend_app.generate_process_sheet(req)
+        self.assertIn("cutting_specification", res)
+        self.assertIn("size_run_breakdown", res)
+        self.assertIn("pre_costing", res)
+        self.assertEqual(res["cutting_specification"]["recommended_method"], "CNC Laser Cutting Machine")
+        self.assertEqual(len(res["size_run_breakdown"]["breakdown"]), 5)
+        self.assertEqual(res["pre_costing"]["stitch_density_spi"], "14 - 16 SPI (Fine Silk / Delicate / High Density)")
+
+    def test_doll_process_sheet_contains_all_three_specs(self):
+        req = backend_app.DollSheetRequest(
+            project_name="Integration Test Doll Outfit",
+            doll_type="Labubu",
+            components=[
+                backend_app.GarmentComponent(
+                    garment_type="Jacket",
+                    fabric_weight="Denim (Heavy-weight)",
+                    preview_image="globe.svg",
+                    classification_name="Jacket",
+                    similarity_percentage=98.0,
+                    similarity_status="APPROVED",
+                )
+            ],
+            message="Test doll integration specs",
+            batch_quantity=250,
+            pattern_size_run="M — Medium (Sample Base)",
+            cutting_method="Manual Straight Knife (Eastman 629X 8\" Multi-Ply)",
+            stitch_density_spi="7 - 8 SPI (Heavy Denim / Canvas / Outerwear)",
+        )
+        res = backend_app.generate_doll_process_sheet(req)
+        self.assertIn("cutting_specification", res)
+        self.assertIn("size_run_breakdown", res)
+        self.assertIn("pre_costing", res)
+        self.assertEqual(res["cutting_specification"]["machine_model"], "Eastman 629X Blue Streak II (8-inch Cutting Machine)")
+        self.assertFalse(res["size_run_breakdown"]["is_full_run"])
+        self.assertEqual(res["size_run_breakdown"]["breakdown"][0]["size"], "M")
+        self.assertEqual(res["pre_costing"]["stitch_density_spi"], "7 - 8 SPI (Heavy Denim / Canvas / Outerwear)")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
 

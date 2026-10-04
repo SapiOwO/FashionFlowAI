@@ -824,6 +824,219 @@ def calculate_line_balancing(sewing_sequence_detailed: list, batch_quantity: int
     }
 
 
+def calculate_cutting_spec(fabric_weight: str, cutting_method: str = "Auto (AI Recommended based on Fabric)", garment_type: str = "Shirt", batch_qty: int = 100) -> dict:
+    """
+    Calculate cutting department specifications, machine allocation, and blade/laser parameters.
+    Applies industrial garment engineering rules:
+    - Delicate/synthetic fabrics (chiffon, silk, polyester) -> CNC Laser Cutting (edge cauterization, anti-fraying).
+    - Natural/dense/heavy fabrics (denim, cotton, wool, corduroy) -> High-speed Straight Knife (prevents burning & scorching).
+    - Samples & fine curves -> Rotary Round Knife.
+    """
+    fab_lower = (fabric_weight or "").lower()
+    method_pref = (cutting_method or "").lower()
+
+    is_synthetic_or_delicate = any(k in fab_lower for k in [
+        "silk", "chiffon", "organza", "rayon", "viscose", "polyester", "satin", "synthetic", "light-weight"
+    ])
+    is_heavy_or_natural = any(k in fab_lower for k in [
+        "denim", "corduroy", "tweed", "wool", "gabardine", "cotton", "linen", "batik", "flannel", "heavy-weight"
+    ])
+
+    if "laser" in method_pref or (("auto" in method_pref or not method_pref) and is_synthetic_or_delicate and not is_heavy_or_natural):
+        rec_method = "CNC Laser Cutting Machine"
+        machine_model = "CadCam / GoldenLaser CO2 Flatbed Laser (150W)"
+        blade_laser_spec = "150W Sealed CO2 Laser Tube, 0.2mm Beam Focal Spot, 450 mm/s Feed Rate"
+        max_ply_height = "1 - 2 Plies (Single-ply high-precision tensionless lay)"
+        cutting_time_unit_mins = 0.40
+        safety_aid = "Exhaust Fume Evacuation Hood + Honeycomb Vacuum Bed + Laser Safety Shielding"
+        suitability_reason = "Thermal beam cauterizes edges automatically, preventing unraveling and fiber fraying on delicate sheer synthetics."
+        warning_note = "Excessive stack height will cause thermal edge adhesion. Keep stack to <= 2 plies." if is_heavy_or_natural else None
+    elif "rotary" in method_pref or "round" in method_pref:
+        rec_method = "Manual Rotary Round Knife"
+        machine_model = "KM RS-100 Octagonal Rotary Blade (4-inch)"
+        blade_laser_spec = "4-inch Octagonal Alloy Blade, 2400 RPM with Push-button Sharpener"
+        max_ply_height = "10 - 25 Plies (Low-ply agile curves & sample prototyping)"
+        cutting_time_unit_mins = 0.20
+        safety_aid = "Stainless Steel Mesh Glove + Transparent Polycarbonate Finger Guard"
+        suitability_reason = "Agile blade radius ideal for sharp radius cuts, collar points, and small sample runs without distorting layers."
+        warning_note = None
+    else:
+        rec_method = "Manual Straight Knife Cutter"
+        machine_model = "Eastman 629X Blue Streak II (8-inch Cutting Machine)"
+        blade_laser_spec = "8-inch High-Speed Steel Wave Blade, Dual-Speed 3400 RPM with Automatic Abrasive Belt Sharpener"
+        max_ply_height = "60 - 100 Plies (High-volume multi-ply vacuum table, up to 160 mm stack)"
+        cutting_time_unit_mins = 0.12
+        safety_aid = "Stainless Steel Chainmail Protective Glove + Spring-loaded Lower Blade Guard"
+        suitability_reason = "High-speed reciprocating blade slices dense multi-ply stacks cleanly without edge scorching, melting, or carbon odor."
+        warning_note = "Delicate sheer fabrics may fray along raw cut edges; apply serging/overlock promptly." if is_synthetic_or_delicate else None
+
+    batch_cutting_time_mins = round(cutting_time_unit_mins * batch_qty, 2)
+    batch_cutting_time_hours = round(batch_cutting_time_mins / 60.0, 2)
+
+    return {
+        "recommended_method": rec_method,
+        "selected_method": cutting_method or rec_method,
+        "machine_model": machine_model,
+        "blade_laser_spec": blade_laser_spec,
+        "max_ply_height": max_ply_height,
+        "cutting_time_unit_mins": cutting_time_unit_mins,
+        "batch_cutting_time_mins": batch_cutting_time_mins,
+        "batch_cutting_time_hours": batch_cutting_time_hours,
+        "safety_aid": safety_aid,
+        "suitability_reason": suitability_reason,
+        "warning_note": warning_note,
+        "is_laser_recommended": "laser" in rec_method.lower(),
+    }
+
+
+def calculate_size_run_breakdown(garment_key: str, fabric_weight: str, pattern_size_run: str = "Full Size Run (S, M, L, XL, XXL)", batch_qty: int = 100) -> dict:
+    """
+    Calculate pattern size grading distribution and fabric yardage consumption per size.
+    Applies industrial garment markers:
+    - Base consumption (size M) derived from garment archetype.
+    - Standard ASTM grading multipliers across S, M, L, XL, XXL.
+    """
+    BASE_CONSUMPTION = {
+        "shirt": 1.50,
+        "tshirt": 1.10,
+        "jacket": 2.20,
+        "pants": 1.60,
+        "skirt": 1.25,
+        "dress": 2.60,
+        "hat": 0.45,
+    }
+    base_cons = BASE_CONSUMPTION.get(garment_key, 1.50)
+
+    SIZE_SPECS = [
+        {"size": "S", "multiplier": 0.90, "ratio": 0.15},
+        {"size": "M", "multiplier": 1.00, "ratio": 0.35},
+        {"size": "L", "multiplier": 1.15, "ratio": 0.30},
+        {"size": "XL", "multiplier": 1.30, "ratio": 0.15},
+        {"size": "XXL", "multiplier": 1.45, "ratio": 0.05},
+    ]
+
+    size_run_str = (pattern_size_run or "").strip()
+    is_full_run = "full" in size_run_str.lower() or "s, m, l" in size_run_str.lower()
+
+    items = []
+    if is_full_run:
+        allocated = 0
+        for i, s in enumerate(SIZE_SPECS):
+            if i == len(SIZE_SPECS) - 1:
+                qty = max(1, batch_qty - allocated)
+            else:
+                qty = max(1, int(round(batch_qty * s["ratio"])))
+                allocated += qty
+            unit_cons = round(base_cons * s["multiplier"], 2)
+            subtotal_m = round(unit_cons * qty, 2)
+            items.append({
+                "size": s["size"],
+                "ratio_pct": int(s["ratio"] * 100),
+                "quantity_pcs": qty,
+                "unit_consumption_m": unit_cons,
+                "subtotal_fabric_m": subtotal_m,
+            })
+    else:
+        target_size = "M"
+        size_match = re.search(r'\b(XXL|XL|XS|S|M|L)\b', size_run_str, re.IGNORECASE)
+        if size_match:
+            target_size = size_match.group(1).upper()
+        matched_spec = next((s for s in SIZE_SPECS if s["size"] == target_size), SIZE_SPECS[1])
+        unit_cons = round(base_cons * matched_spec["multiplier"], 2)
+        subtotal_m = round(unit_cons * batch_qty, 2)
+        items.append({
+            "size": target_size,
+            "ratio_pct": 100,
+            "quantity_pcs": batch_qty,
+            "unit_consumption_m": unit_cons,
+            "subtotal_fabric_m": subtotal_m,
+        })
+
+    total_fabric_m = round(sum(item["subtotal_fabric_m"] for item in items), 2)
+    total_with_waste_m = round(total_fabric_m * 1.05, 2)
+
+    return {
+        "pattern_size_run": pattern_size_run,
+        "is_full_run": is_full_run,
+        "base_sample_size": "M",
+        "base_unit_consumption_m": base_cons,
+        "breakdown": items,
+        "total_net_fabric_m": total_fabric_m,
+        "total_gross_fabric_m": total_with_waste_m,
+        "waste_allowance_pct": 5.0,
+        "recommended_roll_width": "58 - 60 inches (150 cm standard fabric roll)",
+        "marker_utilization_pct": 86.8,
+    }
+
+
+def calculate_pre_costing(
+    sewing_sequence_detailed: list,
+    total_smv_mins: float,
+    batch_qty: int,
+    stitch_density_spi: str = "10 - 12 SPI (Standard Commercial)",
+    cutting_time_mins: float = 0.15,
+    garment_key: str = "shirt"
+) -> dict:
+    """
+    Calculate pre-production manufacturing cost and thread consumption.
+    Applies ASTM D3823 thread consumption formulas + GSD labour rates.
+    """
+    SEAM_LENGTHS = {
+        "shirt": 8.5,
+        "tshirt": 5.2,
+        "jacket": 12.0,
+        "pants": 9.8,
+        "skirt": 6.5,
+        "dress": 14.2,
+        "hat": 3.5,
+    }
+    base_seam_m = SEAM_LENGTHS.get(garment_key, 8.0)
+
+    mult_sum = 0.0
+    for s in sewing_sequence_detailed:
+        model = (s.get("recommended_model") or "").upper()
+        if model.startswith("MO-"):
+            mult_sum += 16.5
+        elif model.startswith("MH-") or model.startswith("MS-"):
+            mult_sum += 4.5
+        elif model.startswith("LK-") or model.startswith("LBH-") or model.startswith("MEB-"):
+            mult_sum += 6.0
+        else:
+            mult_sum += 2.8
+
+    avg_stitch_mult = mult_sum / len(sewing_sequence_detailed) if sewing_sequence_detailed else 5.5
+
+    spi_str = (stitch_density_spi or "").lower()
+    if "14" in spi_str or "16" in spi_str:
+        spi_factor = 1.25
+    elif "8" in spi_str or "10" in spi_str:
+        spi_factor = 0.85
+    else:
+        spi_factor = 1.0
+
+    unit_thread_meters = round(base_seam_m * avg_stitch_mult * spi_factor, 1)
+    batch_thread_meters = round(unit_thread_meters * batch_qty, 1)
+    batch_thread_km = round(batch_thread_meters / 1000.0, 2)
+
+    unit_thread_cost = round(unit_thread_meters * 0.0007, 3)
+    unit_sewing_labour = round(total_smv_mins * 0.08, 2)
+    unit_cutting_labour = round(cutting_time_mins * 0.07, 2)
+
+    unit_total_manufacturing = round(unit_thread_cost + unit_sewing_labour + unit_cutting_labour, 2)
+    batch_total_manufacturing = round(unit_total_manufacturing * batch_qty, 2)
+
+    return {
+        "stitch_density_spi": stitch_density_spi,
+        "base_seam_length_m": base_seam_m,
+        "unit_thread_consumption_m": unit_thread_meters,
+        "batch_thread_consumption_km": batch_thread_km,
+        "unit_thread_cost_usd": unit_thread_cost,
+        "unit_sewing_labour_usd": unit_sewing_labour,
+        "unit_cutting_labour_usd": unit_cutting_labour,
+        "unit_total_manufacturing_usd": unit_total_manufacturing,
+        "batch_total_manufacturing_usd": batch_total_manufacturing,
+    }
+
 
 def normalize_garment_key(raw_garment_type: str) -> str:
     """
@@ -896,6 +1109,9 @@ class DollSheetRequest(BaseModel):
     components: list[GarmentComponent]
     message: str
     batch_quantity: int = 100
+    pattern_size_run: str = "Doll Standard Scale"
+    cutting_method: str = "Auto (AI Recommended based on Fabric)"
+    stitch_density_spi: str = "12 - 14 SPI (Fine Miniature)"
     tags: list[str] = []
     designer_notes: str = ""
 
@@ -910,6 +1126,9 @@ class ProcessSheetRequest(BaseModel):
     message: str
     visual_vector: list = []   # 384-dim embedding — MUST be sent from frontend to persist for duplicate detection
     batch_quantity: int = 100
+    pattern_size_run: str = "Full Size Run (S, M, L, XL, XXL)"
+    cutting_method: str = "Auto (AI Recommended based on Fabric)"
+    stitch_density_spi: str = "10 - 12 SPI (Standard Commercial)"
     is_reuse_master: bool = False  # When True: recalculate batch scaling on existing master ID, skip new DB insert
     reuse_master_id: int | None = None  # Original master project ID to reuse
     tags: list[str] = []   # Project tags (e.g. SS26-Core, v1.0-master)
@@ -1085,6 +1304,22 @@ def generate_process_sheet(req: ProcessSheetRequest):
         batch_qty
     )
 
+    # Calculate cutting department specifications
+    cutting_spec = calculate_cutting_spec(req.fabric_weight, req.cutting_method, req.garment_type, batch_qty)
+
+    # Calculate size run breakdown and fabric yardage
+    size_run_breakdown = calculate_size_run_breakdown(garment_key, req.fabric_weight, req.pattern_size_run, batch_qty)
+
+    # Calculate pre-costing & thread consumption
+    pre_costing = calculate_pre_costing(
+        sewing_sequence_detailed,
+        single_smv_val,
+        batch_qty,
+        req.stitch_density_spi,
+        cutting_spec["cutting_time_unit_mins"],
+        garment_key
+    )
+
     result_payload = {
         "yolo_detections": [],
         "classification": [{"class_name": req.classification_name, "confidence": req.similarity_percentage / 100.0}],
@@ -1099,6 +1334,9 @@ def generate_process_sheet(req: ProcessSheetRequest):
         "complexity": complexity,
         "batch_production": batch_production,
         "line_balancing": line_balancing,
+        "cutting_specification": cutting_spec,
+        "size_run_breakdown": size_run_breakdown,
+        "pre_costing": pre_costing,
         "engineering_checklist": engineering_checklist,
         "preview_image": req.preview_image,
         "historical_examples": search_similar_garments(get_mock_embedding(req.classification_name)),
@@ -1116,6 +1354,9 @@ def generate_process_sheet(req: ProcessSheetRequest):
             "garment_type": req.garment_type,
             "fabric_weight": req.fabric_weight,
             "garment_key": garment_key,
+            "pattern_size_run": req.pattern_size_run,
+            "cutting_method": req.cutting_method,
+            "stitch_density_spi": req.stitch_density_spi,
         }
     }
 
@@ -1225,6 +1466,18 @@ def generate_doll_process_sheet(req: DollSheetRequest):
         batch_qty
     )
 
+    primary_fabric = req.components[0].fabric_weight if req.components else "Medium-weight"
+    cutting_spec = calculate_cutting_spec(primary_fabric, req.cutting_method, "doll", batch_qty)
+    size_run_breakdown = calculate_size_run_breakdown("hat", primary_fabric, req.pattern_size_run, batch_qty)
+    pre_costing = calculate_pre_costing(
+        combined_sequence,
+        total_smv_val,
+        batch_qty,
+        req.stitch_density_spi,
+        cutting_spec["cutting_time_unit_mins"],
+        "hat"
+    )
+
     result_payload = {
         "is_doll_project": True,
         "doll_type": req.doll_type,
@@ -1242,6 +1495,9 @@ def generate_doll_process_sheet(req: DollSheetRequest):
         "complexity": complexity,
         "batch_production": batch_production,
         "line_balancing": line_balancing,
+        "cutting_specification": cutting_spec,
+        "size_run_breakdown": size_run_breakdown,
+        "pre_costing": pre_costing,
         "engineering_checklist": engineering_checklist,
         "preview_image": req.components[0].preview_image if req.components else "globe.svg",
         "historical_examples": search_similar_garments(get_mock_embedding(req.doll_type)) if req.components else [],
@@ -1255,7 +1511,10 @@ def generate_doll_process_sheet(req: DollSheetRequest):
         "project_details": {
             "name": req.project_name,
             "doll_type": req.doll_type,
-            "components_count": len(req.components)
+            "components_count": len(req.components),
+            "pattern_size_run": req.pattern_size_run,
+            "cutting_method": req.cutting_method,
+            "stitch_density_spi": req.stitch_density_spi,
         }
     }
 

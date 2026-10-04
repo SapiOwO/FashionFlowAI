@@ -121,6 +121,15 @@ This roadmap outlines what has been implemented in the FashionFlow AI project an
   * Fixed GHCR repository owner case sensitivity (`sapiowo`) in `.github/workflows/docker-publish.yml` and configured strict version tag release triggers (`v*.*.*`).
   * Aligned `README.md` and `docs/QUICKSTART.md` with Open WebUI documentation standards, adding Open WebUI warning callouts, single-command launcher, update sequence, and container management runbook (`docker ps`, `docker logs -f`, `docker stop`, `docker start`).
   * Passed 55/55 backend unit tests (100%), verified live container running on port 3000.
+* **Phase 25: Industrial Garment Engineering Suite: Grading, Cutting Allocation & ASTM Pre-Costing (2026-10-04)**:
+  * Implemented `calculate_size_run_breakdown()` in `backend/app.py`: proportional size grading distribution across S (15%), M (35%), L (30%), XL (15%), XXL (5%), ASTM unit yardage consumption, total net meters, 5% marker waste allowance, roll width specification, and marker utilization metrics.
+  * Implemented `calculate_cutting_spec()` in `backend/app.py`: physics-based fabric cutting compatibility engine selecting Eastman 629X 8" Straight Knife (denim/cotton multi-ply), CadCam/GoldenLaser 150W CO2 Laser (delicate synthetics edge-cauterization), or KM RS-100 Rotary Knife (sample curves), complete with safety equipment guidelines and unit/batch cutting time calculations.
+  * Implemented `calculate_pre_costing()` in `backend/app.py`: ASTM D3823 standard thread consumption calculation based on seam length, machine stitch multipliers, and SPI factor, plus SMV-based sewing labor and cutting labor rate estimations.
+  * Added Step 2 Form controls with live dynamic AI recommendation badges (`quizSizeRun`, `quizCuttingMethod`, `quizStitchDensity`).
+  * Updated Step 2 Confirmation Modal with explicit parameter review rows and seamless doll outfit set support.
+  * Rendered interactive Step 3 Bento Cards for Size Grading, Pre-Sewing Cutting Allocation, and Manufacturing Pre-Costing, along with matching native Print/PDF Tech Pack Export Cards.
+  * Created `rehydrateProjectPayload` fallback guards ensuring legacy database records load cleanly with full engineering parameters.
+  * Added 8 new automated test cases to `backend/tests/test_backend_contract.py` bringing total passing tests to **63/63 PASS (100%)**.
 
 ---
 
