@@ -6,8 +6,13 @@ import threading
 def log_stream(stream, prefix):
     """Read lines from a stream and print them with a prefix."""
     for line in iter(stream.readline, ''):
-        sys.stdout.write(f"[{prefix}] {line}")
-        sys.stdout.flush()
+        try:
+            sys.stdout.write(f"[{prefix}] {line}")
+            sys.stdout.flush()
+        except UnicodeEncodeError:
+            clean_line = line.encode("ascii", errors="replace").decode("ascii")
+            sys.stdout.write(f"[{prefix}] {clean_line}")
+            sys.stdout.flush()
 
 def ensure_embedded_postgres():
     """Start embedded PostgreSQL service and initialize database/pgvector inside Docker container."""

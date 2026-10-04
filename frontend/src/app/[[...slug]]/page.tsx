@@ -770,7 +770,7 @@ export default function Home() {
 
   const [quizName, setQuizName] = useState("");
   const [quizGarment, setQuizGarment] = useState("Shirt");
-  const [quizFabric, setQuizFabric] = useState("Medium-weight");
+  const [quizFabric, setQuizFabric] = useState("");
   const [batchQuantity, setBatchQuantity] = useState(100);
   const [isCustomBatchMode, setIsCustomBatchMode] = useState(false);
   const [customBatchInput, setCustomBatchInput] = useState("");
@@ -806,6 +806,7 @@ export default function Home() {
   // Multi-step wizard stepper state (1: Upload & Originality, 2: Engineering Parameters, 3: Process Sheet)
   const [currentStep, setCurrentStep] = useState(1);
   const [showBackConfirmModal, setShowBackConfirmModal] = useState(false);
+  const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
 
 
   // Upload History log state (Persisted in Postgres/SQLite database)
@@ -1632,7 +1633,7 @@ export default function Home() {
     setResult(null);
     setQuizName("");
     setQuizGarment("Shirt");
-    setQuizFabric("Medium-weight");
+    setQuizFabric("");
     setQuizSizeRun("Full Size Run (S, M, L, XL, XXL)");
     setQuizCuttingMethod("Auto (AI Recommended based on Fabric)");
     setQuizStitchDensity("10 - 12 SPI (Standard Commercial)");
@@ -3263,6 +3264,7 @@ export default function Home() {
                                 <CustomDropdown
                                   value={quizFabric}
                                   onChange={setQuizFabric}
+                                  placeholder="Select Fabric Application / Weight..."
                                   options={[
                                     { value: "Silk (Light-weight)", label: "Sutra / Silk", group: "Light-weight" },
                                     { value: "Chiffon (Light-weight)", label: "Sifon / Chiffon", group: "Light-weight" },
@@ -3483,7 +3485,22 @@ export default function Home() {
                     <div className="bg-white px-10 py-5 flex items-center justify-between mt-auto border-t border-slate-100/60">
                       <button
                         type="button"
-                        onClick={handleResetStep2}
+                        onClick={() => {
+                          const hasProgress = Boolean(
+                            previewUrl ||
+                            quizName.trim() ||
+                            result ||
+                            quizFabric ||
+                            designerNotes.trim() ||
+                            selectedTags.length > 0 ||
+                            Object.values(componentsState).some(c => c.previewUrl)
+                          );
+                          if (hasProgress) {
+                            setShowResetConfirmModal(true);
+                          } else {
+                            handleResetStep2();
+                          }
+                        }}
                         className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/60 font-semibold text-xs rounded-md transition-all cursor-pointer flex items-center gap-2 active:scale-98"
                       >
                         <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -3493,6 +3510,18 @@ export default function Home() {
                       </button>
 
                       <div className="flex items-center gap-3">
+                        {/* Validation helper badge when required fields are missing */}
+                        {((projectMode === "single" && (!quizName.trim() || !quizFabric)) || (projectMode === "doll" && !quizName.trim())) && (
+                          <div className="hidden sm:flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200/80 px-3 py-2 rounded-md font-medium">
+                            <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            </svg>
+                            <span>
+                              Required: {!quizName.trim() ? "Project Name" : ""}{!quizName.trim() && (projectMode === "single" && !quizFabric) ? " & " : ""}{projectMode === "single" && !quizFabric ? "Fabric Application" : ""}
+                            </span>
+                          </div>
+                        )}
+
                         <button
                           type="button"
                           onClick={handleSafeBackToStep1}
@@ -3510,8 +3539,15 @@ export default function Home() {
                             (showReusePrompt && projectMode === "single" && (reuseMode === null || (reuseMode === "new" && !quizName.trim()))) ||
                             // In normal mode (no reuse prompt): must have a project name
                             (!showReusePrompt && !quizName.trim()) ||
+                            // In single mode: must select a fabric application
+                            (projectMode === "single" && !quizFabric) ||
                             // Must have a sketch loaded
                             (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))
+                          }
+                          title={
+                            !quizName.trim() || (projectMode === "single" && !quizFabric)
+                              ? `Please enter a Project Name${projectMode === "single" && !quizFabric ? " and select a Fabric Application" : ""} to continue`
+                              : undefined
                           }
                           className="px-8 py-3 text-white font-bold text-xs rounded-md flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98 bg-[#155DFC] hover:bg-[#1249cc]"
                         >
@@ -4028,12 +4064,44 @@ export default function Home() {
                             </div>
                             <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
                               <span className="text-slate-400 font-medium">Garment Category:</span>
-                              <span className="font-semibold text-slate-900">{quizGarment}</span>
+                              <span className="font-semibold text-slate-900">{fullResult.project_details?.garment_type || quizGarment}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
                               <span className="text-slate-400 font-medium">Fabric Application:</span>
-                              <span className="font-semibold text-slate-900">{quizFabric}</span>
+                              <span className="font-semibold text-slate-900">{fullResult.project_details?.fabric_weight || quizFabric}</span>
                             </div>
+                            <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
+                              <span className="text-slate-400 font-medium">Production Batch:</span>
+                              <span className="font-mono font-bold text-[#155DFC]">
+                                {(fullResult.project_details?.batch_quantity || fullResult.batch_production?.batch_quantity || batchQuantity).toLocaleString()} pcs
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
+                              <span className="text-slate-400 font-medium">Pattern Size Run:</span>
+                              <span className="font-semibold text-slate-900 truncate max-w-[200px] text-right" title={fullResult.project_details?.pattern_size_run || fullResult.size_run_breakdown?.pattern_size_run || quizSizeRun}>
+                                {fullResult.project_details?.pattern_size_run || fullResult.size_run_breakdown?.pattern_size_run || quizSizeRun}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
+                              <span className="text-slate-400 font-medium">Cutting Machinery:</span>
+                              <span className="font-semibold text-slate-900 truncate max-w-[200px] text-right" title={fullResult.cutting_specification?.recommended_method || fullResult.project_details?.cutting_method || quizCuttingMethod}>
+                                {fullResult.cutting_specification?.recommended_method || fullResult.project_details?.cutting_method || quizCuttingMethod}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
+                              <span className="text-slate-400 font-medium">Stitch Density (SPI):</span>
+                              <span className="font-semibold text-slate-900">
+                                {fullResult.pre_costing?.stitch_density_spi || fullResult.project_details?.stitch_density_spi || quizStitchDensity}
+                              </span>
+                            </div>
+                            {fullResult.pre_costing?.unit_total_manufacturing_usd && (
+                              <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-2.5">
+                                <span className="text-slate-400 font-medium">Est. Unit Mfg. Cost:</span>
+                                <span className="font-mono font-bold text-emerald-700">
+                                  ${fullResult.pre_costing.unit_total_manufacturing_usd.toFixed(2)} / unit
+                                </span>
+                              </div>
+                            )}
                           </>
                         )}
                       </div>
@@ -5808,6 +5876,47 @@ export default function Home() {
                   className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-all shadow-xs cursor-pointer"
                 >
                   Yes, Return to Step 1
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2 Reset Form & Sketch Confirmation Modal */}
+        {showResetConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white border border-slate-200 rounded-md shadow-2xl max-w-md w-full p-6 space-y-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-md bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-golden-heading-bold text-slate-900 text-base">Reset Form &amp; Sketch?</h3>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    This will clear your current sketch upload, project details, and configured engineering specifications. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowResetConfirmModal(false)}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-all cursor-pointer"
+                >
+                  Cancel &amp; Keep Progress
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowResetConfirmModal(false);
+                    handleResetStep2();
+                  }}
+                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-all shadow-xs cursor-pointer"
+                >
+                  Yes, Reset Everything
                 </button>
               </div>
             </div>
