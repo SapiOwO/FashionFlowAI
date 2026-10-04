@@ -764,6 +764,8 @@ export default function Home() {
   const [quizGarment, setQuizGarment] = useState("Shirt");
   const [quizFabric, setQuizFabric] = useState("Medium-weight");
   const [batchQuantity, setBatchQuantity] = useState(100);
+  const [isCustomBatchMode, setIsCustomBatchMode] = useState(false);
+  const [customBatchInput, setCustomBatchInput] = useState("");
   const [quizSizeRun, setQuizSizeRun] = useState<string>("Full Size Run (S, M, L, XL, XXL)");
   const [quizCuttingMethod, setQuizCuttingMethod] = useState<string>("Auto (AI Recommended based on Fabric)");
   const [quizStitchDensity, setQuizStitchDensity] = useState<string>("10 - 12 SPI (Standard Commercial)");
@@ -1819,12 +1821,28 @@ export default function Home() {
       setQuizSizeRun(pResult.project_details.pattern_size_run || pResult.size_run_breakdown?.pattern_size_run || "Full Size Run (S, M, L, XL, XXL)");
       setQuizCuttingMethod(pResult.project_details.cutting_method || pResult.cutting_specification?.selected_method || "Auto (AI Recommended based on Fabric)");
       setQuizStitchDensity(pResult.project_details.stitch_density_spi || pResult.pre_costing?.stitch_density_spi || "10 - 12 SPI (Standard Commercial)");
-      setBatchQuantity(pResult.project_details.batch_quantity || pResult.batch_production?.batch_quantity || 100);
+      const loadedBatch = pResult.project_details.batch_quantity || pResult.batch_production?.batch_quantity || 100;
+      setBatchQuantity(loadedBatch);
+      if (![100, 250, 500, 1000].includes(loadedBatch)) {
+        setIsCustomBatchMode(true);
+        setCustomBatchInput(loadedBatch.toString());
+      } else {
+        setIsCustomBatchMode(false);
+        setCustomBatchInput("");
+      }
     } else {
       setQuizSizeRun(pResult.size_run_breakdown?.pattern_size_run || "Full Size Run (S, M, L, XL, XXL)");
       setQuizCuttingMethod(pResult.cutting_specification?.selected_method || "Auto (AI Recommended based on Fabric)");
       setQuizStitchDensity(pResult.pre_costing?.stitch_density_spi || "10 - 12 SPI (Standard Commercial)");
-      setBatchQuantity(pResult.batch_production?.batch_quantity || 100);
+      const loadedBatch = pResult.batch_production?.batch_quantity || 100;
+      setBatchQuantity(loadedBatch);
+      if (![100, 250, 500, 1000].includes(loadedBatch)) {
+        setIsCustomBatchMode(true);
+        setCustomBatchInput(loadedBatch.toString());
+      } else {
+        setIsCustomBatchMode(false);
+        setCustomBatchInput("");
+      }
     }
 
     const resolvedName = project.fileName || pResult.project_details?.name || "Project";
@@ -3276,32 +3294,111 @@ export default function Home() {
                             </div>
                           )}
 
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
-                            <div className="flex items-center gap-2">
-                              {[100, 250, 500, 1000].map((qty) => (
-                                <button
-                                  key={qty}
-                                  type="button"
-                                  onClick={() => setBatchQuantity(qty)}
-                                  className={`flex-1 py-2 px-2 rounded-md text-xs font-mono font-bold transition-all cursor-pointer border ${
-                                    batchQuantity === qty
-                                      ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
-                                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                                  }`}
-                                >
-                                  {qty} pcs
-                                </button>
-                              ))}
-                              <input
-                                type="number"
-                                min={1}
-                                value={batchQuantity}
-                                onChange={(e) => setBatchQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="w-20 bg-white border border-slate-200/80 rounded-md py-2 px-2 text-xs font-mono text-slate-900 text-center font-bold focus:bg-white focus:border-[#155DFC] focus:outline-none"
-                                placeholder="Qty"
-                              />
+                          <div className="flex flex-col gap-2">
+                            {/* Header row with Title and Live Calculated Target */}
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200/80">
+                                <span className="text-slate-400">Target:</span>
+                                <strong className="text-[#155DFC] font-bold">{batchQuantity.toLocaleString()} pcs</strong>
+                              </span>
                             </div>
+
+                            {/* Standard Production Volume Presets */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {[100, 250, 500, 1000].map((qty) => {
+                                const isCustomActive = isCustomBatchMode || ![100, 250, 500, 1000].includes(batchQuantity);
+                                const isSelected = !isCustomActive && batchQuantity === qty;
+                                return (
+                                  <button
+                                    key={qty}
+                                    type="button"
+                                    onClick={() => {
+                                      setBatchQuantity(qty);
+                                      setIsCustomBatchMode(false);
+                                      setCustomBatchInput("");
+                                    }}
+                                    className={`py-2 px-3 rounded-md text-xs font-mono font-bold transition-all cursor-pointer border text-center ${
+                                      isSelected
+                                        ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs ring-1 ring-[#155DFC]"
+                                        : "bg-slate-50 text-slate-700 border-slate-200/80 hover:bg-slate-100 hover:border-slate-300"
+                                    }`}
+                                  >
+                                    {qty.toLocaleString()} pcs
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Prominent Custom Batch Input with Clear Tag and Suffix */}
+                            {(() => {
+                              const isCustomActive = isCustomBatchMode || ![100, 250, 500, 1000].includes(batchQuantity);
+                              return (
+                                <div className="relative flex items-center">
+                                  <div className="absolute left-3 flex items-center gap-1.5 pointer-events-none">
+                                    <svg
+                                      className={`w-3.5 h-3.5 transition-colors ${isCustomActive ? "text-[#155DFC]" : "text-slate-400"}`}
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                    </svg>
+                                    <span className={`text-xs font-semibold transition-colors ${isCustomActive ? "text-[#155DFC]" : "text-slate-500"}`}>
+                                      Custom Batch:
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={100000}
+                                    value={isCustomActive ? (customBatchInput || batchQuantity.toString()) : ""}
+                                    onFocus={() => {
+                                      setIsCustomBatchMode(true);
+                                      if (!customBatchInput) {
+                                        setCustomBatchInput(batchQuantity.toString());
+                                      }
+                                    }}
+                                    onChange={(e) => {
+                                      const valStr = e.target.value;
+                                      setCustomBatchInput(valStr);
+                                      setIsCustomBatchMode(true);
+                                      const val = parseInt(valStr, 10);
+                                      if (!isNaN(val) && val > 0) {
+                                        setBatchQuantity(val);
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      const val = parseInt(customBatchInput, 10);
+                                      if (isNaN(val) || val <= 0) {
+                                        if ([100, 250, 500, 1000].includes(batchQuantity)) {
+                                          setIsCustomBatchMode(false);
+                                          setCustomBatchInput("");
+                                        } else {
+                                          setBatchQuantity(100);
+                                          setIsCustomBatchMode(false);
+                                          setCustomBatchInput("");
+                                        }
+                                      }
+                                    }}
+                                    placeholder="Or enter custom units (e.g. 75, 350, 2500)..."
+                                    className={`w-full py-2.5 pl-32 pr-12 rounded-md text-xs font-mono transition-all border outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                      isCustomActive
+                                        ? "bg-blue-50/50 text-[#155DFC] border-[#155DFC] ring-1 ring-[#155DFC] font-bold"
+                                        : "bg-white text-slate-900 border-slate-200/80 hover:border-slate-300 placeholder:text-slate-400"
+                                    }`}
+                                  />
+                                  <span className={`absolute right-3 text-xs font-mono pointer-events-none transition-colors ${isCustomActive ? "text-[#155DFC] font-bold" : "text-slate-400"}`}>
+                                    pcs
+                                  </span>
+                                </div>
+                              );
+                            })()}
+
+                            <span className="text-xs text-slate-400">
+                              Select a standard apparel production tier or specify an exact custom cutting run.
+                            </span>
                           </div>
 
                           {/* Pattern Size Run & Grading Selection */}
