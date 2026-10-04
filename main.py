@@ -27,6 +27,32 @@ def ensure_embedded_postgres():
         except Exception as e:
             print(f"[SYSTEM-WARN] Could not start embedded PostgreSQL: {e}. System will fallback to SQLite.")
 
+def free_ports(ports=(8000, 3000)):
+    """Terminate stale orphan processes occupying development ports."""
+    current_pid = os.getpid()
+    for port in ports:
+        try:
+            if os.name == "nt":
+                cmd = f"netstat -ano | findstr :{port}"
+                out = subprocess.check_output(cmd, shell=True, text=True, errors="ignore")
+                for line in out.strip().splitlines():
+                    if "LISTENING" in line.upper():
+                        parts = line.strip().split()
+                        pid = int(parts[-1])
+                        if pid and pid != current_pid and pid != 0:
+                            print(f"[SYSTEM] Freeing port {port} held by stale process (PID {pid})...")
+                            subprocess.run(["taskkill", "/F", "/PID", str(pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                cmd = f"lsof -ti:{port}"
+                out = subprocess.check_output(cmd, shell=True, text=True, errors="ignore")
+                for pid_str in out.strip().splitlines():
+                    pid = int(pid_str)
+                    if pid and pid != current_pid:
+                        print(f"[SYSTEM] Freeing port {port} held by stale process (PID {pid})...")
+                        subprocess.run(["kill", "-9", str(pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
 def main():
     root_dir = os.path.dirname(os.path.abspath(__file__))
     backend_dir = os.path.join(root_dir, "backend")
@@ -35,6 +61,9 @@ def main():
     print("====================================================")
     print("  Starting FashionFlow Unified Developer Environment")
     print("====================================================")
+
+    # Free up development ports if previous sessions did not cleanly shutdown
+    free_ports([8000, 3000])
 
     # 1. Detect Python Interpreter (Use local .venv if present)
     venv_dir = os.path.join(root_dir, ".venv")
