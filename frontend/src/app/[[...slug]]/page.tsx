@@ -305,6 +305,113 @@ const renderReleaseNotesMarkdown = (text: string) => {
 };
 
 
+interface CustomDropdownOption {
+  value: string;
+  label: string;
+}
+
+interface CustomDropdownProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: (string | CustomDropdownOption)[];
+  placeholder?: string;
+}
+
+const CustomDropdown: React.FC<CustomDropdownProps> = ({
+  value,
+  onChange,
+  options,
+  placeholder = "Select an option",
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const normalizedOptions: CustomDropdownOption[] = options.map((opt) =>
+    typeof opt === "string" ? { value: opt, label: opt } : opt
+  );
+
+  const selectedOption = normalizedOptions.find((opt) => opt.value === value);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`w-full bg-white border rounded-md py-3 px-4 text-sm text-slate-900 flex items-center justify-between text-left cursor-pointer transition-all ${
+          isOpen
+            ? "border-[#155DFC] ring-1 ring-[#155DFC]"
+            : "border-slate-200/80 hover:border-slate-300"
+        }`}
+      >
+        <span className="truncate font-normal text-slate-900">
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <svg
+          className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ml-2 ${
+            isOpen ? "rotate-180 text-[#155DFC]" : ""
+          }`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-md shadow-xl z-50 py-1 max-h-60 overflow-y-auto">
+          {normalizedOptions.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer flex items-center justify-between block ${
+                  isSelected
+                    ? "bg-slate-100 font-semibold text-slate-900"
+                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                <span className="truncate">{opt.label}</span>
+                {isSelected && (
+                  <svg className="w-4 h-4 text-[#155DFC] shrink-0 ml-2" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 interface TagSelectorProps {
   selectedTags: string[];
   onChange: (tags: string[]) => void;
@@ -3200,67 +3307,49 @@ export default function Home() {
                           {/* Pattern Size Run & Grading Selection */}
                           <div className="flex flex-col gap-1.5">
                             <label className="text-sm font-semibold text-slate-700">Pattern Size Run &amp; Grading</label>
-                            <select
+                            <CustomDropdown
                               value={quizSizeRun}
-                              onChange={(e) => setQuizSizeRun(e.target.value)}
-                              className="bg-white border border-slate-200/80 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
-                            >
-                              <option value="Full Size Run (S, M, L, XL, XXL)">Full Size Run (S, M, L, XL, XXL) — Proportional Grading</option>
-                              <option value="S — Small">S — Small Only</option>
-                              <option value="M — Medium (Sample Base)">M — Medium (Sample Master Base)</option>
-                              <option value="L — Large">L — Large Only</option>
-                              <option value="XL — Extra Large">XL — Extra Large Only</option>
-                              <option value="XXL — Double Extra Large">XXL — Double Extra Large Only</option>
-                            </select>
+                              onChange={setQuizSizeRun}
+                              options={[
+                                { value: "Full Size Run (S, M, L, XL, XXL)", label: "Full Size Run (S, M, L, XL, XXL) — Proportional Grading" },
+                                { value: "S — Small", label: "S — Small Only" },
+                                { value: "M — Medium (Sample Base)", label: "M — Medium (Sample Master Base)" },
+                                { value: "L — Large", label: "L — Large Only" },
+                                { value: "XL — Extra Large", label: "XL — Extra Large Only" },
+                                { value: "XXL — Double Extra Large", label: "XXL — Double Extra Large Only" },
+                              ]}
+                            />
                             <span className="text-xs text-slate-400">Specifies marker grading scale and fabric yardage consumption per size.</span>
                           </div>
 
-                          {/* Cutting Department Machinery Selection with dynamic AI recommendation */}
+                          {/* Cutting Department Machinery Selection */}
                           <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center justify-between">
-                              <label className="text-sm font-semibold text-slate-700">Cutting Department Machine Allocation</label>
-                              {(() => {
-                                const fabLower = (quizFabric || "").toLowerCase();
-                                const isDelicate = fabLower.includes("silk") || fabLower.includes("chiffon") || fabLower.includes("polyester") || fabLower.includes("light");
-                                const isHeavy = fabLower.includes("denim") || fabLower.includes("corduroy") || fabLower.includes("heavy") || fabLower.includes("wool");
-                                return (
-                                  <span className={`text-[11px] font-mono font-semibold px-2 py-0.5 rounded border ${
-                                    isDelicate
-                                      ? "bg-purple-50 text-purple-700 border-purple-200"
-                                      : isHeavy
-                                      ? "bg-amber-50 text-amber-700 border-amber-200"
-                                      : "bg-blue-50 text-[#155DFC] border-blue-200"
-                                  }`}>
-                                    AI Rec: {isDelicate ? "CNC Laser (Anti-Fray)" : isHeavy ? "Straight Knife (Multi-Ply)" : "Straight Knife (Standard)"}
-                                  </span>
-                                );
-                              })()}
-                            </div>
-                            <select
+                            <label className="text-sm font-semibold text-slate-700">Cutting Department Machine Allocation</label>
+                            <CustomDropdown
                               value={quizCuttingMethod}
-                              onChange={(e) => setQuizCuttingMethod(e.target.value)}
-                              className="bg-white border border-slate-200/80 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
-                            >
-                              <option value="Auto (AI Recommended based on Fabric)">Auto (AI Recommended based on Fabric)</option>
-                              <option value="CNC Laser Cutting (Sealed Edge / Anti-Fraying)">CNC Laser Cutting (Sealed Edge / Anti-Fraying)</option>
-                              <option value="Manual Straight Knife (Eastman 629X 8&quot; Multi-Ply)">Manual Straight Knife (Eastman 629X 8&quot; Multi-Ply)</option>
-                              <option value="Manual Rotary Round Knife (KM RS-100 4&quot; Precision)">Manual Rotary Round Knife (KM RS-100 4&quot; Precision)</option>
-                            </select>
+                              onChange={setQuizCuttingMethod}
+                              options={[
+                                { value: "Auto (AI Recommended based on Fabric)", label: "Auto (AI Recommended based on Fabric)" },
+                                { value: "CNC Laser Cutting (Sealed Edge / Anti-Fraying)", label: "CNC Laser Cutting (Sealed Edge / Anti-Fraying)" },
+                                { value: 'Manual Straight Knife (Eastman 629X 8" Multi-Ply)', label: 'Manual Straight Knife (Eastman 629X 8" Multi-Ply)' },
+                                { value: 'Manual Rotary Round Knife (KM RS-100 4" Precision)', label: 'Manual Rotary Round Knife (KM RS-100 4" Precision)' },
+                              ]}
+                            />
                             <span className="text-xs text-slate-400">Controls edge thermal sealing vs. high-ply reciprocating blade slicing.</span>
                           </div>
 
                           {/* Stitch Density (SPI - Stitches Per Inch) */}
                           <div className="flex flex-col gap-1.5">
                             <label className="text-sm font-semibold text-slate-700">Stitch Density (SPI — Stitches Per Inch)</label>
-                            <select
+                            <CustomDropdown
                               value={quizStitchDensity}
-                              onChange={(e) => setQuizStitchDensity(e.target.value)}
-                              className="bg-white border border-slate-200/80 rounded-md py-3 px-4 text-sm text-slate-900 focus:bg-white focus:border-[#155DFC] focus:ring-1 focus:ring-[#155DFC] focus:outline-none transition-colors w-full"
-                            >
-                              <option value="10 - 12 SPI (Standard Commercial)">10 - 12 SPI (Standard Commercial Garment)</option>
-                              <option value="7 - 8 SPI (Heavy Denim / Canvas / Outerwear)">7 - 8 SPI (Heavy Denim / Canvas / Outerwear)</option>
-                              <option value="14 - 16 SPI (Fine Silk / Delicate / High Density)">14 - 16 SPI (Fine Silk / Delicate / High Density)</option>
-                            </select>
+                              onChange={setQuizStitchDensity}
+                              options={[
+                                { value: "10 - 12 SPI (Standard Commercial)", label: "10 - 12 SPI (Standard Commercial Garment)" },
+                                { value: "7 - 8 SPI (Heavy Denim / Canvas / Outerwear)", label: "7 - 8 SPI (Heavy Denim / Canvas / Outerwear)" },
+                                { value: "14 - 16 SPI (Fine Silk / Delicate / High Density)", label: "14 - 16 SPI (Fine Silk / Delicate / High Density)" },
+                              ]}
+                            />
                             <span className="text-xs text-slate-400">Governs ASTM thread consumption formula and structural seam tension.</span>
                           </div>
 
