@@ -889,7 +889,13 @@ def calculate_cutting_spec(fabric_weight: str, cutting_method: str = "Auto (AI R
     }
 
 
-def calculate_size_run_breakdown(garment_key: str, fabric_weight: str, pattern_size_run: str = "Full Size Run (S, M, L, XL, XXL)", batch_qty: int = 100) -> dict:
+def calculate_size_run_breakdown(
+    garment_key: str,
+    fabric_weight: str,
+    pattern_size_run: str = "Full Size Run (S, M, L, XL, XXL)",
+    batch_qty: int = 100,
+    custom_size_breakdown: list = None
+) -> dict:
     """
     Calculate pattern size grading distribution and fabric yardage consumption per size.
     Applies industrial garment markers:
@@ -907,6 +913,15 @@ def calculate_size_run_breakdown(garment_key: str, fabric_weight: str, pattern_s
     }
     base_cons = BASE_CONSUMPTION.get(garment_key, 1.50)
 
+    SIZE_MULTIPLIERS = {
+        "XS": 0.80,
+        "S": 0.90,
+        "M": 1.00,
+        "L": 1.15,
+        "XL": 1.30,
+        "XXL": 1.45,
+    }
+
     SIZE_SPECS = [
         {"size": "S", "multiplier": 0.90, "ratio": 0.15},
         {"size": "M", "multiplier": 1.00, "ratio": 0.35},
@@ -915,42 +930,66 @@ def calculate_size_run_breakdown(garment_key: str, fabric_weight: str, pattern_s
         {"size": "XXL", "multiplier": 1.45, "ratio": 0.05},
     ]
 
-    size_run_str = (pattern_size_run or "").strip()
-    is_full_run = "full" in size_run_str.lower() or "s, m, l" in size_run_str.lower()
-
     items = []
-    if is_full_run:
-        allocated = 0
-        for i, s in enumerate(SIZE_SPECS):
-            if i == len(SIZE_SPECS) - 1:
-                qty = max(1, batch_qty - allocated)
-            else:
-                qty = max(1, int(round(batch_qty * s["ratio"])))
-                allocated += qty
-            unit_cons = round(base_cons * s["multiplier"], 2)
+    # If custom size breakdown array was provided from interactive UI toggles
+    if custom_size_breakdown and isinstance(custom_size_breakdown, list) and len(custom_size_breakdown) > 0:
+        total_custom_units = sum(max(0, int(c.get("quantity_pcs", 0))) for c in custom_size_breakdown)
+        effective_total = total_custom_units if total_custom_units > 0 else batch_qty
+        for c in custom_size_breakdown:
+            s_name = str(c.get("size", "M")).upper()
+            qty = max(0, int(c.get("quantity_pcs", 0)))
+            if qty <= 0 and len(custom_size_breakdown) > 1:
+                continue
+            multiplier = SIZE_MULTIPLIERS.get(s_name, 1.0)
+            unit_cons = round(base_cons * multiplier, 2)
             subtotal_m = round(unit_cons * qty, 2)
+            ratio_pct = round((qty / effective_total) * 100) if effective_total > 0 else 0
             items.append({
-                "size": s["size"],
-                "ratio_pct": int(s["ratio"] * 100),
+                "size": s_name,
+                "ratio_pct": ratio_pct,
                 "quantity_pcs": qty,
                 "unit_consumption_m": unit_cons,
                 "subtotal_fabric_m": subtotal_m,
             })
+        active_sizes_str = ", ".join(item["size"] for item in items)
+        pattern_size_run = f"Custom Run ({active_sizes_str})"
+        is_full_run = len(items) >= 4
     else:
-        target_size = "M"
-        size_match = re.search(r'\b(XXL|XL|XS|S|M|L)\b', size_run_str, re.IGNORECASE)
-        if size_match:
-            target_size = size_match.group(1).upper()
-        matched_spec = next((s for s in SIZE_SPECS if s["size"] == target_size), SIZE_SPECS[1])
-        unit_cons = round(base_cons * matched_spec["multiplier"], 2)
-        subtotal_m = round(unit_cons * batch_qty, 2)
-        items.append({
-            "size": target_size,
-            "ratio_pct": 100,
-            "quantity_pcs": batch_qty,
-            "unit_consumption_m": unit_cons,
-            "subtotal_fabric_m": subtotal_m,
-        })
+        size_run_str = (pattern_size_run or "").strip()
+        is_full_run = "full" in size_run_str.lower() or "s, m, l" in size_run_str.lower()
+
+        if is_full_run:
+            allocated = 0
+            for i, s in enumerate(SIZE_SPECS):
+                if i == len(SIZE_SPECS) - 1:
+                    qty = max(1, batch_qty - allocated)
+                else:
+                    qty = max(1, int(round(batch_qty * s["ratio"])))
+                    allocated += qty
+                unit_cons = round(base_cons * s["multiplier"], 2)
+                subtotal_m = round(unit_cons * qty, 2)
+                items.append({
+                    "size": s["size"],
+                    "ratio_pct": int(s["ratio"] * 100),
+                    "quantity_pcs": qty,
+                    "unit_consumption_m": unit_cons,
+                    "subtotal_fabric_m": subtotal_m,
+                })
+        else:
+            target_size = "M"
+            size_match = re.search(r'\b(XXL|XL|XS|S|M|L)\b', size_run_str, re.IGNORECASE)
+            if size_match:
+                target_size = size_match.group(1).upper()
+            matched_spec = next((s for s in SIZE_SPECS if s["size"] == target_size), SIZE_SPECS[1])
+            unit_cons = round(base_cons * matched_spec["multiplier"], 2)
+            subtotal_m = round(unit_cons * batch_qty, 2)
+            items.append({
+                "size": target_size,
+                "ratio_pct": 100,
+                "quantity_pcs": batch_qty,
+                "unit_consumption_m": unit_cons,
+                "subtotal_fabric_m": subtotal_m,
+            })
 
     total_fabric_m = round(sum(item["subtotal_fabric_m"] for item in items), 2)
     total_with_waste_m = round(total_fabric_m * 1.05, 2)
@@ -980,6 +1019,7 @@ def calculate_pre_costing(
     """
     Calculate pre-production manufacturing cost and thread consumption.
     Applies ASTM D3823 thread consumption formulas + GSD labour rates.
+    Includes both international USD ($) and Indonesian Rupiah (IDR) currency conversions.
     """
     SEAM_LENGTHS = {
         "shirt": 8.5,
@@ -1025,6 +1065,14 @@ def calculate_pre_costing(
     unit_total_manufacturing = round(unit_thread_cost + unit_sewing_labour + unit_cutting_labour, 2)
     batch_total_manufacturing = round(unit_total_manufacturing * batch_qty, 2)
 
+    # Industrial standard benchmark conversion: 1 USD = 16,000 IDR
+    USD_TO_IDR_RATE = 16000.0
+    unit_total_manufacturing_idr = int(round(unit_total_manufacturing * USD_TO_IDR_RATE))
+    batch_total_manufacturing_idr = int(round(batch_total_manufacturing * USD_TO_IDR_RATE))
+    unit_thread_cost_idr = int(round(unit_thread_cost * USD_TO_IDR_RATE))
+    unit_sewing_labour_idr = int(round(unit_sewing_labour * USD_TO_IDR_RATE))
+    unit_cutting_labour_idr = int(round(unit_cutting_labour * USD_TO_IDR_RATE))
+
     return {
         "stitch_density_spi": stitch_density_spi,
         "base_seam_length_m": base_seam_m,
@@ -1035,6 +1083,12 @@ def calculate_pre_costing(
         "unit_cutting_labour_usd": unit_cutting_labour,
         "unit_total_manufacturing_usd": unit_total_manufacturing,
         "batch_total_manufacturing_usd": batch_total_manufacturing,
+        "exchange_rate_usd_idr": USD_TO_IDR_RATE,
+        "unit_total_manufacturing_idr": unit_total_manufacturing_idr,
+        "batch_total_manufacturing_idr": batch_total_manufacturing_idr,
+        "unit_thread_cost_idr": unit_thread_cost_idr,
+        "unit_sewing_labour_idr": unit_sewing_labour_idr,
+        "unit_cutting_labour_idr": unit_cutting_labour_idr,
     }
 
 
@@ -1110,8 +1164,10 @@ class DollSheetRequest(BaseModel):
     message: str
     batch_quantity: int = 100
     pattern_size_run: str = "Doll Standard Scale"
+    custom_size_breakdown: list = []
     cutting_method: str = "Auto (AI Recommended based on Fabric)"
     stitch_density_spi: str = "12 - 14 SPI (Fine Miniature)"
+    target_daily_units: int = 500
     tags: list[str] = []
     designer_notes: str = ""
 
@@ -1127,8 +1183,10 @@ class ProcessSheetRequest(BaseModel):
     visual_vector: list = []   # 384-dim embedding — MUST be sent from frontend to persist for duplicate detection
     batch_quantity: int = 100
     pattern_size_run: str = "Full Size Run (S, M, L, XL, XXL)"
+    custom_size_breakdown: list = []
     cutting_method: str = "Auto (AI Recommended based on Fabric)"
     stitch_density_spi: str = "10 - 12 SPI (Standard Commercial)"
+    target_daily_units: int = 500
     is_reuse_master: bool = False  # When True: recalculate batch scaling on existing master ID, skip new DB insert
     reuse_master_id: int | None = None  # Original master project ID to reuse
     tags: list[str] = []   # Project tags (e.g. SS26-Core, v1.0-master)
@@ -1294,7 +1352,8 @@ def generate_process_sheet(req: ProcessSheetRequest):
         "operator_daily_capacity_pcs": round((8.0 * 60.0) / single_smv_val, 1) if single_smv_val > 0 else 0,
     }
 
-    line_balancing = calculate_line_balancing(sewing_sequence_detailed, batch_qty, target_daily_units=500)
+    target_daily = getattr(req, "target_daily_units", 500) or 500
+    line_balancing = calculate_line_balancing(sewing_sequence_detailed, batch_qty, target_daily_units=target_daily)
 
     engineering_checklist = build_engineering_checklist(
         req.similarity_status,
@@ -1308,7 +1367,14 @@ def generate_process_sheet(req: ProcessSheetRequest):
     cutting_spec = calculate_cutting_spec(req.fabric_weight, req.cutting_method, req.garment_type, batch_qty)
 
     # Calculate size run breakdown and fabric yardage
-    size_run_breakdown = calculate_size_run_breakdown(garment_key, req.fabric_weight, req.pattern_size_run, batch_qty)
+    custom_sizes = getattr(req, "custom_size_breakdown", None)
+    size_run_breakdown = calculate_size_run_breakdown(
+        garment_key,
+        req.fabric_weight,
+        req.pattern_size_run,
+        batch_qty,
+        custom_size_breakdown=custom_sizes
+    )
 
     # Calculate pre-costing & thread consumption
     pre_costing = calculate_pre_costing(
@@ -1357,6 +1423,7 @@ def generate_process_sheet(req: ProcessSheetRequest):
             "pattern_size_run": req.pattern_size_run,
             "cutting_method": req.cutting_method,
             "stitch_density_spi": req.stitch_density_spi,
+            "target_daily_units": target_daily,
         }
     }
 
@@ -1456,7 +1523,8 @@ def generate_doll_process_sheet(req: DollSheetRequest):
     }
 
     work_aids = derive_work_aids_from_sequence(combined_sequence, req.components[0].fabric_weight if req.components else "Medium")
-    line_balancing = calculate_line_balancing(combined_sequence, batch_qty, target_daily_units=500)
+    target_daily = getattr(req, "target_daily_units", 500) or 500
+    line_balancing = calculate_line_balancing(combined_sequence, batch_qty, target_daily_units=target_daily)
 
     engineering_checklist = build_engineering_checklist(
         "APPROVED",
@@ -1468,7 +1536,14 @@ def generate_doll_process_sheet(req: DollSheetRequest):
 
     primary_fabric = req.components[0].fabric_weight if req.components else "Medium-weight"
     cutting_spec = calculate_cutting_spec(primary_fabric, req.cutting_method, "doll", batch_qty)
-    size_run_breakdown = calculate_size_run_breakdown("hat", primary_fabric, req.pattern_size_run, batch_qty)
+    custom_sizes = getattr(req, "custom_size_breakdown", None)
+    size_run_breakdown = calculate_size_run_breakdown(
+        "hat",
+        primary_fabric,
+        req.pattern_size_run,
+        batch_qty,
+        custom_size_breakdown=custom_sizes
+    )
     pre_costing = calculate_pre_costing(
         combined_sequence,
         total_smv_val,
@@ -1515,6 +1590,7 @@ def generate_doll_process_sheet(req: DollSheetRequest):
             "pattern_size_run": req.pattern_size_run,
             "cutting_method": req.cutting_method,
             "stitch_density_spi": req.stitch_density_spi,
+            "target_daily_units": target_daily,
         }
     }
 

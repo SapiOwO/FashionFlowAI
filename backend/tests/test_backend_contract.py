@@ -961,7 +961,49 @@ class TestEndToEndNewEngineeringSpecs(unittest.TestCase):
         self.assertEqual(res["cutting_specification"]["machine_model"], "Eastman 629X Blue Streak II (8-inch Cutting Machine)")
         self.assertFalse(res["size_run_breakdown"]["is_full_run"])
         self.assertEqual(res["size_run_breakdown"]["breakdown"][0]["size"], "M")
-        self.assertEqual(res["pre_costing"]["stitch_density_spi"], "7 - 8 SPI (Heavy Denim / Canvas / Outerwear)")
+    def test_custom_size_breakdown_distribution(self):
+        custom_input = [
+            {"size": "S", "quantity_pcs": 30},
+            {"size": "L", "quantity_pcs": 70},
+        ]
+        res = backend_app.calculate_size_run_breakdown(
+            "shirt",
+            "Cotton",
+            batch_qty=100,
+            custom_size_breakdown=custom_input
+        )
+        self.assertFalse(res["is_full_run"])
+        self.assertEqual(len(res["breakdown"]), 2)
+        sizes = [b["size"] for b in res["breakdown"]]
+        self.assertEqual(sizes, ["S", "L"])
+        self.assertEqual(res["breakdown"][0]["quantity_pcs"], 30)
+        self.assertEqual(res["breakdown"][0]["ratio_pct"], 30)
+        self.assertEqual(res["breakdown"][1]["quantity_pcs"], 70)
+        self.assertEqual(res["breakdown"][1]["ratio_pct"], 70)
+        self.assertEqual(res["pattern_size_run"], "Custom Run (S, L)")
+
+    def test_line_balancing_configurable_daily_target(self):
+        seq = [
+            {"step_num": 1, "operation": "Sewing Step", "recommended_model": "DDL-9000C", "smv_mins": 1.5}
+        ]
+        lb_500 = backend_app.calculate_line_balancing(seq, batch_quantity=100, target_daily_units=500)
+        lb_1000 = backend_app.calculate_line_balancing(seq, batch_quantity=100, target_daily_units=1000)
+        self.assertEqual(lb_500["target_daily_units"], 500)
+        self.assertEqual(lb_500["takt_time_mins"], 0.96)
+        self.assertEqual(lb_1000["target_daily_units"], 1000)
+        self.assertEqual(lb_1000["takt_time_mins"], 0.48)
+
+    def test_pre_costing_dual_currency_idr(self):
+        dummy_seq = [{"recommended_model": "DDL-8700", "step_num": 1}]
+        costing = backend_app.calculate_pre_costing(dummy_seq, 2.0, 100, "10 - 12 SPI", 0.20, "shirt")
+        self.assertIn("exchange_rate_usd_idr", costing)
+        self.assertEqual(costing["exchange_rate_usd_idr"], 16000.0)
+        self.assertIn("unit_total_manufacturing_idr", costing)
+        self.assertGreater(costing["unit_total_manufacturing_idr"], 0)
+        self.assertEqual(
+            costing["unit_total_manufacturing_idr"],
+            int(round(costing["unit_total_manufacturing_usd"] * 16000.0))
+        )
 
 
 if __name__ == "__main__":

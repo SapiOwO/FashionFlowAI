@@ -175,6 +175,60 @@ const DOLL_TYPES: Record<string, string[]> = {
   "Casual Doll": ["tshirt", "skirt"]
 };
 
+const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+
+const SIZE_BELL_WEIGHTS: Record<string, number> = {
+  XS: 0.05,
+  S: 0.15,
+  M: 0.35,
+  L: 0.30,
+  XL: 0.10,
+  XXL: 0.05,
+};
+
+const SIZE_FABRIC_MULTIPLIERS: Record<string, number> = {
+  XS: 0.80,
+  S: 0.90,
+  M: 1.00,
+  L: 1.15,
+  XL: 1.30,
+  XXL: 1.45,
+};
+
+function distributeBellCurve(totalQty: number, activeSizes: string[]): Record<string, number> {
+  if (activeSizes.length === 0) return {};
+  const totalWeight = activeSizes.reduce((sum, s) => sum + (SIZE_BELL_WEIGHTS[s] || 0.2), 0);
+  const result: Record<string, number> = {};
+  let allocated = 0;
+  activeSizes.forEach((s, idx) => {
+    if (idx === activeSizes.length - 1) {
+      result[s] = Math.max(1, totalQty - allocated);
+    } else {
+      const weight = (SIZE_BELL_WEIGHTS[s] || 0.2) / totalWeight;
+      const qty = Math.max(1, Math.round(totalQty * weight));
+      result[s] = qty;
+      allocated += qty;
+    }
+  });
+  return result;
+}
+
+function distributeEvenly(totalQty: number, activeSizes: string[]): Record<string, number> {
+  if (activeSizes.length === 0) return {};
+  const result: Record<string, number> = {};
+  let allocated = 0;
+  const each = Math.max(1, Math.floor(totalQty / activeSizes.length));
+  activeSizes.forEach((s, idx) => {
+    if (idx === activeSizes.length - 1) {
+      result[s] = Math.max(1, totalQty - allocated);
+    } else {
+      result[s] = each;
+      allocated += each;
+    }
+  });
+  return result;
+}
+
 const GitHubIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path fillRule="evenodd" clipRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8C0 11.54 2.29 14.53 5.47 15.59C5.87 15.66 6.02 15.42 6.02 15.21C6.02 15.02 6.01 14.39 6.01 13.72C4 14.09 3.48 13.23 3.32 12.78C3.23 12.55 2.84 11.84 2.5 11.65C2.22 11.5 1.82 11.13 2.49 11.12C3.12 11.11 3.57 11.7 3.72 11.94C4.44 13.15 5.59 12.81 6.05 12.6C6.12 12.08 6.33 11.73 6.56 11.53C4.78 11.33 2.92 10.64 2.92 7.58C2.92 6.71 3.23 5.99 3.74 5.43C3.66 5.23 3.38 4.41 3.82 3.31C3.82 3.31 4.49 3.1 6.02 4.13C6.66 3.95 7.34 3.86 8.02 3.86C8.7 3.86 9.38 3.95 10.02 4.13C11.55 3.09 12.22 3.31 12.22 3.31C12.66 4.41 12.38 5.23 12.3 5.43C12.81 5.99 13.12 6.7 13.12 7.58C13.12 10.65 11.25 11.33 9.47 11.53C9.76 11.78 10.01 12.26 10.01 13.01C10.01 14.08 10 14.94 10 15.21C10 15.42 10.15 15.67 10.55 15.59C13.71 14.53 16 11.53 16 8C16 3.58 12.42 0 8 0Z" transform="scale(64)" fill="currentColor"/>
@@ -774,11 +828,81 @@ export default function Home() {
   const [batchQuantity, setBatchQuantity] = useState(100);
   const [isCustomBatchMode, setIsCustomBatchMode] = useState(false);
   const [customBatchInput, setCustomBatchInput] = useState("");
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(["S", "M", "L", "XL", "XXL"]);
+  const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({
+    S: 15,
+    M: 35,
+    L: 30,
+    XL: 15,
+    XXL: 5,
+  });
+  const [targetDailyUnits, setTargetDailyUnits] = useState<number>(500);
   const [quizSizeRun, setQuizSizeRun] = useState<string>("Full Size Run (S, M, L, XL, XXL)");
   const [quizCuttingMethod, setQuizCuttingMethod] = useState<string>("Auto (AI Recommended based on Fabric)");
   const [quizStitchDensity, setQuizStitchDensity] = useState<string>("10 - 12 SPI (Standard Commercial)");
   const [isQuizSubmitted, setIsQuizSubmitted] = useState(false);
   const [fullResult, setFullResult] = useState<any | null>(null);
+
+  // Sync batch total with active size quantities proportionally
+  const handleBatchQuantityChange = (newQty: number) => {
+    setBatchQuantity(newQty);
+    const currentTotal = selectedSizes.reduce((sum, s) => sum + (sizeQuantities[s] || 0), 0);
+    if (currentTotal > 0) {
+      const updated: Record<string, number> = {};
+      let allocated = 0;
+      selectedSizes.forEach((s, idx) => {
+        if (idx === selectedSizes.length - 1) {
+          updated[s] = Math.max(1, newQty - allocated);
+        } else {
+          const ratio = (sizeQuantities[s] || 0) / currentTotal;
+          const q = Math.max(1, Math.round(newQty * ratio));
+          updated[s] = q;
+          allocated += q;
+        }
+      });
+      setSizeQuantities(updated);
+    } else {
+      setSizeQuantities(distributeBellCurve(newQty, selectedSizes));
+    }
+  };
+
+  const handleSizeQuantityChange = (size: string, val: number) => {
+    const updated = { ...sizeQuantities, [size]: Math.max(0, val) };
+    setSizeQuantities(updated);
+    const newTotal = selectedSizes.reduce((sum, s) => sum + (updated[s] || 0), 0);
+    if (newTotal > 0) {
+      setBatchQuantity(newTotal);
+      if (![100, 250, 500, 1000].includes(newTotal)) {
+        setIsCustomBatchMode(true);
+        setCustomBatchInput(newTotal.toString());
+      } else {
+        setIsCustomBatchMode(false);
+        setCustomBatchInput("");
+      }
+    }
+  };
+
+  const toggleSize = (size: string) => {
+    if (selectedSizes.includes(size)) {
+      if (selectedSizes.length <= 1) return; // Keep at least one size
+      const newSelected = selectedSizes.filter(s => s !== size);
+      setSelectedSizes(newSelected);
+      setSizeQuantities(distributeBellCurve(batchQuantity, newSelected));
+    } else {
+      const order = ["XS", "S", "M", "L", "XL", "XXL"];
+      const newSelected = [...selectedSizes, size].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+      setSelectedSizes(newSelected);
+      setSizeQuantities(distributeBellCurve(batchQuantity, newSelected));
+    }
+  };
+
+  const applyBellCurve = () => {
+    setSizeQuantities(distributeBellCurve(batchQuantity, selectedSizes));
+  };
+
+  const applyEvenSplit = () => {
+    setSizeQuantities(distributeEvenly(batchQuantity, selectedSizes));
+  };
 
   // Catalog Reuse Prompt State — shown when DINOv2 detects >= 90% similarity match
   const [showReusePrompt, setShowReusePrompt] = useState(false);
@@ -1464,13 +1588,23 @@ export default function Home() {
 
     setIsLoading(true);
     try {
+      const activeCustomSizeBreakdown = selectedSizes.map(sz => ({
+        size: sz,
+        quantity_pcs: Math.max(1, sizeQuantities[sz] || 1)
+      }));
+      const activeSizeRunTitle = selectedSizes.length === 5 && ["S", "M", "L", "XL", "XXL"].every(s => selectedSizes.includes(s))
+        ? "Full Size Run (S, M, L, XL, XXL)"
+        : `Custom Run (${selectedSizes.join(", ")})`;
+
       const payload = {
         project_name: quizName.trim(),
         doll_type: dollType,
         components: componentsList,
         message: `Consolidated doll clothing process sheet for ${dollType}.`,
         batch_quantity: batchQuantity,
-        pattern_size_run: quizSizeRun,
+        pattern_size_run: activeSizeRunTitle,
+        custom_size_breakdown: activeCustomSizeBreakdown,
+        target_daily_units: targetDailyUnits,
         cutting_method: quizCuttingMethod,
         stitch_density_spi: quizStitchDensity,
         tags: selectedTags,
@@ -1538,6 +1672,14 @@ export default function Home() {
 
     setIsLoading(true);
     try {
+      const activeCustomSizeBreakdown = selectedSizes.map(sz => ({
+        size: sz,
+        quantity_pcs: Math.max(1, sizeQuantities[sz] || 1)
+      }));
+      const activeSizeRunTitle = selectedSizes.length === 5 && ["S", "M", "L", "XL", "XXL"].every(s => selectedSizes.includes(s))
+        ? "Full Size Run (S, M, L, XL, XXL)"
+        : `Custom Run (${selectedSizes.join(", ")})`;
+
       const payload = {
         project_name: resolvedProjectName,
         garment_type: quizGarment,
@@ -1550,7 +1692,9 @@ export default function Home() {
         // CRITICAL: send visual_vector so backend can persist it for future cosine-similarity duplicate detection
         visual_vector: targetResult.visual_vector || [],
         batch_quantity: batchQuantity,
-        pattern_size_run: quizSizeRun,
+        pattern_size_run: activeSizeRunTitle,
+        custom_size_breakdown: activeCustomSizeBreakdown,
+        target_daily_units: targetDailyUnits,
         cutting_method: quizCuttingMethod,
         stitch_density_spi: quizStitchDensity,
         // Reuse flag: when true backend skips inserting a new DB row and recalculates on existing master ID
@@ -1616,6 +1760,12 @@ export default function Home() {
     setEditingProjectNameValue("");
     setShowRenameConfirmModal(false);
     setQuizSizeRun("Full Size Run (S, M, L, XL, XXL)");
+    setSelectedSizes(["S", "M", "L", "XL", "XXL"]);
+    setSizeQuantities({ S: 15, M: 35, L: 30, XL: 15, XXL: 5 });
+    setTargetDailyUnits(500);
+    setBatchQuantity(100);
+    setIsCustomBatchMode(false);
+    setCustomBatchInput("");
     setQuizCuttingMethod("Auto (AI Recommended based on Fabric)");
     setQuizStitchDensity("10 - 12 SPI (Standard Commercial)");
     setComponentsState({
@@ -1635,6 +1785,12 @@ export default function Home() {
     setQuizGarment("Shirt");
     setQuizFabric("");
     setQuizSizeRun("Full Size Run (S, M, L, XL, XXL)");
+    setSelectedSizes(["S", "M", "L", "XL", "XXL"]);
+    setSizeQuantities({ S: 15, M: 35, L: 30, XL: 15, XXL: 5 });
+    setTargetDailyUnits(500);
+    setBatchQuantity(100);
+    setIsCustomBatchMode(false);
+    setCustomBatchInput("");
     setQuizCuttingMethod("Auto (AI Recommended based on Fabric)");
     setQuizStitchDensity("10 - 12 SPI (Standard Commercial)");
     setShowReusePrompt(false);
@@ -1853,6 +2009,18 @@ export default function Home() {
         setCustomBatchInput("");
       }
     }
+
+    if (pResult.size_run_breakdown?.breakdown && Array.isArray(pResult.size_run_breakdown.breakdown) && pResult.size_run_breakdown.breakdown.length > 0) {
+      const loadedSizes = pResult.size_run_breakdown.breakdown.map((b: any) => b.size);
+      const loadedQuantities = pResult.size_run_breakdown.breakdown.reduce((acc: any, b: any) => ({
+        ...acc,
+        [b.size]: b.quantity_pcs
+      }), {});
+      setSelectedSizes(loadedSizes);
+      setSizeQuantities(loadedQuantities);
+    }
+    const loadedTargetDaily = pResult.line_balancing?.target_daily_units || pResult.project_details?.target_daily_units || 500;
+    setTargetDailyUnits(loadedTargetDaily);
 
     const resolvedName = project.fileName || pResult.project_details?.name || "Project";
     if (pResult.is_doll_project) {
@@ -3313,7 +3481,7 @@ export default function Home() {
                                     key={qty}
                                     type="button"
                                     onClick={() => {
-                                      setBatchQuantity(qty);
+                                      handleBatchQuantityChange(qty);
                                       setIsCustomBatchMode(false);
                                       setCustomBatchInput("");
                                     }}
@@ -3365,7 +3533,7 @@ export default function Home() {
                                       setIsCustomBatchMode(true);
                                       const val = parseInt(valStr, 10);
                                       if (!isNaN(val) && val > 0) {
-                                        setBatchQuantity(val);
+                                        handleBatchQuantityChange(val);
                                       }
                                     }}
                                     onBlur={() => {
@@ -3375,7 +3543,7 @@ export default function Home() {
                                           setIsCustomBatchMode(false);
                                           setCustomBatchInput("");
                                         } else {
-                                          setBatchQuantity(100);
+                                          handleBatchQuantityChange(100);
                                           setIsCustomBatchMode(false);
                                           setCustomBatchInput("");
                                         }
@@ -3400,22 +3568,97 @@ export default function Home() {
                             </span>
                           </div>
 
-                          {/* Pattern Size Run & Grading Selection */}
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-slate-700">Pattern Size Run &amp; Grading</label>
-                            <CustomDropdown
-                              value={quizSizeRun}
-                              onChange={setQuizSizeRun}
-                              options={[
-                                { value: "Full Size Run (S, M, L, XL, XXL)", label: "Full Size Run (S, M, L, XL, XXL) — Proportional Grading" },
-                                { value: "S — Small", label: "S — Small Only" },
-                                { value: "M — Medium (Sample Base)", label: "M — Medium (Sample Master Base)" },
-                                { value: "L — Large", label: "L — Large Only" },
-                                { value: "XL — Extra Large", label: "XL — Extra Large Only" },
-                                { value: "XXL — Double Extra Large", label: "XXL — Double Extra Large Only" },
-                              ]}
-                            />
-                            <span className="text-xs text-slate-400">Specifies marker grading scale and fabric yardage consumption per size.</span>
+                          {/* Pattern Size Run & Grading Selection with Interactive Size Toggles & Custom Quantities */}
+                          <div className="flex flex-col gap-3 p-4 bg-slate-50/80 border border-slate-200/90 rounded-md">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <label className="text-sm font-semibold text-slate-800 block">
+                                  Pattern Size Run &amp; Grading Allocation
+                                </label>
+                                <span className="text-xs text-slate-400">
+                                  Toggle active sizes and customize unit allocation. Auto-syncs with total batch ({batchQuantity.toLocaleString()} pcs).
+                                </span>
+                              </div>
+                              <span className="text-xs font-mono font-bold text-[#155DFC] bg-blue-50 border border-blue-200/70 px-2.5 py-1 rounded-md">
+                                {selectedSizes.length} {selectedSizes.length === 1 ? "Size" : "Sizes"} Selected
+                              </span>
+                            </div>
+
+                            {/* Interactive Size Toggle Pills & Quick Presets */}
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-semibold text-slate-500 mr-1">Active Sizes:</span>
+                              {AVAILABLE_SIZES.map((sz) => {
+                                const isChecked = selectedSizes.includes(sz);
+                                return (
+                                  <button
+                                    key={sz}
+                                    type="button"
+                                    onClick={() => toggleSize(sz)}
+                                    className={`py-1.5 px-3 rounded-md text-xs font-mono font-bold border transition-all cursor-pointer ${
+                                      isChecked
+                                        ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs"
+                                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
+                                    }`}
+                                    title={isChecked ? `Click to exclude size ${sz}` : `Click to include size ${sz}`}
+                                  >
+                                    {sz}
+                                  </button>
+                                );
+                              })}
+
+                              {/* Quick Distribute Helpers */}
+                              <div className="ml-auto flex items-center gap-1.5">
+                                <span className="text-[11px] text-slate-400 mr-1">Distribution:</span>
+                                <button
+                                  type="button"
+                                  onClick={applyBellCurve}
+                                  className="px-2.5 py-1 text-[11px] font-mono font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded transition-all cursor-pointer shadow-2xs"
+                                  title="Distribute units according to standard industrial bell-curve (15% S, 35% M, 30% L, 15% XL, 5% XXL)"
+                                >
+                                  Bell Curve
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={applyEvenSplit}
+                                  className="px-2.5 py-1 text-[11px] font-mono font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded transition-all cursor-pointer shadow-2xs"
+                                  title="Split batch quantity evenly across active sizes"
+                                >
+                                  Split Evenly
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Size Allocation Inputs Grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 pt-1">
+                              {selectedSizes.map((sz) => {
+                                const qty = sizeQuantities[sz] ?? 0;
+                                const ratio = batchQuantity > 0 ? Math.round((qty / batchQuantity) * 100) : 0;
+                                const mult = SIZE_FABRIC_MULTIPLIERS[sz] ?? 1.0;
+                                return (
+                                  <div key={sz} className="bg-white border border-slate-200/90 rounded-md p-2.5 flex flex-col gap-1.5 shadow-2xs">
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="font-mono font-bold text-slate-900">{sz}</span>
+                                      <span className="text-[11px] font-mono text-slate-400">{mult}x fabric</span>
+                                    </div>
+                                    <div className="relative flex items-center">
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        max={100000}
+                                        value={qty || ""}
+                                        onChange={(e) => handleSizeQuantityChange(sz, parseInt(e.target.value, 10) || 0)}
+                                        className="w-full py-1.5 px-2 pr-9 rounded text-xs font-mono font-bold text-slate-900 border border-slate-200 focus:border-[#155DFC] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      />
+                                      <span className="absolute right-2 text-[11px] font-mono text-slate-400 pointer-events-none">pcs</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                                      <span>Ratio:</span>
+                                      <span className="font-semibold text-slate-700">{ratio}%</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
 
                           {/* Cutting Department Machinery Selection */}
@@ -3447,6 +3690,57 @@ export default function Home() {
                               ]}
                             />
                             <span className="text-xs text-slate-400">Governs ASTM thread consumption formula and structural seam tension.</span>
+                          </div>
+
+                          {/* Factory Line Balancing — Daily Output Target */}
+                          <div className="flex flex-col gap-2.5 p-4 bg-slate-50/80 border border-slate-200/90 rounded-md">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <label className="text-sm font-semibold text-slate-800 block">
+                                  Factory Line Balancing Daily Output Target
+                                </label>
+                                <span className="text-xs text-slate-400">
+                                  Configures plant target output to derive Takt Time and balance machine workstation count.
+                                </span>
+                              </div>
+                              <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-2.5 py-1 rounded-md">
+                                {targetDailyUnits} pcs / day Target
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2">
+                              {[250, 500, 1000].map((tier) => (
+                                <button
+                                  key={tier}
+                                  type="button"
+                                  onClick={() => setTargetDailyUnits(tier)}
+                                  className={`py-2 px-3 text-xs font-mono font-bold rounded-md border transition-all cursor-pointer ${
+                                    targetDailyUnits === tier
+                                      ? "bg-indigo-50 text-indigo-700 border-indigo-500 ring-1 ring-indigo-500"
+                                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
+                                  }`}
+                                >
+                                  {tier} pcs/day {tier === 500 ? "(Standard)" : ""}
+                                </button>
+                              ))}
+                            </div>
+
+                            <div className="relative flex items-center">
+                              <span className="absolute left-3 text-xs font-semibold text-slate-400">Custom Target:</span>
+                              <input
+                                type="number"
+                                min={10}
+                                max={50000}
+                                value={![250, 500, 1000].includes(targetDailyUnits) ? targetDailyUnits : ""}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  if (!isNaN(val) && val > 0) setTargetDailyUnits(val);
+                                }}
+                                placeholder="Or enter custom daily target (e.g. 750, 1500)..."
+                                className="w-full py-2 pl-28 pr-16 rounded-md text-xs font-mono transition-all border outline-none bg-white text-slate-900 border-slate-200 hover:border-slate-300 placeholder:text-slate-400 focus:border-indigo-500"
+                              />
+                              <span className="absolute right-3 text-xs font-mono text-slate-400">pcs/day</span>
+                            </div>
                           </div>
 
                           {/* Tag Management System */}
@@ -3784,7 +4078,7 @@ export default function Home() {
                           <div className="text-xs font-mono text-slate-500 uppercase">Total Operations</div>
                           <div className="text-sm font-bold text-slate-900">{fullResult?.sewing_sequence_detailed?.length || fullResult?.sewing_steps?.length || 8} Steps</div>
                         </div>
-                        <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
+                        <div className="border border-slate-300 rounded-md p-2 bg-slate-50">
                           <div className="text-xs font-mono text-slate-500 uppercase">Estimated Total SMV</div>
                           <div className="text-sm font-bold text-[#155DFC]">
                             {(fullResult?.sewing_sequence_detailed
@@ -3793,11 +4087,11 @@ export default function Home() {
                             )} Mins
                           </div>
                         </div>
-                        <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
+                        <div className="border border-slate-300 rounded-md p-2 bg-slate-50">
                           <div className="text-xs font-mono text-slate-500 uppercase">Target Line Output</div>
                           <div className="text-sm font-bold text-emerald-700">{fullResult?.line_balancing?.target_daily_units || 500} Pcs / Day</div>
                         </div>
-                        <div className="border border-slate-300 rounded-lg p-2 bg-slate-50">
+                        <div className="border border-slate-300 rounded-md p-2 bg-slate-50">
                           <div className="text-xs font-mono text-slate-500 uppercase">Takt Time / Unit</div>
                           <div className="text-sm font-bold text-slate-900">{fullResult?.line_balancing?.takt_time_mins || 0.96} Mins</div>
                         </div>
@@ -4478,7 +4772,7 @@ export default function Home() {
                         <div className="border-t border-slate-100 pt-6 flex flex-col gap-4">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-mono text-slate-400 font-bold uppercase tracking-widest">
-                              Factory Line Balancing Allocation (500 pcs/day Target)
+                              Factory Line Balancing Allocation ({fullResult.line_balancing?.target_daily_units || 500} pcs/day Target)
                             </span>
                             <span className="text-xs font-mono text-slate-500">
                               Takt Time: <strong className="text-slate-900">{fullResult.line_balancing.takt_time_mins} mins/unit</strong>
@@ -4502,27 +4796,35 @@ export default function Home() {
                       )}
                     </div>
 
-                    {/* MANUFACTURING PRE-COSTING & THREAD CONSUMPTION CARD */}
+                    {/* MANUFACTURING PRE-COSTING & THREAD CONSUMPTION CARD (DUAL CURRENCY USD + IDR) */}
                     {fullResult.pre_costing && (
                       <div className="bg-white border border-slate-100 rounded-md p-8 shadow-2xs flex flex-col gap-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
                             <span className="text-xs font-mono text-slate-400 uppercase tracking-widest block mb-1">
                               MANUFACTURING PRE-COSTING &amp; THREAD CONSUMPTION
                             </span>
-                            <div className="flex items-baseline gap-2">
+                            <div className="flex flex-wrap items-baseline gap-2.5">
                               <span className="font-display font-bold text-3xl text-emerald-700">
                                 ${fullResult.pre_costing.unit_total_manufacturing_usd.toFixed(2)}
                               </span>
                               <span className="text-sm font-semibold text-slate-400">/ unit estimated</span>
+                              <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-md">
+                                ≈ Rp {(fullResult.pre_costing.unit_total_manufacturing_idr ?? Math.round(fullResult.pre_costing.unit_total_manufacturing_usd * 16000)).toLocaleString("id-ID")}
+                              </span>
                             </div>
                           </div>
 
-                          <div className="text-right">
+                          <div className="text-left sm:text-right">
                             <span className="text-xs font-mono text-slate-400 uppercase block mb-1">Batch Total Mfg. Cost</span>
-                            <span className="font-display font-bold text-xl text-slate-900 font-mono">
-                              ${fullResult.pre_costing.batch_total_manufacturing_usd.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </span>
+                            <div className="flex flex-col sm:items-end">
+                              <span className="font-display font-bold text-xl text-slate-900 font-mono">
+                                ${fullResult.pre_costing.batch_total_manufacturing_usd.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </span>
+                              <span className="text-xs font-mono font-bold text-slate-500">
+                                ≈ Rp {(fullResult.pre_costing.batch_total_manufacturing_idr ?? Math.round(fullResult.pre_costing.batch_total_manufacturing_usd * 16000)).toLocaleString("id-ID")}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
@@ -4565,9 +4867,14 @@ export default function Home() {
                                 <span className="text-xs font-bold font-mono text-slate-900 block">Thread Material</span>
                                 <span className="text-xs text-slate-500 font-mono">ASTM D3823 standard</span>
                               </div>
-                              <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold font-mono text-blue-700 border border-blue-200">
-                                ${fullResult.pre_costing.unit_thread_cost_usd}
-                              </span>
+                              <div className="text-right flex flex-col items-end">
+                                <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold font-mono text-blue-700 border border-blue-200">
+                                  ${fullResult.pre_costing.unit_thread_cost_usd}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                  ≈ Rp {(fullResult.pre_costing.unit_thread_cost_idr ?? Math.round(fullResult.pre_costing.unit_thread_cost_usd * 16000)).toLocaleString("id-ID")}
+                                </span>
+                              </div>
                             </div>
 
                             <div className="bg-slate-50/80 border border-slate-200/70 rounded-md p-3 flex items-center justify-between">
@@ -4575,9 +4882,14 @@ export default function Home() {
                                 <span className="text-xs font-bold font-mono text-slate-900 block">Sewing Assembly Labour</span>
                                 <span className="text-xs text-slate-500 font-mono">SMV-scaled operator</span>
                               </div>
-                              <span className="inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold font-mono text-emerald-700 border border-emerald-200">
-                                ${fullResult.pre_costing.unit_sewing_labour_usd}
-                              </span>
+                              <div className="text-right flex flex-col items-end">
+                                <span className="inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-bold font-mono text-emerald-700 border border-emerald-200">
+                                  ${fullResult.pre_costing.unit_sewing_labour_usd}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                  ≈ Rp {(fullResult.pre_costing.unit_sewing_labour_idr ?? Math.round(fullResult.pre_costing.unit_sewing_labour_usd * 16000)).toLocaleString("id-ID")}
+                                </span>
+                              </div>
                             </div>
 
                             <div className="bg-slate-50/80 border border-slate-200/70 rounded-md p-3 flex items-center justify-between">
@@ -4585,10 +4897,20 @@ export default function Home() {
                                 <span className="text-xs font-bold font-mono text-slate-900 block">Cutting Dept Labour</span>
                                 <span className="text-xs text-slate-500 font-mono">Machine lay &amp; cut</span>
                               </div>
-                              <span className="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold font-mono text-amber-700 border border-amber-200">
-                                ${fullResult.pre_costing.unit_cutting_labour_usd}
-                              </span>
+                              <div className="text-right flex flex-col items-end">
+                                <span className="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-bold font-mono text-amber-700 border border-amber-200">
+                                  ${fullResult.pre_costing.unit_cutting_labour_usd}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                  ≈ Rp {(fullResult.pre_costing.unit_cutting_labour_idr ?? Math.round(fullResult.pre_costing.unit_cutting_labour_usd * 16000)).toLocaleString("id-ID")}
+                                </span>
+                              </div>
                             </div>
+                          </div>
+
+                          <div className="text-[11px] font-mono text-slate-400 bg-slate-50 border border-slate-100 rounded-md px-3 py-1.5 flex items-center justify-between mt-1">
+                            <span>ASTM D3823 Thread Standard &amp; GSD SMV Labour Rate Formula</span>
+                            <span>Benchmark Exchange Rate: 1 USD = Rp 16.000 IDR</span>
                           </div>
                         </div>
                       </div>
