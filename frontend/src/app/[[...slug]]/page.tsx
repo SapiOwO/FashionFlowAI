@@ -177,15 +177,6 @@ const DOLL_TYPES: Record<string, string[]> = {
 
 const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
 
-const SIZE_BELL_WEIGHTS: Record<string, number> = {
-  XS: 0.05,
-  S: 0.15,
-  M: 0.35,
-  L: 0.30,
-  XL: 0.10,
-  XXL: 0.05,
-};
-
 const SIZE_FABRIC_MULTIPLIERS: Record<string, number> = {
   XS: 0.80,
   S: 0.90,
@@ -194,40 +185,6 @@ const SIZE_FABRIC_MULTIPLIERS: Record<string, number> = {
   XL: 1.30,
   XXL: 1.45,
 };
-
-function distributeBellCurve(totalQty: number, activeSizes: string[]): Record<string, number> {
-  if (activeSizes.length === 0) return {};
-  const totalWeight = activeSizes.reduce((sum, s) => sum + (SIZE_BELL_WEIGHTS[s] || 0.2), 0);
-  const result: Record<string, number> = {};
-  let allocated = 0;
-  activeSizes.forEach((s, idx) => {
-    if (idx === activeSizes.length - 1) {
-      result[s] = Math.max(1, totalQty - allocated);
-    } else {
-      const weight = (SIZE_BELL_WEIGHTS[s] || 0.2) / totalWeight;
-      const qty = Math.max(1, Math.round(totalQty * weight));
-      result[s] = qty;
-      allocated += qty;
-    }
-  });
-  return result;
-}
-
-function distributeEvenly(totalQty: number, activeSizes: string[]): Record<string, number> {
-  if (activeSizes.length === 0) return {};
-  const result: Record<string, number> = {};
-  let allocated = 0;
-  const each = Math.max(1, Math.floor(totalQty / activeSizes.length));
-  activeSizes.forEach((s, idx) => {
-    if (idx === activeSizes.length - 1) {
-      result[s] = Math.max(1, totalQty - allocated);
-    } else {
-      result[s] = each;
-      allocated += each;
-    }
-  });
-  return result;
-}
 
 const GitHubIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -828,80 +785,43 @@ export default function Home() {
   const [batchQuantity, setBatchQuantity] = useState(100);
   const [isCustomBatchMode, setIsCustomBatchMode] = useState(false);
   const [customBatchInput, setCustomBatchInput] = useState("");
-  const [selectedSizes, setSelectedSizes] = useState<string[]>(["S", "M", "L", "XL", "XXL"]);
-  const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({
-    S: 15,
-    M: 35,
-    L: 30,
-    XL: 15,
-    XXL: 5,
-  });
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({});
   const [targetDailyUnits, setTargetDailyUnits] = useState<number>(500);
+  const [showAdvancedPlantSettings, setShowAdvancedPlantSettings] = useState<boolean>(false);
   const [quizSizeRun, setQuizSizeRun] = useState<string>("Full Size Run (S, M, L, XL, XXL)");
   const [quizCuttingMethod, setQuizCuttingMethod] = useState<string>("Auto (AI Recommended based on Fabric)");
   const [quizStitchDensity, setQuizStitchDensity] = useState<string>("10 - 12 SPI (Standard Commercial)");
   const [isQuizSubmitted, setIsQuizSubmitted] = useState(false);
   const [fullResult, setFullResult] = useState<any | null>(null);
 
-  // Sync batch total with active size quantities proportionally
-  const handleBatchQuantityChange = (newQty: number) => {
-    setBatchQuantity(newQty);
-    const currentTotal = selectedSizes.reduce((sum, s) => sum + (sizeQuantities[s] || 0), 0);
-    if (currentTotal > 0) {
-      const updated: Record<string, number> = {};
-      let allocated = 0;
-      selectedSizes.forEach((s, idx) => {
-        if (idx === selectedSizes.length - 1) {
-          updated[s] = Math.max(1, newQty - allocated);
-        } else {
-          const ratio = (sizeQuantities[s] || 0) / currentTotal;
-          const q = Math.max(1, Math.round(newQty * ratio));
-          updated[s] = q;
-          allocated += q;
-        }
-      });
-      setSizeQuantities(updated);
-    } else {
-      setSizeQuantities(distributeBellCurve(newQty, selectedSizes));
-    }
-  };
+  // Computed total batch quantity from active size allocations
+  const totalBatchQuantity = selectedSizes.reduce((sum, s) => sum + (sizeQuantities[s] || 0), 0);
 
   const handleSizeQuantityChange = (size: string, val: number) => {
-    const updated = { ...sizeQuantities, [size]: Math.max(0, val) };
-    setSizeQuantities(updated);
-    const newTotal = selectedSizes.reduce((sum, s) => sum + (updated[s] || 0), 0);
-    if (newTotal > 0) {
-      setBatchQuantity(newTotal);
-      if (![100, 250, 500, 1000].includes(newTotal)) {
-        setIsCustomBatchMode(true);
-        setCustomBatchInput(newTotal.toString());
-      } else {
-        setIsCustomBatchMode(false);
-        setCustomBatchInput("");
-      }
-    }
+    const safeVal = Math.max(0, isNaN(val) ? 0 : val);
+    setSizeQuantities(prev => ({ ...prev, [size]: safeVal }));
   };
 
   const toggleSize = (size: string) => {
     if (selectedSizes.includes(size)) {
-      if (selectedSizes.length <= 1) return; // Keep at least one size
+      // Can turn off freely, even all sizes down to 0
       const newSelected = selectedSizes.filter(s => s !== size);
       setSelectedSizes(newSelected);
-      setSizeQuantities(distributeBellCurve(batchQuantity, newSelected));
+      setSizeQuantities(prev => {
+        const next = { ...prev };
+        delete next[size];
+        return next;
+      });
     } else {
       const order = ["XS", "S", "M", "L", "XL", "XXL"];
       const newSelected = [...selectedSizes, size].sort((a, b) => order.indexOf(a) - order.indexOf(b));
       setSelectedSizes(newSelected);
-      setSizeQuantities(distributeBellCurve(batchQuantity, newSelected));
+      setSizeQuantities(prev => ({
+        ...prev,
+        [size]: prev[size] && prev[size] > 0 ? prev[size] : 10
+      }));
     }
-  };
-
-  const applyBellCurve = () => {
-    setSizeQuantities(distributeBellCurve(batchQuantity, selectedSizes));
-  };
-
-  const applyEvenSplit = () => {
-    setSizeQuantities(distributeEvenly(batchQuantity, selectedSizes));
   };
 
   // Catalog Reuse Prompt State — shown when DINOv2 detects >= 90% similarity match
@@ -1601,7 +1521,7 @@ export default function Home() {
         doll_type: dollType,
         components: componentsList,
         message: `Consolidated doll clothing process sheet for ${dollType}.`,
-        batch_quantity: batchQuantity,
+        batch_quantity: Math.max(1, totalBatchQuantity),
         pattern_size_run: activeSizeRunTitle,
         custom_size_breakdown: activeCustomSizeBreakdown,
         target_daily_units: targetDailyUnits,
@@ -1691,7 +1611,7 @@ export default function Home() {
         message: targetResult.message,
         // CRITICAL: send visual_vector so backend can persist it for future cosine-similarity duplicate detection
         visual_vector: targetResult.visual_vector || [],
-        batch_quantity: batchQuantity,
+        batch_quantity: Math.max(1, totalBatchQuantity),
         pattern_size_run: activeSizeRunTitle,
         custom_size_breakdown: activeCustomSizeBreakdown,
         target_daily_units: targetDailyUnits,
@@ -1748,7 +1668,7 @@ export default function Home() {
     setFullResult(null);
     setQuizName("");
     setQuizGarment("Shirt");
-    setQuizFabric("Medium-weight");
+    setQuizFabric("");
     setIsQuizSubmitted(false);
     setCurrentStep(1);
     setShowReusePrompt(false);
@@ -1760,12 +1680,10 @@ export default function Home() {
     setEditingProjectNameValue("");
     setShowRenameConfirmModal(false);
     setQuizSizeRun("Full Size Run (S, M, L, XL, XXL)");
-    setSelectedSizes(["S", "M", "L", "XL", "XXL"]);
-    setSizeQuantities({ S: 15, M: 35, L: 30, XL: 15, XXL: 5 });
+    setSelectedSizes([]);
+    setSizeQuantities({});
     setTargetDailyUnits(500);
-    setBatchQuantity(100);
-    setIsCustomBatchMode(false);
-    setCustomBatchInput("");
+    setShowAdvancedPlantSettings(false);
     setQuizCuttingMethod("Auto (AI Recommended based on Fabric)");
     setQuizStitchDensity("10 - 12 SPI (Standard Commercial)");
     setComponentsState({
@@ -1785,12 +1703,10 @@ export default function Home() {
     setQuizGarment("Shirt");
     setQuizFabric("");
     setQuizSizeRun("Full Size Run (S, M, L, XL, XXL)");
-    setSelectedSizes(["S", "M", "L", "XL", "XXL"]);
-    setSizeQuantities({ S: 15, M: 35, L: 30, XL: 15, XXL: 5 });
+    setSelectedSizes([]);
+    setSizeQuantities({});
     setTargetDailyUnits(500);
-    setBatchQuantity(100);
-    setIsCustomBatchMode(false);
-    setCustomBatchInput("");
+    setShowAdvancedPlantSettings(false);
     setQuizCuttingMethod("Auto (AI Recommended based on Fabric)");
     setQuizStitchDensity("10 - 12 SPI (Standard Commercial)");
     setShowReusePrompt(false);
@@ -3468,106 +3384,6 @@ export default function Home() {
                             </div>
                           )}
 
-                          <div className="flex flex-col gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Production Run Quantity (Batch Size)</label>
-
-                            {/* Standard Production Volume Presets */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                              {[100, 250, 500, 1000].map((qty) => {
-                                const isCustomActive = isCustomBatchMode || ![100, 250, 500, 1000].includes(batchQuantity);
-                                const isSelected = !isCustomActive && batchQuantity === qty;
-                                return (
-                                  <button
-                                    key={qty}
-                                    type="button"
-                                    onClick={() => {
-                                      handleBatchQuantityChange(qty);
-                                      setIsCustomBatchMode(false);
-                                      setCustomBatchInput("");
-                                    }}
-                                    className={`py-2 px-3 rounded-md text-xs font-mono font-bold transition-all cursor-pointer border text-center ${
-                                      isSelected
-                                        ? "bg-[#155DFC] text-white border-[#155DFC] shadow-2xs ring-1 ring-[#155DFC]"
-                                        : "bg-slate-50 text-slate-700 border-slate-200/80 hover:bg-slate-100 hover:border-slate-300"
-                                    }`}
-                                  >
-                                    {qty.toLocaleString()} pcs
-                                  </button>
-                                );
-                              })}
-                            </div>
-
-                            {/* Prominent Custom Batch Input with Clear Tag and Suffix */}
-                            {(() => {
-                              const isCustomActive = isCustomBatchMode || ![100, 250, 500, 1000].includes(batchQuantity);
-                              return (
-                                <div className="relative flex items-center">
-                                  <div className="absolute left-3 flex items-center gap-1.5 pointer-events-none">
-                                    <svg
-                                      className={`w-3.5 h-3.5 transition-colors ${isCustomActive ? "text-[#155DFC]" : "text-slate-400"}`}
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="2"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                                    </svg>
-                                    <span className={`text-xs font-semibold transition-colors ${isCustomActive ? "text-[#155DFC]" : "text-slate-500"}`}>
-                                      Custom Batch:
-                                    </span>
-                                  </div>
-                                  <input
-                                    type="number"
-                                    min={1}
-                                    max={100000}
-                                    value={isCustomActive ? (customBatchInput || batchQuantity.toString()) : ""}
-                                    onFocus={() => {
-                                      setIsCustomBatchMode(true);
-                                      if (!customBatchInput) {
-                                        setCustomBatchInput(batchQuantity.toString());
-                                      }
-                                    }}
-                                    onChange={(e) => {
-                                      const valStr = e.target.value;
-                                      setCustomBatchInput(valStr);
-                                      setIsCustomBatchMode(true);
-                                      const val = parseInt(valStr, 10);
-                                      if (!isNaN(val) && val > 0) {
-                                        handleBatchQuantityChange(val);
-                                      }
-                                    }}
-                                    onBlur={() => {
-                                      const val = parseInt(customBatchInput, 10);
-                                      if (isNaN(val) || val <= 0) {
-                                        if ([100, 250, 500, 1000].includes(batchQuantity)) {
-                                          setIsCustomBatchMode(false);
-                                          setCustomBatchInput("");
-                                        } else {
-                                          handleBatchQuantityChange(100);
-                                          setIsCustomBatchMode(false);
-                                          setCustomBatchInput("");
-                                        }
-                                      }
-                                    }}
-                                    placeholder="Or enter custom units (e.g. 75, 350, 2500)..."
-                                    className={`w-full py-2.5 pl-32 pr-12 rounded-md text-xs font-mono transition-all border outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                                      isCustomActive
-                                        ? "bg-blue-50/50 text-[#155DFC] border-[#155DFC] ring-1 ring-[#155DFC] font-bold"
-                                        : "bg-white text-slate-900 border-slate-200/80 hover:border-slate-300 placeholder:text-slate-400"
-                                    }`}
-                                  />
-                                  <span className={`absolute right-3 text-xs font-mono pointer-events-none transition-colors ${isCustomActive ? "text-[#155DFC] font-bold" : "text-slate-400"}`}>
-                                    pcs
-                                  </span>
-                                </div>
-                              );
-                            })()}
-
-                            <span className="text-xs text-slate-400">
-                              Select a standard apparel production tier or specify an exact custom cutting run.
-                            </span>
-                          </div>
-
                           {/* Pattern Size Run & Grading Selection with Interactive Size Toggles & Custom Quantities */}
                           <div className="flex flex-col gap-3 p-4 bg-slate-50/80 border border-slate-200/90 rounded-md">
                             <div className="flex items-center justify-between">
@@ -3576,15 +3392,22 @@ export default function Home() {
                                   Pattern Size Run &amp; Grading Allocation
                                 </label>
                                 <span className="text-xs text-slate-400">
-                                  Toggle active sizes and customize unit allocation. Auto-syncs with total batch ({batchQuantity.toLocaleString()} pcs).
+                                  Toggle active sizes and customize unit allocation per size.
                                 </span>
                               </div>
-                              <span className="text-xs font-mono font-bold text-[#155DFC] bg-blue-50 border border-blue-200/70 px-2.5 py-1 rounded-md">
-                                {selectedSizes.length} {selectedSizes.length === 1 ? "Size" : "Sizes"} Selected
-                              </span>
+                              <div className="flex items-center gap-2">
+                                {totalBatchQuantity > 0 && (
+                                  <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md">
+                                    Total: {totalBatchQuantity.toLocaleString()} pcs
+                                  </span>
+                                )}
+                                <span className="text-xs font-mono font-bold text-[#155DFC] bg-blue-50 border border-blue-200/70 px-2.5 py-1 rounded-md">
+                                  {selectedSizes.length} {selectedSizes.length === 1 ? "Size" : "Sizes"} Selected
+                                </span>
+                              </div>
                             </div>
 
-                            {/* Interactive Size Toggle Pills & Quick Presets */}
+                            {/* Interactive Size Toggle Pills */}
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="text-xs font-semibold text-slate-500 mr-1">Active Sizes:</span>
                               {AVAILABLE_SIZES.map((sz) => {
@@ -3605,60 +3428,47 @@ export default function Home() {
                                   </button>
                                 );
                               })}
+                            </div>
 
-                              {/* Quick Distribute Helpers */}
-                              <div className="ml-auto flex items-center gap-1.5">
-                                <span className="text-[11px] text-slate-400 mr-1">Distribution:</span>
-                                <button
-                                  type="button"
-                                  onClick={applyBellCurve}
-                                  className="px-2.5 py-1 text-[11px] font-mono font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded transition-all cursor-pointer shadow-2xs"
-                                  title="Distribute units according to standard industrial bell-curve (15% S, 35% M, 30% L, 15% XL, 5% XXL)"
-                                >
-                                  Bell Curve
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={applyEvenSplit}
-                                  className="px-2.5 py-1 text-[11px] font-mono font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded transition-all cursor-pointer shadow-2xs"
-                                  title="Split batch quantity evenly across active sizes"
-                                >
-                                  Split Evenly
-                                </button>
+                            {/* Size Allocation Inputs Grid or Empty State Placeholder */}
+                            {selectedSizes.length === 0 ? (
+                              <div className="py-6 px-4 text-center border border-dashed border-slate-300 rounded-md bg-white">
+                                <p className="text-xs font-medium text-slate-500">
+                                  Select at least one active size above to configure production quantities.
+                                </p>
                               </div>
-                            </div>
-
-                            {/* Size Allocation Inputs Grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 pt-1">
-                              {selectedSizes.map((sz) => {
-                                const qty = sizeQuantities[sz] ?? 0;
-                                const ratio = batchQuantity > 0 ? Math.round((qty / batchQuantity) * 100) : 0;
-                                const mult = SIZE_FABRIC_MULTIPLIERS[sz] ?? 1.0;
-                                return (
-                                  <div key={sz} className="bg-white border border-slate-200/90 rounded-md p-2.5 flex flex-col gap-1.5 shadow-2xs">
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="font-mono font-bold text-slate-900">{sz}</span>
-                                      <span className="text-[11px] font-mono text-slate-400">{mult}x fabric</span>
+                            ) : (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-1">
+                                {selectedSizes.map((sz) => {
+                                  const qty = sizeQuantities[sz] ?? 0;
+                                  const ratio = totalBatchQuantity > 0 ? Math.round((qty / totalBatchQuantity) * 100) : 0;
+                                  const mult = SIZE_FABRIC_MULTIPLIERS[sz] ?? 1.0;
+                                  return (
+                                    <div key={sz} className="bg-white border border-slate-200/90 rounded-md p-2.5 flex flex-col gap-1.5 shadow-2xs">
+                                      <div className="flex items-center justify-between text-xs">
+                                        <span className="font-mono font-bold text-slate-900">{sz}</span>
+                                        <span className="text-[11px] font-mono text-slate-400">{mult}x fabric</span>
+                                      </div>
+                                      <div className="relative flex items-center">
+                                        <input
+                                          type="number"
+                                          min={1}
+                                          max={100000}
+                                          value={qty || ""}
+                                          onChange={(e) => handleSizeQuantityChange(sz, parseInt(e.target.value, 10) || 0)}
+                                          className="w-full py-1.5 px-2 pr-9 rounded text-xs font-mono font-bold text-slate-900 border border-slate-200 focus:border-[#155DFC] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        />
+                                        <span className="absolute right-2 text-[11px] font-mono text-slate-400 pointer-events-none">pcs</span>
+                                      </div>
+                                      <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                                        <span>Ratio:</span>
+                                        <span className="font-semibold text-slate-700">{ratio}%</span>
+                                      </div>
                                     </div>
-                                    <div className="relative flex items-center">
-                                      <input
-                                        type="number"
-                                        min={1}
-                                        max={100000}
-                                        value={qty || ""}
-                                        onChange={(e) => handleSizeQuantityChange(sz, parseInt(e.target.value, 10) || 0)}
-                                        className="w-full py-1.5 px-2 pr-9 rounded text-xs font-mono font-bold text-slate-900 border border-slate-200 focus:border-[#155DFC] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                      />
-                                      <span className="absolute right-2 text-[11px] font-mono text-slate-400 pointer-events-none">pcs</span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
-                                      <span>Ratio:</span>
-                                      <span className="font-semibold text-slate-700">{ratio}%</span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
 
                           {/* Cutting Department Machinery Selection */}
@@ -3692,57 +3502,6 @@ export default function Home() {
                             <span className="text-xs text-slate-400">Governs ASTM thread consumption formula and structural seam tension.</span>
                           </div>
 
-                          {/* Factory Line Balancing — Daily Output Target */}
-                          <div className="flex flex-col gap-2.5 p-4 bg-slate-50/80 border border-slate-200/90 rounded-md">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <label className="text-sm font-semibold text-slate-800 block">
-                                  Factory Line Balancing Daily Output Target
-                                </label>
-                                <span className="text-xs text-slate-400">
-                                  Configures plant target output to derive Takt Time and balance machine workstation count.
-                                </span>
-                              </div>
-                              <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-2.5 py-1 rounded-md">
-                                {targetDailyUnits} pcs / day Target
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-2">
-                              {[250, 500, 1000].map((tier) => (
-                                <button
-                                  key={tier}
-                                  type="button"
-                                  onClick={() => setTargetDailyUnits(tier)}
-                                  className={`py-2 px-3 text-xs font-mono font-bold rounded-md border transition-all cursor-pointer ${
-                                    targetDailyUnits === tier
-                                      ? "bg-indigo-50 text-indigo-700 border-indigo-500 ring-1 ring-indigo-500"
-                                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
-                                  }`}
-                                >
-                                  {tier} pcs/day {tier === 500 ? "(Standard)" : ""}
-                                </button>
-                              ))}
-                            </div>
-
-                            <div className="relative flex items-center">
-                              <span className="absolute left-3 text-xs font-semibold text-slate-400">Custom Target:</span>
-                              <input
-                                type="number"
-                                min={10}
-                                max={50000}
-                                value={![250, 500, 1000].includes(targetDailyUnits) ? targetDailyUnits : ""}
-                                onChange={(e) => {
-                                  const val = parseInt(e.target.value, 10);
-                                  if (!isNaN(val) && val > 0) setTargetDailyUnits(val);
-                                }}
-                                placeholder="Or enter custom daily target (e.g. 750, 1500)..."
-                                className="w-full py-2 pl-28 pr-16 rounded-md text-xs font-mono transition-all border outline-none bg-white text-slate-900 border-slate-200 hover:border-slate-300 placeholder:text-slate-400 focus:border-indigo-500"
-                              />
-                              <span className="absolute right-3 text-xs font-mono text-slate-400">pcs/day</span>
-                            </div>
-                          </div>
-
                           {/* Tag Management System */}
                           <TagSelector
                             selectedTags={selectedTags}
@@ -3770,6 +3529,88 @@ export default function Home() {
                               rows={3}
                               className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 text-xs text-slate-900 focus:bg-white focus:border-[#155DFC] focus:outline-none transition-all w-full resize-none leading-relaxed break-words break-all"
                             />
+                          </div>
+
+                          {/* Advanced Plant Settings (Collapsible Dropdown - Testing & Simulation Only) */}
+                          <div className="border border-slate-200/90 rounded-md overflow-hidden bg-slate-50/50">
+                            <button
+                              type="button"
+                              onClick={() => setShowAdvancedPlantSettings(!showAdvancedPlantSettings)}
+                              className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-100/80 transition-colors flex items-center justify-between cursor-pointer text-left"
+                            >
+                              <div className="flex items-center gap-2">
+                                <svg
+                                  className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${showAdvancedPlantSettings ? "rotate-90" : ""}`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                </svg>
+                                <span className="text-xs font-bold text-slate-700">
+                                  Advanced Plant Settings
+                                </span>
+                                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                                  Simulation &amp; Testing Only
+                                </span>
+                              </div>
+                              <span className="text-xs font-mono font-semibold text-slate-500">
+                                {targetDailyUnits} pcs/day Target
+                              </span>
+                            </button>
+
+                            {showAdvancedPlantSettings && (
+                              <div className="p-4 border-t border-slate-200/80 bg-white flex flex-col gap-3">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <label className="text-sm font-semibold text-slate-800 block">
+                                      Factory Line Balancing Daily Output Target
+                                    </label>
+                                    <span className="text-xs text-slate-400">
+                                      Internal simulation parameter used to calculate plant Takt Time and balance operator workstations.
+                                    </span>
+                                  </div>
+                                  <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                                    Hanya untuk testing semata dalam sistem
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2">
+                                  {[250, 500, 1000].map((tier) => (
+                                    <button
+                                      key={tier}
+                                      type="button"
+                                      onClick={() => setTargetDailyUnits(tier)}
+                                      className={`py-2 px-3 text-xs font-mono font-bold rounded-md border transition-all cursor-pointer ${
+                                        targetDailyUnits === tier
+                                          ? "bg-indigo-50 text-indigo-700 border-indigo-500 ring-1 ring-indigo-500"
+                                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
+                                      }`}
+                                    >
+                                      {tier} pcs/day {tier === 500 ? "(Standard)" : ""}
+                                    </button>
+                                  ))}
+                                </div>
+
+                                <div className="relative flex items-center">
+                                  <span className="absolute left-3 text-xs font-semibold text-slate-400">Custom Target:</span>
+                                  <input
+                                    type="number"
+                                    min={10}
+                                    max={50000}
+                                    value={![250, 500, 1000].includes(targetDailyUnits) ? targetDailyUnits : ""}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value, 10);
+                                      if (!isNaN(val) && val > 0) setTargetDailyUnits(val);
+                                    }}
+                                    placeholder="Or enter custom daily target (e.g. 750, 1500)..."
+                                    className="w-full py-2 pl-28 pr-16 rounded-md text-xs font-mono transition-all border outline-none bg-white text-slate-900 border-slate-200 hover:border-slate-300 placeholder:text-slate-400 focus:border-indigo-500"
+                                  />
+                                  <span className="absolute right-3 text-xs font-mono text-slate-400">pcs/day</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
                          </form>
@@ -3824,14 +3665,23 @@ export default function Home() {
                             (!showReusePrompt && !quizName.trim()) ||
                             // In single mode: must select a fabric application
                             (projectMode === "single" && !quizFabric) ||
+                            // Size allocation check: must have at least 1 active size with units > 0
+                            selectedSizes.length === 0 ||
+                            totalBatchQuantity <= 0 ||
                             // Must have a sketch loaded
                             (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl))
                           }
-                          title={
-                            !quizName.trim() || (projectMode === "single" && !quizFabric)
-                              ? `Please enter a Project Name${projectMode === "single" && !quizFabric ? " and select a Fabric Application" : ""} to continue`
-                              : undefined
-                          }
+                          title={(() => {
+                            if (isLoading) return "Processing...";
+                            const missing: string[] = [];
+                            if (!quizName.trim()) missing.push("Project Name");
+                            if (projectMode === "single" && !quizFabric) missing.push("Fabric Application");
+                            if (selectedSizes.length === 0 || totalBatchQuantity <= 0) missing.push("At least one active size with quantity > 0");
+                            if (projectMode === "single" ? (!previewUrl || !result) : !Object.values(componentsState).some(c => c.previewUrl)) {
+                              missing.push("Pattern Sketch");
+                            }
+                            return missing.length > 0 ? `Required: ${missing.join(", ")}` : undefined;
+                          })()}
                           className="px-8 py-3 text-white font-bold text-xs rounded-md flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-98 bg-[#155DFC] hover:bg-[#1249cc]"
                         >
                           {isLoading ? (
@@ -6534,8 +6384,8 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Garment Category:</span><strong className="text-slate-900 font-semibold">{projectMode === "doll" ? `Doll Outfit (${dollType})` : quizGarment}</strong></div>
                 <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Fabric Application:</span><strong className="text-slate-900 font-semibold">{projectMode === "doll" ? "Multi-component Ensemble" : quizFabric}</strong></div>
-                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Production Run Quantity:</span><strong className="text-[#155DFC] font-mono font-bold">{batchQuantity} pcs</strong></div>
-                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Pattern Size Run:</span><strong className="text-slate-900 font-semibold">{quizSizeRun}</strong></div>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Production Run Quantity:</span><strong className="text-[#155DFC] font-mono font-bold">{totalBatchQuantity.toLocaleString()} pcs</strong></div>
+                <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Pattern Size Run:</span><strong className="text-slate-900 font-semibold">{selectedSizes.length > 0 ? (selectedSizes.length === 5 && ["S", "M", "L", "XL", "XXL"].every(s => selectedSizes.includes(s)) ? "Full Size Run (S, M, L, XL, XXL)" : `Custom Run (${selectedSizes.join(", ")})`) : "No Sizes Selected"}</strong></div>
                 <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Cutting Allocation:</span><strong className="text-slate-900 font-semibold">{quizCuttingMethod}</strong></div>
                 <div className="flex justify-between items-center text-xs border-b border-slate-100 pb-2"><span className="text-slate-500">Stitch Density (SPI):</span><strong className="text-slate-900 font-semibold">{quizStitchDensity}</strong></div>
                 <div className="flex justify-between items-start gap-2 text-xs">
