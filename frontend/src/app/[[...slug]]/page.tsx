@@ -3551,8 +3551,8 @@ export default function Home() {
                                 <span className="text-xs font-bold text-slate-700">
                                   Advanced Plant Settings
                                 </span>
-                                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                                  Simulation &amp; Testing Only
+                                <span className="text-xs italic text-slate-400 font-normal">
+                                  (Simulation &amp; Testing Only)
                                 </span>
                               </div>
                               <span className="text-xs font-mono font-semibold text-slate-500">
@@ -3562,17 +3562,12 @@ export default function Home() {
 
                             {showAdvancedPlantSettings && (
                               <div className="p-4 border-t border-slate-200/80 bg-white flex flex-col gap-3">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <label className="text-sm font-semibold text-slate-800 block">
-                                      Factory Line Balancing Daily Output Target
-                                    </label>
-                                    <span className="text-xs text-slate-400">
-                                      Internal simulation parameter used to calculate plant Takt Time and balance operator workstations.
-                                    </span>
-                                  </div>
-                                  <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                                    Hanya untuk testing semata dalam sistem
+                                <div>
+                                  <label className="text-sm font-semibold text-slate-800 block">
+                                    Factory Line Balancing Daily Output Target
+                                  </label>
+                                  <span className="text-xs text-slate-400">
+                                    Internal simulation parameter used to calculate plant Takt Time and balance operator workstations.
                                   </span>
                                 </div>
 
